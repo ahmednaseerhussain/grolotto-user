@@ -4,23 +4,13 @@
     "slug": "grolotto",
     "scheme": "grolotto",
     "version": "1.0.0",
-    "sdkVersion": "54.0.0",
+    "sdkVersion": "51.0.0",
     "orientation": "portrait",
-    "icon": "./assets/appicon.jpeg",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/appicon.jpeg",
-        "backgroundColor": "#ffffff"
-      },
       "package": "com.grolotto.app"
     },
     "plugins": [
@@ -28,10 +18,10 @@
         "expo-build-properties",
         {
           "android": {
-            "newArchEnabled": true
+            "newArchEnabled": false
           },
           "ios": {
-            "newArchEnabled": true
+            "newArchEnabled": false
           }
         }
       ]

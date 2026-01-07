@@ -1,0 +1,241 @@
+import React, { useState } from "react";
+import { View, Text, TextInput, Pressable, StyleSheet, Alert } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useAppStore } from "../state/appStore";
+
+export default function AdminLogin() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  const setUser = useAppStore(s => s.setUser);
+
+  const handleLogin = async () => {
+    if (!username || !password) {
+      Alert.alert("Error", "Please enter both username and password");
+      return;
+    }
+
+    setLoading(true);
+    
+    // Simple hardcoded admin login for demo
+    const isValidUsername = username.toLowerCase() === "admin" || username.toLowerCase() === "admin@groloto.com";
+    const isValidPassword = password === "admin123";
+    
+    if (isValidUsername && isValidPassword) {
+      // Create admin user and log in
+      setUser({
+        id: "admin1",
+        email: "admin@groloto.com",
+        name: "System Admin",
+        role: "admin",
+        isVerified: true,
+        balance: 0,
+      });
+    } else {
+      Alert.alert(
+        "Invalid Credentials",
+        "Demo Admin Account:\n• Username: admin\n• Password: admin123"
+      );
+    }
+    
+    setLoading(false);
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.logoContainer}>
+          <Ionicons name="shield-checkmark" size={64} color="#3b82f6" />
+        </View>
+        <Text style={styles.title}>GroLoto Admin</Text>
+        <Text style={styles.subtitle}>Lottery Management System</Text>
+      </View>
+
+      {/* Login Form */}
+      <View style={styles.formContainer}>
+        <Text style={styles.formTitle}>Admin Login</Text>
+        
+        <View style={styles.inputContainer}>
+          <Ionicons name="person" size={20} color="#6b7280" style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Username or Email"
+            placeholderTextColor="#9ca3af"
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Ionicons name="lock-closed" size={20} color="#6b7280" style={styles.inputIcon} />
+          <TextInput
+            style={[styles.input, { paddingRight: 50 }]}
+            placeholder="Password"
+            placeholderTextColor="#9ca3af"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <Pressable 
+            onPress={() => setShowPassword(!showPassword)}
+            style={styles.eyeIcon}
+          >
+            <Ionicons 
+              name={showPassword ? "eye" : "eye-off"} 
+              size={20} 
+              color="#6b7280" 
+            />
+          </Pressable>
+        </View>
+
+        <Pressable 
+          style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          <Text style={styles.loginButtonText}>
+            {loading ? "Signing In..." : "Sign In"}
+          </Text>
+        </Pressable>
+
+        {/* Demo Credentials */}
+        <View style={styles.demoContainer}>
+          <Text style={styles.demoTitle}>Demo Credentials:</Text>
+          <Text style={styles.demoText}>Username: admin</Text>
+          <Text style={styles.demoText}>Password: admin123</Text>
+        </View>
+      </View>
+
+      {/* Footer */}
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>GroLoto Admin v1.0 - Secure Lottery Management</Text>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  header: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  logoContainer: {
+    backgroundColor: '#dbeafe',
+    padding: 20,
+    borderRadius: 50,
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#6b7280',
+  },
+  formContainer: {
+    backgroundColor: '#ffffff',
+    margin: 20,
+    padding: 30,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  formTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    marginBottom: 16,
+    backgroundColor: '#f9fafb',
+  },
+  inputIcon: {
+    marginLeft: 12,
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    color: '#1f2937',
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 12,
+    padding: 4,
+  },
+  loginButton: {
+    backgroundColor: '#3b82f6',
+    paddingVertical: 16,
+    borderRadius: 8,
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  loginButtonDisabled: {
+    backgroundColor: '#9ca3af',
+  },
+  loginButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  demoContainer: {
+    backgroundColor: '#fef3c7',
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#fbbf24',
+  },
+  demoTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#92400e',
+    marginBottom: 8,
+  },
+  demoText: {
+    fontSize: 14,
+    color: '#92400e',
+    marginBottom: 4,
+  },
+  footerText: {
+    fontSize: 12,
+    color: '#9ca3af',
+    textAlign: 'center',
+  },
+  footer: {
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+});
