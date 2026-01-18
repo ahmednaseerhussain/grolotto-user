@@ -51,7 +51,7 @@ export default function VendorDashboard() {
 
   const quickActions = [
     { id: "draws", title: t("pricesAndStates"), icon: "pricetag", color: "#3b82f6", screen: "DrawManagement", subtitle: t("configurePriceLimits") },
-    { id: "limits", title: "Limites/Numéro", icon: "ban", color: "#ef4444", screen: "NumberLimits", subtitle: "Contrôler les mises" },
+    { id: "limits", title: "Number Limits", icon: "ban", color: "#ef4444", screen: "NumberLimits", subtitle: "Control bets" },
     { id: "history", title: t("history"), icon: "analytics", color: "#f59e0b", screen: "VendorPlayHistory", subtitle: t("reportsAndSales") },
     { id: "payout", title: t("withdrawal"), icon: "wallet", color: "#10b981", screen: "PayoutManagement", subtitle: "MonCash, PayPal" },
     { id: "profile", title: t("myProfile"), icon: "person", color: "#8b5cf6", screen: "VendorProfile", subtitle: t("infoAndReviews") },
@@ -298,10 +298,10 @@ export default function VendorDashboard() {
           <View style={styles.announcementCard}>
             <View style={styles.announcementHeader}>
               <Ionicons name="megaphone" size={16} color="#3b82f6" />
-              <Text style={styles.announcementTitle}>Résultats NY Lottery publiés</Text>
+              <Text style={styles.announcementTitle}>NY Lottery Results Published</Text>
             </View>
             <Text style={styles.announcementText}>
-              Les résultats du tirage de New York du 26 septembre sont maintenant disponibles.
+              New York lottery results for September 26 are now available.
             </Text>
             <Text style={styles.announcementTime}>Il y a 2 heures</Text>
           </View>
@@ -309,7 +309,7 @@ export default function VendorDashboard() {
           <View style={styles.announcementCard}>
             <View style={styles.announcementHeader}>
               <Ionicons name="information-circle" size={16} color="#10b981" />
-              <Text style={styles.announcementTitle}>Nouvelle fonctionnalité disponible</Text>
+              <Text style={styles.announcementTitle}>New Feature Available</Text>
             </View>
             <Text style={styles.announcementText}>
               Vous pouvez maintenant configurer des limites personnalisées pour chaque type de jeu.
@@ -329,7 +329,7 @@ export default function VendorDashboard() {
               </View>
               <View style={styles.activityContent}>
                 <Text style={styles.activityTitle}>
-                  Nouveau billet {game.gameType.toUpperCase()} - {game.draw}
+                  New Ticket {game.gameType.toUpperCase()} - {game.draw}
                 </Text>
                 <Text style={styles.activitySubtitle}>
                   {formatCurrency(game.betAmount)} • {game.numbers.join(", ")}
@@ -347,7 +347,7 @@ export default function VendorDashboard() {
           {todayGamePlays.length === 0 && (
             <View style={styles.emptyState}>
               <Ionicons name="time-outline" size={48} color="#d1d5db" />
-              <Text style={styles.emptyStateText}>Aucune activité aujourd'hui</Text>
+              <Text style={styles.emptyStateText}>No activity today</Text>
             </View>
           )}
         </View>
@@ -547,7 +547,7 @@ export default function VendorDashboard() {
                   <Text style={styles.totalEarningsValue}>{stats.totalTickets}</Text>
                 </View>
                 <View style={styles.totalEarningsRow}>
-                  <Text style={styles.totalEarningsLabel}>Solde disponible:</Text>
+                  <Text style={styles.totalEarningsLabel}>Available Balance:</Text>
                   <Text style={styles.totalEarningsValue}>{formatCurrency(stats.availableBalance)}</Text>
                 </View>
                 <Pressable 
@@ -557,7 +557,7 @@ export default function VendorDashboard() {
                     handleQuickAction('VendorPlayHistory');
                   }}
                 >
-                  <Text style={styles.viewHistoryButtonText}>Voir l'Historique Complet</Text>
+                  <Text style={styles.viewHistoryButtonText}>View Full History</Text>
                 </Pressable>
               </View>
             </ScrollView>

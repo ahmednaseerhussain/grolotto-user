@@ -274,9 +274,9 @@ export default function PlayerDashboard() {
         <View style={styles.headerActions}>
           <Pressable 
             style={styles.headerButton}
-            onPress={() => (navigation as any).navigate("SettingsScreen")}
+            onPress={() => (navigation as any).navigate("EditProfileScreen")}
           >
-            <Ionicons name="settings-outline" size={24} color="#6b7280" />
+            <Ionicons name="person-outline" size={24} color="#6b7280" />
           </Pressable>
           <Pressable style={styles.headerButton} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={24} color="#6b7280" />
@@ -337,7 +337,7 @@ export default function PlayerDashboard() {
         <View style={styles.quickActions}>
           <Pressable 
             style={[styles.actionCard, { backgroundColor: "#3b82f6" }]}
-            onPress={() => setShowPaymentModal(true)}
+            onPress={() => (navigation as any).navigate("RewardsScreen")}
           >
             <Ionicons name="wallet" size={32} color="#ffffff" />
             <Text style={styles.actionTitle}>Wallet</Text>
@@ -420,7 +420,7 @@ export default function PlayerDashboard() {
               </View>
               <Pressable 
                 style={styles.bannerButton}
-                onPress={() => setShowPaymentModal(true)}
+                onPress={() => (navigation as any).navigate("RewardsScreen")}
               >
                 <Text style={styles.bannerButtonText}>Claim Now</Text>
               </Pressable>

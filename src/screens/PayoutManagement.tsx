@@ -80,7 +80,7 @@ export default function PayoutManagement() {
 
   const handleRequestPayout = () => {
     if (!selectedMethod || !amount) {
-      Alert.alert("Erreur", "Veuillez sélectionner une méthode et saisir un montant");
+      Alert.alert("Error", "Please select a method and enter an amount");
       return;
     }
 
@@ -154,7 +154,7 @@ export default function PayoutManagement() {
             <View style={styles.balanceHeader}>
               <View style={styles.balanceHeaderLeft}>
                 <Ionicons name="wallet" size={24} color="#10b981" />
-                <Text style={styles.balanceTitle}>Solde Disponible</Text>
+                <Text style={styles.balanceTitle}>Available Balance</Text>
               </View>
               
               {/* Currency Toggle */}
@@ -195,7 +195,7 @@ export default function PayoutManagement() {
               </View>
               
               <View style={styles.balanceItem}>
-                <Text style={styles.balanceLabel}>Total gagné</Text>
+                <Text style={styles.balanceLabel}>Total Earned</Text>
                 <Text style={styles.balanceTotal}>{formatCurrency(currentVendor.totalRevenue)}</Text>
               </View>
             </View>
@@ -214,7 +214,7 @@ export default function PayoutManagement() {
           {showRequestForm && (
             <View style={styles.requestForm}>
               <View style={styles.formHeader}>
-                <Text style={styles.formTitle}>Nouveau retrait</Text>
+                <Text style={styles.formTitle}>New Withdrawal</Text>
                 <Pressable 
                   style={styles.closeButton}
                   onPress={() => setShowRequestForm(false)}
@@ -247,7 +247,7 @@ export default function PayoutManagement() {
                 </View>
                 <View style={styles.availableContainer}>
                   <Text style={styles.availableText}>
-                    Disponible: {formatCurrency(availableBalance)}
+                    Available: {formatCurrency(availableBalance)}
                   </Text>
                   {withdrawalCurrency === "HTG" && (
                     <Text style={styles.conversionText}>
@@ -331,7 +331,7 @@ export default function PayoutManagement() {
             {vendorPayouts.length === 0 ? (
               <View style={styles.emptyState}>
                 <Ionicons name="receipt-outline" size={48} color="#d1d5db" />
-                <Text style={styles.emptyStateText}>Aucun retrait effectué</Text>
+                <Text style={styles.emptyStateText}>No withdrawals made</Text>
                 <Text style={styles.emptyStateSubtext}>
                   Vos demandes de retrait apparaîtront ici
                 </Text>

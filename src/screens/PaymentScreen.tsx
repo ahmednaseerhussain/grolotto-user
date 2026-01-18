@@ -15,6 +15,20 @@ const PAYMENT_METHODS = [
     description: "Visa, Mastercard, Discover",
   },
   {
+    type: "gift_card" as PaymentMethodType,
+    name: "Gift Card",
+    icon: "gift" as const,
+    color: "#8b5cf6",
+    description: "Prepaid gift cards",
+  },
+  {
+    type: "cashapp" as PaymentMethodType,
+    name: "CashApp",
+    icon: "logo-usd" as const,
+    color: "#00d54b",
+    description: "Cash App payments",
+  },
+  {
     type: "moncash" as PaymentMethodType,
     name: "MonCash",
     icon: "wallet" as const,
@@ -45,6 +59,8 @@ export default function PaymentScreen() {
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCVV, setCardCVV] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [giftCardCode, setGiftCardCode] = useState("");
+  const [giftCardCurrency, setGiftCardCurrency] = useState<"USD" | "HTG">(currency);
   const [processing, setProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -69,16 +85,19 @@ export default function PaymentScreen() {
   };
 
   const needsCardDetails = selectedMethod === "debit_card";
-  const needsPhoneNumber = selectedMethod === "moncash" || selectedMethod === "natcash";
+  const needsPhoneNumber = selectedMethod === "moncash" || selectedMethod === "natcash" || selectedMethod === "cashapp";
+  const needsGiftCard = selectedMethod === "gift_card";
   
   const isValidCardNumber = cardNumber.replace(/\s/g, "").length >= 16;
   const isValidExpiry = cardExpiry.replace(/\D/g, "").length === 4;
   const isValidCVV = cardCVV.length >= 3;
   const isValidPhone = phoneNumber.length >= 8;
+  const isValidGiftCard = giftCardCode.length >= 12 && giftCardCurrency === currency;
   
   const canProceed = amount && parseFloat(amount) > 0 && selectedMethod && 
     (!needsCardDetails || (isValidCardNumber && isValidExpiry && isValidCVV)) &&
-    (!needsPhoneNumber || isValidPhone);
+    (!needsPhoneNumber || isValidPhone) &&
+    (!needsGiftCard || isValidGiftCard);
 
   const handlePayment = () => {
     if (!canProceed || !user) return;
@@ -294,18 +313,62 @@ export default function PaymentScreen() {
         {needsPhoneNumber && (
           <Animated.View entering={FadeInDown.duration(400)} className="mb-6">
             <Text className="text-slate-300 font-semibold text-base mb-3">
-              {selectedMethod === "moncash" ? "MonCash" : "NatCash"} Phone Number
+              {selectedMethod === "cashapp" ? "CashApp Tag" : selectedMethod === "moncash" ? "MonCash" : "NatCash"} {selectedMethod === "cashapp" ? "" : "Phone Number"}
             </Text>
             <View className="bg-slate-800 rounded-xl border border-slate-700 px-4 py-4">
               <TextInput
                 className="text-white text-base"
-                placeholder="+509 1234 5678"
+                placeholder={selectedMethod === "cashapp" ? "$yourtag" : "+509 1234 5678"}
                 placeholderTextColor="#64748b"
-                keyboardType="phone-pad"
+                keyboardType={selectedMethod === "cashapp" ? "default" : "phone-pad"}
                 value={phoneNumber}
                 onChangeText={setPhoneNumber}
               />
             </View>
+          </Animated.View>
+        )}
+
+        {/* Gift Card Details */}
+        {needsGiftCard && (
+          <Animated.View entering={FadeInDown.duration(400)} className="mb-6">
+            <Text className="text-slate-300 font-semibold text-base mb-3">Gift Card Details</Text>
+            
+            <View className="bg-slate-800 rounded-xl border border-slate-700 p-4 mb-3">
+              <Text className="text-slate-400 text-sm mb-2">Gift Card Code</Text>
+              <TextInput
+                className="text-white text-base"
+                placeholder="Enter 16-digit code"
+                placeholderTextColor="#64748b"
+                keyboardType="default"
+                maxLength={20}
+                value={giftCardCode}
+                onChangeText={setGiftCardCode}
+                autoCapitalize="characters"
+              />
+            </View>
+
+            <View className="bg-slate-800 rounded-xl border border-slate-700 p-4 mb-3">
+              <Text className="text-slate-400 text-sm mb-2">Gift Card Currency</Text>
+              <Text className="text-white text-base font-semibold">{giftCardCurrency}</Text>
+            </View>
+
+            {giftCardCurrency !== currency && (
+              <View className="flex-row items-center bg-red-900/20 border border-red-700 rounded-lg px-3 py-2">
+                <Ionicons name="alert-circle" size={16} color="#ef4444" />
+                <Text className="text-red-400 text-xs ml-2 flex-1">
+                  Gift card currency ({giftCardCurrency}) doesn't match your wallet currency ({currency}). Only {currency} gift cards can be added to your {currency} wallet.
+                </Text>
+              </View>
+            )}
+            
+            {giftCardCurrency === currency && (
+              <View className="flex-row items-center bg-green-900/20 border border-green-700 rounded-lg px-3 py-2">
+                <Ionicons name="checkmark-circle" size={16} color="#10b981" />
+                <Text className="text-green-400 text-xs ml-2 flex-1">
+                  Gift card currency matches your wallet
+                </Text>
+              </View>
+            )}
           </Animated.View>
         )}
 

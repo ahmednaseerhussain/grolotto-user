@@ -128,7 +128,7 @@ export default function TodayPlayersWinners() {
           </head>
           <body>
             <div class="header">
-              <h1>Rapport Journalier - Joueurs et Gagnants</h1>
+              <h1>Daily Report - Players and Winners</h1>
               <h3>${reportDate}</h3>
               <p>Vendeur: ${currentVendor?.firstName} ${currentVendor?.lastName}</p>
             </div>
@@ -148,11 +148,11 @@ export default function TodayPlayersWinners() {
               </div>
               <div class="stat-item">
                 <div class="stat-value">${overallStats.totalWinners}</div>
-                <div class="stat-label">Gagnants</div>
+                <div class="stat-label">Winners</div>
               </div>
               <div class="stat-item">
                 <div class="stat-value">${formatCurrency(overallStats.totalWon)}</div>
-                <div class="stat-label">Total Gagné</div>
+                <div class="stat-label">Total Won</div>
               </div>
             </div>
             
@@ -176,7 +176,7 @@ export default function TodayPlayersWinners() {
                   `).join('')}
                 </table>
                 
-                <h4>Gagnants (${data.totalWinners})</h4>
+                <h4>Winners (${data.totalWinners})</h4>
                 <table class="table">
                   <tr>
                     <th>ID Joueur</th>
@@ -197,7 +197,7 @@ export default function TodayPlayersWinners() {
                 </table>
                 
                 <div class="totals">
-                  <strong>Total État: ${data.totalPlayers} joueurs, ${formatCurrency(data.totalPlayed)} misé, ${formatCurrency(data.totalWon)} gagné</strong>
+                  <strong>Total State: ${data.totalPlayers} players, ${formatCurrency(data.totalPlayed)} bet, ${formatCurrency(data.totalWon)} won</strong>
                 </div>
               </div>
             `).join('')}
@@ -210,7 +210,7 @@ export default function TodayPlayersWinners() {
       
     } catch (error) {
       console.error('PDF Export Error:', error);
-      Alert.alert("Erreur", "Échec de l'export PDF");
+      Alert.alert("Error", "PDF export failed");
     } finally {
       setIsExporting(false);
     }
@@ -231,7 +231,7 @@ export default function TodayPlayersWinners() {
         
         // Add winners data
         data.winners.forEach((winner: any) => {
-          csvContent += `Gagnant,${data.state},${winner.playerId},${winner.gameType},"${winner.numbers.join(', ')}",${winner.betAmount},${winner.winAmount},${new Date(winner.timestamp).toISOString()}\n`;
+          csvContent += `Winner,${data.state},${winner.playerId},${winner.gameType},"${winner.numbers.join(', ')}",${winner.betAmount},${winner.winAmount},${new Date(winner.timestamp).toISOString()}\n`;
         });
       });
 
@@ -242,7 +242,7 @@ export default function TodayPlayersWinners() {
       
     } catch (error) {
       console.error('CSV Export Error:', error);
-      Alert.alert("Erreur", "Échec de l'export CSV");
+      Alert.alert("Error", "CSV export failed");
     } finally {
       setIsExporting(false);
     }
@@ -258,7 +258,7 @@ export default function TodayPlayersWinners() {
         >
           <Ionicons name="arrow-back" size={24} color="#1f2937" />
         </Pressable>
-        <Text style={styles.headerTitle}>Joueurs et Gagnants du Jour</Text>
+        <Text style={styles.headerTitle}>Today's Players and Winners</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -286,13 +286,13 @@ export default function TodayPlayersWinners() {
           <View style={styles.statCard}>
             <Ionicons name="trophy" size={20} color="#f59e0b" />
             <Text style={styles.statValue}>{overallStats.totalWinners}</Text>
-            <Text style={styles.statLabel}>Gagnants</Text>
+            <Text style={styles.statLabel}>Winners</Text>
           </View>
           
           <View style={styles.statCard}>
             <Ionicons name="trending-up" size={20} color="#ef4444" />
             <Text style={styles.statValue}>{formatCurrency(overallStats.totalWon)}</Text>
-            <Text style={styles.statLabel}>Total Gagné</Text>
+            <Text style={styles.statLabel}>Total Won</Text>
           </View>
         </ScrollView>
       </View>
@@ -347,7 +347,7 @@ export default function TodayPlayersWinners() {
         {todayGames.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="calendar-outline" size={64} color="#d1d5db" />
-            <Text style={styles.emptyStateText}>Aucune activité aujourd'hui</Text>
+            <Text style={styles.emptyStateText}>No activity today</Text>
             <Text style={styles.emptyStateSubtext}>
               Les jeux d'aujourd'hui apparaîtront ici
             </Text>
@@ -360,37 +360,37 @@ export default function TodayPlayersWinners() {
               
               <View style={styles.stateSummary}>
                 <Text style={styles.summaryText}>
-                  {data.totalPlayers} joueurs • {formatCurrency(data.totalPlayed)} misé • {data.totalWinners} gagnants • {formatCurrency(data.totalWon)} gagné
+                  {data.totalPlayers} players • {formatCurrency(data.totalPlayed)} bet • {data.totalWinners} winners • {formatCurrency(data.totalWon)} won
                 </Text>
               </View>
 
               {/* Players Section */}
               <View style={styles.playersSection}>
-                <Text style={styles.sectionTitle}>Joueurs ({data.totalPlayers})</Text>
+                <Text style={styles.sectionTitle}>Players ({data.totalPlayers})</Text>
                 {data.players.slice(0, 5).map((player: any) => (
                   <View key={player.playerId} style={styles.playerItem}>
-                    <Text style={styles.playerName}>Joueur #{player.playerId.slice(-4)}</Text>
+                    <Text style={styles.playerName}>Player #{player.playerId.slice(-4)}</Text>
                     <Text style={styles.playerStats}>
-                      {player.games} jeux • {formatCurrency(player.totalBet)}
+                      {player.games} games • {formatCurrency(player.totalBet)}
                     </Text>
                   </View>
                 ))}
                 {data.players.length > 5 && (
-                  <Text style={styles.moreText}>+{data.players.length - 5} autres joueurs</Text>
+                  <Text style={styles.moreText}>+{data.players.length - 5} more players</Text>
                 )}
               </View>
 
               {/* Winners Section */}
               <View style={styles.winnersSection}>
-                <Text style={styles.sectionTitle}>Gagnants ({data.totalWinners})</Text>
+                <Text style={styles.sectionTitle}>Winners ({data.totalWinners})</Text>
                 {data.winners.map((winner: any, index: number) => (
                   <View key={index} style={styles.winnerItem}>
                     <View style={styles.winnerHeader}>
-                      <Text style={styles.winnerName}>Joueur #{winner.playerId.slice(-4)}</Text>
+                      <Text style={styles.winnerName}>Player #{winner.playerId.slice(-4)}</Text>
                       <Text style={styles.winAmount}>{formatCurrency(winner.winAmount)}</Text>
                     </View>
                     <Text style={styles.winnerDetails}>
-                      {winner.gameType} • {winner.numbers.join(', ')} • Mise: {formatCurrency(winner.betAmount)}
+                      {winner.gameType} • {winner.numbers.join(', ')} • Bet: {formatCurrency(winner.betAmount)}
                     </Text>
                   </View>
                 ))}
@@ -405,18 +405,18 @@ export default function TodayPlayersWinners() {
               
               <View style={styles.stateSummary}>
                 <Text style={styles.summaryText}>
-                  {gamesByState[selectedState].totalPlayers} joueurs • {formatCurrency(gamesByState[selectedState].totalPlayed)} misé • {gamesByState[selectedState].totalWinners} gagnants • {formatCurrency(gamesByState[selectedState].totalWon)} gagné
+                  {gamesByState[selectedState].totalPlayers} players • {formatCurrency(gamesByState[selectedState].totalPlayed)} bet • {gamesByState[selectedState].totalWinners} winners • {formatCurrency(gamesByState[selectedState].totalWon)} won
                 </Text>
               </View>
 
               {/* Detailed Players */}
               <View style={styles.playersSection}>
-                <Text style={styles.sectionTitle}>Tous les Joueurs ({gamesByState[selectedState].totalPlayers})</Text>
+                <Text style={styles.sectionTitle}>All Players ({gamesByState[selectedState].totalPlayers})</Text>
                 {gamesByState[selectedState].players.map((player: any) => (
                   <View key={player.playerId} style={styles.playerItem}>
-                    <Text style={styles.playerName}>Joueur #{player.playerId.slice(-4)}</Text>
+                    <Text style={styles.playerName}>Player #{player.playerId.slice(-4)}</Text>
                     <Text style={styles.playerStats}>
-                      {player.games} jeux • {formatCurrency(player.totalBet)}
+                      {player.games} games • {formatCurrency(player.totalBet)}
                     </Text>
                   </View>
                 ))}
@@ -424,15 +424,15 @@ export default function TodayPlayersWinners() {
 
               {/* Detailed Winners */}
               <View style={styles.winnersSection}>
-                <Text style={styles.sectionTitle}>Tous les Gagnants ({gamesByState[selectedState].totalWinners})</Text>
+                <Text style={styles.sectionTitle}>All Winners ({gamesByState[selectedState].totalWinners})</Text>
                 {gamesByState[selectedState].winners.map((winner: any, index: number) => (
                   <View key={index} style={styles.winnerItem}>
                     <View style={styles.winnerHeader}>
-                      <Text style={styles.winnerName}>Joueur #{winner.playerId.slice(-4)}</Text>
+                      <Text style={styles.winnerName}>Player #{winner.playerId.slice(-4)}</Text>
                       <Text style={styles.winAmount}>{formatCurrency(winner.winAmount)}</Text>
                     </View>
                     <Text style={styles.winnerDetails}>
-                      {winner.gameType} • {winner.numbers.join(', ')} • Mise: {formatCurrency(winner.betAmount)}
+                      {winner.gameType} • {winner.numbers.join(', ')} • Bet: {formatCurrency(winner.betAmount)}
                     </Text>
                   </View>
                 ))}

@@ -208,8 +208,8 @@ export default function NumberSelection() {
     }, [gameType, currentValue]);
 
     return (
-      <View className="mx-2 mb-4 items-center">
-        <Text className="text-gray-700 font-medium mb-2 text-center">
+      <View className="mx-1 mb-3 items-center" style={{ minWidth: 65 }}>
+        <Text className="text-gray-700 font-medium mb-2 text-center text-sm">
           {gameType === "senp" ? t("number") : `#${index + 1}`}
         </Text>
         
@@ -223,11 +223,11 @@ export default function NumberSelection() {
           maxLength={gameType.startsWith("loto") ? 1 : 2}
           style={{
             backgroundColor: "#facc15",
-            borderRadius: 16,
-            width: 72,
-            height: 72,
+            borderRadius: 12,
+            width: 65,
+            height: 65,
             textAlign: "center",
-            fontSize: 28,
+            fontSize: 26,
             fontWeight: "900",
             color: "#000000",
             borderWidth: 2,
@@ -257,15 +257,9 @@ export default function NumberSelection() {
     }
     
     return (
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 10 }}
-      >
-        <View className="flex-row justify-center items-center space-x-2">
-          {pickers}
-        </View>
-      </ScrollView>
+      <View className="flex-row justify-center items-center flex-wrap px-2">
+        {pickers}
+      </View>
     );
   };
 
@@ -286,6 +280,20 @@ export default function NumberSelection() {
     if (selectedNumbers.length === 0 || selectedNumbers.some(num => num === undefined)) {
       Alert.alert("Error", t("selectAllNumbers"));
       return;
+    }
+
+    // VALIDATION 0: Check if vendor has stopped sales for any of these numbers
+    const stoppedNumbers = vendor.draws[selectedState]?.stoppedNumbers || [];
+    for (const number of selectedNumbers) {
+      const formattedNumber = number.toString().padStart(2, '0');
+      if (stoppedNumbers.includes(formattedNumber)) {
+        Alert.alert(
+          "Sales Stopped",
+          `The vendor has stopped accepting bets on number ${formattedNumber}. Please choose a different number.`,
+          [{ text: "OK" }]
+        );
+        return;
+      }
     }
 
     // VALIDATION 1: Check if player has already bet on any of these numbers in this state

@@ -54,7 +54,7 @@ export default function VendorPlayHistory() {
             Email utilisateur: {user?.email || "Non connecté"}
           </Text>
           <Text style={styles.errorSubtext}>
-            Vendeurs disponibles: {vendors.length}
+            Available Vendors: {vendors.length}
           </Text>
         </View>
       </SafeAreaView>
@@ -181,7 +181,7 @@ export default function VendorPlayHistory() {
           <View style={styles.statCard}>
             <Ionicons name="trophy" size={20} color="#f59e0b" />
             <Text style={styles.statValue}>{stats.winningTickets}</Text>
-            <Text style={styles.statLabel}>Gagnants</Text>
+            <Text style={styles.statLabel}>Winners</Text>
           </View>
           
           <View style={styles.statCard}>
@@ -312,7 +312,7 @@ export default function VendorPlayHistory() {
           {filteredGamePlays.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="receipt-outline" size={48} color="#d1d5db" />
-              <Text style={styles.emptyStateText}>Aucun résultat trouvé</Text>
+              <Text style={styles.emptyStateText}>No results found</Text>
               <Text style={styles.emptyStateSubtext}>
                 Ajustez vos filtres ou essayez une autre recherche
               </Text>
@@ -353,8 +353,8 @@ export default function VendorPlayHistory() {
                         game.status === "lost" ? styles.gameStatusLost : styles.gameStatusPending
                       ]}>
                         <Text style={styles.gameStatusText}>
-                          {game.status === "won" ? "Gagnant" : 
-                           game.status === "lost" ? "Perdant" : "En attente"}
+                          {game.status === "won" ? "Winner" : 
+                           game.status === "lost" ? "Lost" : "Pending"}
                         </Text>
                       </View>
                     </View>

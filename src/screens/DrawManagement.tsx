@@ -56,8 +56,8 @@ export default function DrawManagement() {
     // If enabling a draw, ensure it has at least one active game
     if (!currentDraw.enabled && getEnabledGamesCount(currentDraw) === 0) {
       Alert.alert(
-        "Aucun jeu activé",
-        "Vous devez d'abord activer au moins un type de jeu pour ce tirage. Senp est activé par défaut.",
+        "No Games Enabled",
+        "You must first enable at least one game type for this draw. Senp is enabled by default.",
         [
           {
             text: "OK",
@@ -95,7 +95,7 @@ export default function DrawManagement() {
       if (gameSettings.enabled) {
         Alert.alert(
           "Impossible de désactiver",
-          "Un tirage actif doit avoir au moins un jeu activé. Désactivez d'abord le tirage ou activez un autre jeu.",
+          "An active draw must have at least one enabled game. Disable the draw first or enable another game.",
           [{ text: "OK" }]
         );
         return;
@@ -247,9 +247,9 @@ export default function DrawManagement() {
             </Text>
           </View>
 
-          <Text style={styles.sectionTitle}>États Disponibles</Text>
+          <Text style={styles.sectionTitle}>Available States</Text>
           <Text style={styles.sectionDescription}>
-            Activez les tirages que vous souhaitez offrir à vos clients
+            Enable the draws you want to offer to your customers
           </Text>
 
           {DRAWS.map((draw) => {
@@ -339,7 +339,7 @@ export default function DrawManagement() {
                                     style={styles.cancelButton}
                                     onPress={cancelEditingLimits}
                                   >
-                                    <Text style={styles.cancelButtonText}>Annuler</Text>
+                                    <Text style={styles.cancelButtonText}>Cancel</Text>
                                   </Pressable>
                                   <Pressable 
                                     style={styles.saveButton}
@@ -420,7 +420,7 @@ export default function DrawManagement() {
           <View style={styles.quickSetupCard}>
             <Text style={styles.quickSetupTitle}>Configuration Rapide</Text>
             <Text style={styles.quickSetupDescription}>
-              Appliquer des paramètres prédéfinis à tous vos tirages
+              Apply preset settings to all your draws
             </Text>
             
             <View style={styles.quickSetupActions}>

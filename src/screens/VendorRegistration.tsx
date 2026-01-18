@@ -268,7 +268,7 @@ export default function VendorRegistration() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Confirmer mot de passe *</Text>
+            <Text style={styles.label}>Confirm Password *</Text>
             <TextInput
               style={[styles.input, errors.confirmPassword ? styles.inputError : null]}
               value={formData.confirmPassword}

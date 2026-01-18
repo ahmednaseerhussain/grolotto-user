@@ -204,10 +204,10 @@ export default function ResultsScreen() {
               GROLOTTO
             </Text>
             <Text style={{ fontSize: 18, fontWeight: '600', color: '#1f2937', marginBottom: 2 }}>
-              Byenveni, {user?.name || 'themepam89'}
+              Welcome, {user?.name || 'themepam89'}
             </Text>
             <Text style={{ fontSize: 14, color: '#6b7280' }}>
-              Pare pou jwe jòdi a?
+              Ready to play today?
             </Text>
           </View>
           
@@ -261,7 +261,9 @@ export default function ResultsScreen() {
         </Pressable>
       </View>
       
-      <Pressable style={{ 
+      <Pressable 
+        onPress={() => navigation.navigate("TransactionHistory" as never)}
+        style={{ 
         flexDirection: 'row', 
         alignItems: 'center', 
         justifyContent: 'center', 
@@ -281,7 +283,9 @@ export default function ResultsScreen() {
           gap: 12, 
           marginBottom: 20 
         }}>
-          <Pressable style={[{
+          <Pressable 
+            onPress={() => navigation.navigate("PaymentScreen" as never)}
+            style={[{
             width: (width - 60) / 2,
             backgroundColor: '#3b82f6',
             borderRadius: 16,
@@ -299,7 +303,9 @@ export default function ResultsScreen() {
             </Text>
           </Pressable>
           
-          <Pressable style={[{
+          <Pressable 
+            onPress={() => navigation.navigate("Tchala" as never)}
+            style={[{
             width: (width - 60) / 2,
             backgroundColor: '#f59e0b',
             borderRadius: 16,
@@ -313,7 +319,7 @@ export default function ResultsScreen() {
               Tchala
             </Text>
             <Text style={{ color: '#ffffff', fontSize: 12, opacity: 0.9, marginTop: 4, textAlign: 'center' }}>
-              Nimewo Rèv yo
+              Dream Numbers
             </Text>
           </Pressable>
           
@@ -330,14 +336,16 @@ export default function ResultsScreen() {
           }]}>
             <Ionicons name="document-text" size={24} color="#ffffff" />
             <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '600', marginTop: 8, textAlign: 'center' }}>
-              Rezilta yo
+              Results
             </Text>
             <Text style={{ color: '#ffffff', fontSize: 12, opacity: 0.9, marginTop: 4, textAlign: 'center' }}>
-              Of yo
+              Latest Draws
             </Text>
           </Pressable>
           
-          <Pressable style={[{
+          <Pressable 
+            onPress={() => navigation.navigate("HistoryScreen" as never)}
+            style={[{
             width: (width - 60) / 2,
             backgroundColor: '#8b5cf6',
             borderRadius: 16,
@@ -348,10 +356,10 @@ export default function ResultsScreen() {
           }]}>
             <Ionicons name="time" size={24} color="#ffffff" />
             <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '600', marginTop: 8, textAlign: 'center' }}>
-              Istwa
+              History
             </Text>
             <Text style={{ color: '#ffffff', fontSize: 12, opacity: 0.9, marginTop: 4, textAlign: 'center' }}>
-              Jwèt Pase yo
+              Past Games
             </Text>
           </Pressable>
         </View>
@@ -486,7 +494,7 @@ export default function ResultsScreen() {
 
         {/* Jwenn Machann yo Section - matching screenshot */}
         <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#1f2937', marginBottom: 16 }}>
-          Jwenn Machann yo
+          Find Vendors
         </Text>
         
         <View style={{
@@ -500,13 +508,13 @@ export default function ResultsScreen() {
         }}>
           <Ionicons name="search" size={20} color="#6b7280" />
           <Text style={{ marginLeft: 12, color: '#9ca3af', flex: 1 }}>
-            Chèche pa machann oswa eta (GA, NY, FL...
+            Search by vendor or state (GA, NY, FL)...
           </Text>
         </View>
 
         {/* Available Machines */}
         <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#1f2937', marginBottom: 16 }}>
-          Machann ki Disponib yo (2)
+          Available Vendors (2)
         </Text>
         
         <Pressable style={{

@@ -21,24 +21,29 @@ export default function NumberLimits() {
   const gamePlays = useAppStore(s => s.gamePlays);
   const setNumberLimit = useAppStore(s => s.setNumberLimit);
   const removeNumberLimit = useAppStore(s => s.removeNumberLimit);
+  const stopNumberSales = useAppStore(s => s.stopNumberSales);
+  const resumeNumberSales = useAppStore(s => s.resumeNumberSales);
 
   const [selectedDraw, setSelectedDraw] = useState<string>("NY");
   const [newNumber, setNewNumber] = useState("");
   const [newLimit, setNewLimit] = useState("");
   const [isAdding, setIsAdding] = useState(false);
+  const [isStopping, setIsStopping] = useState(false);
+  const [stopNumber, setStopNumber] = useState("");
 
   const currentVendor = vendors.find(v => v.email === user?.email);
 
   if (!currentVendor) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text>Vendeur non trouvé</Text>
+        <Text>Vendor not found</Text>
       </SafeAreaView>
     );
   }
 
   const selectedDrawSettings = currentVendor.draws[selectedDraw as keyof typeof currentVendor.draws];
   const numberLimits = selectedDrawSettings.numberLimits || [];
+  const stoppedNumbers = selectedDrawSettings.stoppedNumbers || [];
 
   // Calculate current totals from game plays
   const getNumberBetTotal = (number: string) => {
@@ -53,7 +58,7 @@ export default function NumberLimits() {
 
   const addNumberLimit = () => {
     if (!newNumber || !newLimit) {
-      Alert.alert("Erreur", "Veuillez entrer un numéro et une limite");
+      Alert.alert("Error", "Please enter a number and limit");
       return;
     }
 
@@ -61,12 +66,12 @@ export default function NumberLimits() {
     const limitAmount = parseFloat(newLimit);
 
     if (isNaN(limitAmount) || limitAmount <= 0) {
-      Alert.alert("Erreur", "Veuillez entrer une limite valide");
+      Alert.alert("Error", "Please enter a valid limit");
       return;
     }
 
     if (parseInt(newNumber) < 0 || parseInt(newNumber) > 99) {
-      Alert.alert("Erreur", "Le numéro doit être entre 00 et 99");
+      Alert.alert("Error", "Number must be between 00 and 99");
       return;
     }
 
@@ -74,21 +79,84 @@ export default function NumberLimits() {
     setNewNumber("");
     setNewLimit("");
     setIsAdding(false);
-    Alert.alert("Succès", `Limite de $${limitAmount} ajoutée pour le numéro ${numberStr}`);
+    Alert.alert("Success", `Limit of $${limitAmount} added for number ${numberStr}`);
   };
 
   const handleRemoveLimit = (number: string) => {
     Alert.alert(
-      "Supprimer la limite",
-      `Êtes-vous sûr de vouloir supprimer la limite pour le numéro ${number}?`,
+      "Remove Limit",
+      `Are you sure you want to remove the limit for number ${number}?`,
       [
-        { text: "Annuler", style: "cancel" },
+        { text: "Cancel", style: "cancel" },
         {
-          text: "Supprimer",
+          text: "Remove",
           style: "destructive",
           onPress: () => {
             removeNumberLimit(currentVendor.id, selectedDraw, number);
-            Alert.alert("Succès", "Limite supprimée");
+            // Also remove from stopped numbers if it was stopped
+            if (stoppedNumbers.includes(number)) {
+              resumeNumberSales(currentVendor.id, selectedDraw, number);
+            }
+            Alert.alert("Success", "Limit removed");
+          },
+        },
+      ]
+    );
+  };
+
+  const handleStopSales = (number: string) => {
+    Alert.alert(
+      "Stop Sales",
+      `Are you sure you want to stop sales for number ${number}?\n\nNo new bets will be accepted until you resume sales.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Stop",
+          style: "destructive",
+          onPress: () => {
+            stopNumberSales(currentVendor.id, selectedDraw, number);
+            Alert.alert("✋ Sales Stopped", `No more bets will be accepted for number ${number}`);
+          },
+        },
+      ]
+    );
+  };
+
+  const handleStopNumberFromForm = () => {
+    if (!stopNumber) {
+      Alert.alert("Error", "Please enter a number to stop");
+      return;
+    }
+
+    const numberStr = stopNumber.padStart(2, '0');
+
+    if (parseInt(stopNumber) < 0 || parseInt(stopNumber) > 99) {
+      Alert.alert("Error", "Number must be between 00 and 99");
+      return;
+    }
+
+    if (stoppedNumbers.includes(numberStr)) {
+      Alert.alert("Already Stopped", `Sales for number ${numberStr} are already stopped`);
+      return;
+    }
+
+    useAppStore.getState().stopNumberSales(currentVendor.id, selectedDraw, numberStr);
+    setStopNumber("");
+    setIsStopping(false);
+    Alert.alert("✋ Sales Stopped", `No more bets will be accepted for number ${numberStr}`);
+  };
+
+  const handleResumeSales = (number: string) => {
+    Alert.alert(
+      "Resume Sales",
+      `Do you want to resume sales for number ${number}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Resume",
+          onPress: () => {
+            resumeNumberSales(currentVendor.id, selectedDraw, number);
+            Alert.alert("✅ Sales Resumed", `Bets are now accepted for number ${number}`);
           },
         },
       ]
@@ -110,13 +178,25 @@ export default function NumberLimits() {
         <Pressable style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#1f2937" />
         </Pressable>
-        <Text style={styles.headerTitle}>Limites par Numéro</Text>
-        <Pressable
-          style={styles.addButton}
-          onPress={() => setIsAdding(!isAdding)}
-        >
-          <Ionicons name={isAdding ? "close" : "add"} size={24} color="#ffffff" />
-        </Pressable>
+        <Text style={styles.headerTitle}>Limits per Number</Text>
+        <View style={styles.headerButtons}>
+          <Pressable
+            style={styles.stopAllButton}
+            onPress={() => setIsStopping(!isStopping)}
+          >
+            <Ionicons 
+              name={isStopping ? "close" : "hand-right"} 
+              size={24} 
+              color="#ffffff" 
+            />
+          </Pressable>
+          <Pressable
+            style={styles.addButton}
+            onPress={() => setIsAdding(!isAdding)}
+          >
+            <Ionicons name={isAdding ? "close" : "add"} size={24} color="#ffffff" />
+          </Pressable>
+        </View>
       </View>
 
       {/* Draw Selector */}
@@ -154,16 +234,15 @@ export default function NumberLimits() {
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          {/* Info Card */}
           <View style={styles.infoCard}>
             <View style={styles.infoHeader}>
               <Ionicons name="information-circle" size={20} color="#3b82f6" />
-              <Text style={styles.infoTitle}>Comment ça marche?</Text>
+              <Text style={styles.infoTitle}>How does it work?</Text>
             </View>
             <Text style={styles.infoText}>
-              Définissez une limite maximale pour chaque numéro. Si un joueur tente de parier sur un numéro qui a déjà atteint sa limite, la mise sera refusée.
+              Set a maximum limit for each number. If a player tries to bet on a number that has already reached its limit, the bet will be refused.
               {"\n\n"}
-              Exemple: Si vous définissez une limite de $600 pour le numéro 06 et que $570 ont déjà été misés, seul $30 de plus peut être accepté.
+              Example: If you set a limit of $600 for number 06 and $570 has already been bet, only $30 more can be accepted.
             </Text>
           </View>
 
@@ -171,17 +250,17 @@ export default function NumberLimits() {
           <View style={styles.summaryCard}>
             <View style={styles.summaryRow}>
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryLabel}>Limites Totales</Text>
+                <Text style={styles.summaryLabel}>Total Limits</Text>
                 <Text style={styles.summaryValue}>${getTotalLimits().toFixed(0)}</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryLabel}>Mises Totales</Text>
+                <Text style={styles.summaryLabel}>Total Bets</Text>
                 <Text style={styles.summaryValue}>${getTotalBets().toFixed(0)}</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryLabel}>Numéros Limités</Text>
+                <Text style={styles.summaryLabel}>Limited Numbers</Text>
                 <Text style={styles.summaryValue}>{numberLimits.length}</Text>
               </View>
             </View>
@@ -190,11 +269,11 @@ export default function NumberLimits() {
           {/* Add New Limit */}
           {isAdding && (
             <View style={styles.addCard}>
-              <Text style={styles.addCardTitle}>Ajouter une Limite</Text>
+              <Text style={styles.addCardTitle}>Add a Limit</Text>
 
               <View style={styles.inputRow}>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Numéro (00-99)</Text>
+                  <Text style={styles.inputLabel}>Number (00-99)</Text>
                   <TextInput
                     style={styles.input}
                     value={newNumber}
@@ -210,7 +289,7 @@ export default function NumberLimits() {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Limite ($)</Text>
+                  <Text style={styles.inputLabel}>Limit ($)</Text>
                   <TextInput
                     style={styles.input}
                     value={newLimit}
@@ -223,102 +302,199 @@ export default function NumberLimits() {
 
               <Pressable style={styles.addLimitButton} onPress={addNumberLimit}>
                 <Ionicons name="checkmark-circle" size={20} color="#ffffff" />
-                <Text style={styles.addLimitButtonText}>Ajouter la Limite</Text>
+                <Text style={styles.addLimitButtonText}>Add Limit</Text>
+              </Pressable>
+            </View>
+          )}
+
+          {/* Stop Sales Form */}
+          {isStopping && (
+            <View style={styles.stopCard}>
+              <Text style={styles.stopCardTitle}>Stop Sales for Number</Text>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Number (00-99)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={stopNumber}
+                  onChangeText={(text) => {
+                    if (/^\d{0,2}$/.test(text)) {
+                      setStopNumber(text);
+                    }
+                  }}
+                  placeholder="Ex: 06"
+                  keyboardType="numeric"
+                  maxLength={2}
+                />
+              </View>
+
+              <Pressable style={styles.stopSalesButton} onPress={handleStopNumberFromForm}>
+                <Ionicons name="hand-right" size={20} color="#ffffff" />
+                <Text style={styles.stopSalesButtonText}>Stop Sales</Text>
               </Pressable>
             </View>
           )}
 
           {/* Number Limits List */}
           <View style={styles.limitsContainer}>
-            <Text style={styles.sectionTitle}>
-              Limites Actives ({numberLimits.length})
-            </Text>
+            {(() => {
+              // Create list of numbers to display - include numbers with limits OR stopped numbers
+              const numbersToDisplay = new Set([
+                ...numberLimits.map(l => l.number),
+                ...stoppedNumbers
+              ]);
+              
+              const displayItems = Array.from(numbersToDisplay).map(number => {
+                const limit = numberLimits.find(l => l.number === number);
+                return {
+                  number,
+                  limit: limit?.limit || 0,
+                  hasLimit: !!limit
+                };
+              });
 
-            {numberLimits.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Ionicons name="ban-outline" size={48} color="#d1d5db" />
-                <Text style={styles.emptyStateText}>Aucune limite définie</Text>
-                <Text style={styles.emptyStateSubtext}>
-                  Appuyez sur + pour ajouter une limite
-                </Text>
-              </View>
-            ) : (
-              numberLimits
-                .sort((a, b) => {
-                  const totalA = getNumberBetTotal(a.number);
-                  const totalB = getNumberBetTotal(b.number);
-                  const percentA = (totalA / a.limit) * 100;
-                  const percentB = (totalB / b.limit) * 100;
-                  return percentB - percentA;
-                })
-                .map((limit) => {
-                  const currentTotal = getNumberBetTotal(limit.number);
-                  const remaining = limit.limit - currentTotal;
-                  const percentage = (currentTotal / limit.limit) * 100;
-                  const isNearLimit = percentage >= 80;
-                  const isAtLimit = percentage >= 100;
+              return (
+                <>
+                  <Text style={styles.sectionTitle}>
+                    Managed Numbers ({displayItems.length})
+                  </Text>
 
-                  return (
-                    <View key={limit.number} style={styles.limitCard}>
-                      <View style={styles.limitHeader}>
-                        <View style={styles.limitInfo}>
-                          <View style={styles.numberBadge}>
-                            <Text style={styles.numberBadgeText}>{limit.number}</Text>
-                          </View>
-                          <View>
-                            <Text style={styles.limitLabel}>Limite: ${limit.limit.toFixed(0)}</Text>
+                  {displayItems.length === 0 ? (
+                    <View style={styles.emptyState}>
+                      <Ionicons name="ban-outline" size={48} color="#d1d5db" />
+                      <Text style={styles.emptyStateText}>No numbers managed</Text>
+                      <Text style={styles.emptyStateSubtext}>
+                        Press + to add a limit or ✋ to stop sales
+                      </Text>
+                    </View>
+                  ) : (
+                    displayItems
+                      .sort((a, b) => {
+                        const totalA = getNumberBetTotal(a.number);
+                        const totalB = getNumberBetTotal(b.number);
+                        if (!a.hasLimit) return 1; // Stopped-only numbers go to bottom
+                        if (!b.hasLimit) return -1;
+                        const percentA = (totalA / a.limit) * 100;
+                        const percentB = (totalB / b.limit) * 100;
+                        return percentB - percentA;
+                      })
+                      .map((item) => {
+                        const currentTotal = getNumberBetTotal(item.number);
+                        const remaining = item.limit - currentTotal;
+                        const percentage = item.hasLimit ? (currentTotal / item.limit) * 100 : 0;
+                        const isNearLimit = percentage >= 80;
+                        const isAtLimit = percentage >= 100;
+                        const isStopped = stoppedNumbers.includes(item.number);
+
+                        return (
+                          <View key={item.number} style={[
+                            styles.limitCard,
+                            isStopped && styles.limitCardStopped
+                          ]}>
+                            {/* Stopped Badge */}
+                            {isStopped && (
+                              <View style={styles.stoppedBadge}>
+                                <Ionicons name="hand-right" size={14} color="#ffffff" />
+                                <Text style={styles.stoppedBadgeText}>STOPPED</Text>
+                              </View>
+                            )}
+
+                            <View style={styles.limitHeader}>
+                              <View style={styles.limitInfo}>
+                                <View style={[
+                                  styles.numberBadge,
+                                  isStopped && styles.numberBadgeStopped
+                                ]}>
+                                  <Text style={styles.numberBadgeText}>{item.number}</Text>
+                                </View>
+                                <View>
+                                  <Text style={styles.limitLabel}>
+                                    {isStopped ? "Sales stopped" : `Limit: $${item.limit.toFixed(0)}`}
+                                  </Text>
                             <Text style={[
                               styles.limitStatus,
-                              isAtLimit && styles.limitStatusDanger,
-                              isNearLimit && !isAtLimit && styles.limitStatusWarning,
+                              isStopped && styles.limitStatusStopped,
+                              isAtLimit && !isStopped && styles.limitStatusDanger,
+                              isNearLimit && !isAtLimit && !isStopped && styles.limitStatusWarning,
                             ]}>
-                              {isAtLimit ? "Limite atteinte" : `Restant: $${remaining.toFixed(0)}`}
+                              {isStopped 
+                                ? "No bets accepted" 
+                                : isAtLimit 
+                                ? "Limit reached" 
+                                : `Remaining: $${remaining.toFixed(0)}`
+                              }
                             </Text>
                           </View>
                         </View>
 
-                        <Pressable
-                          style={styles.deleteButton}
-                          onPress={() => handleRemoveLimit(limit.number)}
-                        >
-                          <Ionicons name="trash-outline" size={20} color="#ef4444" />
-                        </Pressable>
-                      </View>
+                              <View style={styles.actionButtons}>
+                                {/* Stop/Resume Button */}
+                                {isStopped ? (
+                                  <Pressable
+                                    style={styles.resumeButton}
+                                    onPress={() => handleResumeSales(item.number)}
+                                  >
+                                    <Ionicons name="play-circle" size={24} color="#10b981" />
+                                  </Pressable>
+                                ) : (
+                                  <Pressable
+                                    style={styles.stopButton}
+                                    onPress={() => handleStopSales(item.number)}
+                                  >
+                                    <Ionicons name="hand-right" size={24} color="#ef4444" />
+                                  </Pressable>
+                                )}
 
-                      {/* Progress Bar */}
-                      <View style={styles.progressContainer}>
-                        <View style={styles.progressBackground}>
-                          <View
-                            style={[
-                              styles.progressBar,
-                              { width: `${Math.min(percentage, 100)}%` },
-                              isAtLimit && styles.progressBarDanger,
-                              isNearLimit && !isAtLimit && styles.progressBarWarning,
-                            ]}
-                          />
-                        </View>
-                        <Text style={styles.progressText}>
-                          ${currentTotal.toFixed(0)} / ${limit.limit.toFixed(0)} ({percentage.toFixed(0)}%)
-                        </Text>
+                                {/* Delete Button - only show if has a limit */}
+                                {item.hasLimit && (
+                                  <Pressable
+                                    style={styles.deleteButton}
+                                    onPress={() => handleRemoveLimit(item.number)}
+                                  >
+                                    <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                                  </Pressable>
+                                )}
+                              </View>
+                            </View>
+
+                            {/* Progress Bar - only show if has limit and not stopped */}
+                            {!isStopped && item.hasLimit && (
+                        <View style={styles.progressContainer}>
+                          <View style={styles.progressBackground}>
+                            <View
+                              style={[
+                                styles.progressBar,
+                                { width: `${Math.min(percentage, 100)}%` },
+                                isAtLimit && styles.progressBarDanger,
+                              ]}
+                            />
+                          </View>
+                          <Text style={styles.progressText}>
+                              {percentage.toFixed(1)}% used
+                            </Text>
+                          </View>
+                        )}
                       </View>
-                    </View>
-                  );
-                })
-            )}
+                    );
+                  })
+                )}
+              </>
+            );
+          })()}
           </View>
 
           {/* Guidelines */}
           <View style={styles.guidelinesCard}>
             <View style={styles.guidelinesHeader}>
               <Ionicons name="bulb" size={20} color="#f59e0b" />
-              <Text style={styles.guidelinesTitle}>Conseils</Text>
+              <Text style={styles.guidelinesTitle}>Tips</Text>
             </View>
             <Text style={styles.guidelinesText}>
-              • Surveillez les numéros populaires (01-31 sont souvent plus joués){"\n"}
-              • Ajustez les limites en fonction de votre capital{"\n"}
-              • Réinitialisez les totaux après chaque tirage{"\n"}
-              • Utilisez des limites plus élevées pour les numéros moins populaires{"\n"}
-              • Vérifiez régulièrement l'état de vos limites
+              • Monitor popular numbers (01-31 are often played more){"\n"}
+              • Adjust limits based on your capital{"\n"}
+              • Reset totals after each draw{"\n"}
+              • Use higher limits for less popular numbers{"\n"}
+              • Regularly check the status of your limits
             </Text>
           </View>
         </View>
@@ -350,6 +526,18 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#1f2937",
     flex: 1,
+  },
+  headerButtons: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  stopAllButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "#ef4444",
+  },
+  resumeAllButton: {
+    backgroundColor: "#10b981",
   },
   addButton: {
     padding: 8,
@@ -412,6 +600,31 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 8,
+  },
+  drawStoppedBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fee2e2",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: "#fecaca",
+    gap: 12,
+  },
+  drawStoppedTextContainer: {
+    flex: 1,
+  },
+  drawStoppedTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#dc2626",
+    marginBottom: 4,
+  },
+  drawStoppedText: {
+    fontSize: 14,
+    color: "#dc2626",
+    lineHeight: 18,
   },
   infoTitle: {
     fontSize: 16,
@@ -508,6 +721,35 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     marginLeft: 6,
   },
+  stopCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#ef4444",
+  },
+  stopCardTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1f2937",
+    marginBottom: 16,
+  },
+  stopSalesButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    backgroundColor: "#ef4444",
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  stopSalesButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#ffffff",
+    marginLeft: 6,
+  },
   limitsContainer: {
     marginBottom: 16,
   },
@@ -543,6 +785,30 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: "#e5e7eb",
+    position: "relative",
+    overflow: "visible",
+  },
+  limitCardStopped: {
+    backgroundColor: "#fef2f2",
+    borderColor: "#fecaca",
+  },
+  stoppedBadge: {
+    position: "absolute",
+    top: -8,
+    left: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#ef4444",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+    zIndex: 1,
+  },
+  stoppedBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#ffffff",
   },
   limitHeader: {
     flexDirection: "row",
@@ -564,6 +830,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 12,
   },
+  numberBadgeStopped: {
+    backgroundColor: "#ef4444",
+  },
   numberBadgeText: {
     fontSize: 18,
     fontWeight: "700",
@@ -584,6 +853,24 @@ const styles = StyleSheet.create({
   },
   limitStatusDanger: {
     color: "#ef4444",
+  },
+  limitStatusStopped: {
+    color: "#dc2626",
+  },
+  actionButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  stopButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "#fee2e2",
+  },
+  resumeButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "#d1fae5",
   },
   deleteButton: {
     padding: 8,

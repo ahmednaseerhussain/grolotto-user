@@ -130,8 +130,8 @@ export type Currency = "USD" | "HTG";
 export type UserRole = "player" | "vendor" | "admin";
 
 // Payment system types
-export type PaymentMethodType = "debit_card" | "moncash" | "natcash";
-export type PayoutMethodType = "moncash" | "natcash" | "ach";
+export type PaymentMethodType = "debit_card" | "gift_card" | "cashapp" | "moncash" | "natcash";
+export type PayoutMethodType = "moncash" | "natcash" | "ach" | "cashapp" | "bank_transfer";
 export type PaymentStatus = "pending" | "completed" | "failed" | "refunded";
 export type TransactionType = "bet_payment" | "winning_payout" | "deposit" | "withdrawal";
 
@@ -220,6 +220,7 @@ export interface DrawSettings {
     loto5: GameSettings;
   };
   numberLimits?: NumberLimit[]; // Per-number betting limits for this draw
+  stoppedNumbers?: string[]; // Numbers with sales stopped
 }
 
 export interface Payout {
@@ -458,6 +459,8 @@ interface AppState {
   // Number limit management
   setNumberLimit: (vendorId: string, draw: string, number: string, limit: number) => void;
   removeNumberLimit: (vendorId: string, draw: string, number: string) => void;
+  stopNumberSales: (vendorId: string, draw: string, number: string) => void;
+  resumeNumberSales: (vendorId: string, draw: string, number: string) => void;
   updateNumberBetTotal: (vendorId: string, draw: string, number: string, amount: number) => void;
   getNumberLimit: (vendorId: string, draw: string, number: string) => NumberLimit | undefined;
   checkNumberLimitAvailable: (vendorId: string, draw: string, number: string, betAmount: number) => { allowed: boolean; remaining: number; message?: string };
@@ -495,21 +498,11 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       // Initial state
-      language: "ht",
-      currency: "HTG",
-      hasCompletedOnboarding: true,
-      user: {
-        id: "admin1",
-        email: "admin@groloto.com",
-        name: "System Admin",
-        role: "admin" as UserRole,
-        isVerified: true,
-        balance: 0,
-        phone: "",
-        country: "Haiti",
-        createdAt: new Date().toISOString(),
-      },
-      isAuthenticated: true,
+      language: "en",
+      currency: "USD",
+      hasCompletedOnboarding: false,
+      user: null,
+      isAuthenticated: false,
       vendors: [
         // Demo vendors for testing
         {
@@ -1042,6 +1035,41 @@ export const useAppStore = create<AppState>()(
               draws: {
                 ...v.draws,
                 [draw]: { ...drawSettings, numberLimits: updatedLimits }
+              }
+            };
+          })
+        })),
+
+      stopNumberSales: (vendorId, draw, number) =>
+        set((state) => ({
+          vendors: state.vendors.map(v => {
+            if (v.id !== vendorId) return v;
+            const drawSettings = v.draws[draw as keyof typeof v.draws];
+            const stoppedNumbers = drawSettings.stoppedNumbers || [];
+            if (stoppedNumbers.includes(number)) return v;
+
+            return {
+              ...v,
+              draws: {
+                ...v.draws,
+                [draw]: { ...drawSettings, stoppedNumbers: [...stoppedNumbers, number] }
+              }
+            };
+          })
+        })),
+
+      resumeNumberSales: (vendorId, draw, number) =>
+        set((state) => ({
+          vendors: state.vendors.map(v => {
+            if (v.id !== vendorId) return v;
+            const drawSettings = v.draws[draw as keyof typeof v.draws];
+            const stoppedNumbers = (drawSettings.stoppedNumbers || []).filter(n => n !== number);
+
+            return {
+              ...v,
+              draws: {
+                ...v.draws,
+                [draw]: { ...drawSettings, stoppedNumbers }
               }
             };
           })

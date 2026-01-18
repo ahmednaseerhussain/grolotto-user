@@ -7,6 +7,10 @@ import { getTranslation } from "../utils/translations";
 
 const { width } = Dimensions.get('window');
 
+interface OnboardingScreensProps {
+  onComplete?: () => void;
+}
+
 interface OnboardingSlide {
   id: number;
   title: string;
@@ -88,13 +92,29 @@ const slides: OnboardingSlide[] = [
   }
 ];
 
-export default function OnboardingScreens() {
+export default function OnboardingScreens({ onComplete }: OnboardingScreensProps = {}) {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [showLanguageSetup, setShowLanguageSetup] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const completeOnboarding = useAppStore(s => s.completeOnboarding);
+  const setLanguage = useAppStore(s => s.setLanguage);
+  const setCurrency = useAppStore(s => s.setCurrency);
   const language = useAppStore(s => s.language);
+  const currency = useAppStore(s => s.currency);
   
   const t = (key: string) => getTranslation(key as any, language);
+
+  const languages = [
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'ht', name: 'Kreyòl', flag: '🇭🇹' },
+    { code: 'fr', name: 'Français', flag: '🇫🇷' },
+    { code: 'es', name: 'Español', flag: '🇪🇸' }
+  ];
+
+  const currencies = [
+    { code: 'USD', name: 'US Dollar', symbol: '$' },
+    { code: 'HTG', name: 'Haitian Gourde', symbol: 'G' }
+  ];
 
   const handleNext = () => {
     if (currentSlide < slides.length - 1) {
@@ -102,7 +122,8 @@ export default function OnboardingScreens() {
       setCurrentSlide(nextSlide);
       scrollViewRef.current?.scrollTo({ x: nextSlide * width, animated: true });
     } else {
-      handleGetStarted();
+      // Show language/currency setup instead of completing
+      setShowLanguageSetup(true);
     }
   };
 
@@ -121,7 +142,16 @@ export default function OnboardingScreens() {
 
   const handleSkip = () => {
     console.log("Skip pressed");
+    // Show language setup even on skip
+    setShowLanguageSetup(true);
+  };
+
+  const handleFinishSetup = () => {
+    // Complete onboarding after language and currency are set
     completeOnboarding();
+    if (onComplete) {
+      onComplete();
+    }
   };
 
   const handleScroll = (event: any) => {
@@ -130,6 +160,90 @@ export default function OnboardingScreens() {
   };
 
   const currentSlideData = slides[currentSlide];
+
+  // Show language/currency setup screen
+  if (showLanguageSetup) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: '#1e293b' }]}>
+        <ScrollView style={styles.setupContainer}>
+          <View style={styles.setupContent}>
+            {/* Header */}
+            <View style={styles.setupHeader}>
+              <Ionicons name="globe-outline" size={60} color="#6366f1" />
+              <Text style={styles.setupTitle}>Choose Your Preferences</Text>
+              <Text style={styles.setupSubtitle}>Select your language and currency to get started</Text>
+            </View>
+
+            {/* Language Selection */}
+            <View style={styles.setupSection}>
+              <Text style={styles.sectionLabel}>Language</Text>
+              <View style={styles.optionsGrid}>
+                {languages.map((lang) => (
+                  <Pressable
+                    key={lang.code}
+                    onPress={() => setLanguage(lang.code as any)}
+                    style={[
+                      styles.optionCard,
+                      language === lang.code && styles.optionCardSelected
+                    ]}
+                  >
+                    <Text style={styles.optionFlag}>{lang.flag}</Text>
+                    <Text style={[
+                      styles.optionText,
+                      language === lang.code && styles.optionTextSelected
+                    ]}>{lang.name}</Text>
+                    {language === lang.code && (
+                      <View style={styles.selectedBadge}>
+                        <Ionicons name="checkmark-circle" size={20} color="#6366f1" />
+                      </View>
+                    )}
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            {/* Currency Selection */}
+            <View style={styles.setupSection}>
+              <Text style={styles.sectionLabel}>Currency</Text>
+              <View style={styles.optionsGrid}>
+                {currencies.map((curr) => (
+                  <Pressable
+                    key={curr.code}
+                    onPress={() => setCurrency(curr.code as any)}
+                    style={[
+                      styles.optionCard,
+                      currency === curr.code && styles.optionCardSelected
+                    ]}
+                  >
+                    <Text style={styles.optionSymbol}>{curr.symbol}</Text>
+                    <Text style={[
+                      styles.optionText,
+                      currency === curr.code && styles.optionTextSelected
+                    ]}>{curr.name}</Text>
+                    <Text style={styles.optionCode}>{curr.code}</Text>
+                    {currency === curr.code && (
+                      <View style={styles.selectedBadge}>
+                        <Ionicons name="checkmark-circle" size={20} color="#6366f1" />
+                      </View>
+                    )}
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            {/* Continue Button */}
+            <Pressable
+              onPress={handleFinishSetup}
+              style={styles.continueButton}
+            >
+              <Text style={styles.continueButtonText}>Continue to App</Text>
+              <Ionicons name="arrow-forward" size={20} color="#ffffff" />
+            </Pressable>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: currentSlideData.bgColor }]}>
@@ -240,6 +354,96 @@ export default function OnboardingScreens() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  setupContainer: {
+    flex: 1,
+  },
+  setupContent: {
+    padding: 24,
+  },
+  setupHeader: {
+    alignItems: 'center',
+    marginBottom: 32,
+    marginTop: 20,
+  },
+  setupTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#f1f5f9',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  setupSubtitle: {
+    fontSize: 16,
+    color: '#94a3b8',
+    textAlign: 'center',
+  },
+  setupSection: {
+    marginBottom: 32,
+  },
+  sectionLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#f1f5f9',
+    marginBottom: 16,
+  },
+  optionsGrid: {
+    gap: 12,
+  },
+  optionCard: {
+    backgroundColor: '#334155',
+    borderRadius: 12,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#334155',
+  },
+  optionCardSelected: {
+    backgroundColor: '#1e293b',
+    borderColor: '#6366f1',
+  },
+  optionFlag: {
+    fontSize: 32,
+    marginRight: 16,
+  },
+  optionSymbol: {
+    fontSize: 32,
+    marginRight: 16,
+    color: '#f1f5f9',
+  },
+  optionText: {
+    fontSize: 18,
+    color: '#cbd5e1',
+    flex: 1,
+    fontWeight: '500',
+  },
+  optionTextSelected: {
+    color: '#f1f5f9',
+    fontWeight: '600',
+  },
+  optionCode: {
+    fontSize: 14,
+    color: '#64748b',
+    marginRight: 8,
+  },
+  selectedBadge: {
+    marginLeft: 8,
+  },
+  continueButton: {
+    backgroundColor: '#6366f1',
+    borderRadius: 12,
+    padding: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
+  },
+  continueButtonText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '600',
+    marginRight: 8,
   },
   header: {
     flexDirection: 'row',

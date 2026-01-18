@@ -130,10 +130,19 @@ export default function EditProfileScreen() {
     placeholder: string,
     keyboardType: any = "default",
     multiline: boolean = false,
-    errorKey?: string
+    errorKey?: string,
+    locked: boolean = false
   ) => (
     <View className="mb-4">
-      <Text className="text-gray-700 font-medium mb-2">{label}</Text>
+      <View className="flex-row items-center mb-2">
+        <Text className="text-gray-700 font-medium">{label}</Text>
+        {locked && (
+          <View className="ml-2 flex-row items-center">
+            <Ionicons name="lock-closed" size={14} color="#ef4444" />
+            <Text className="text-xs text-red-500 ml-1">Locked</Text>
+          </View>
+        )}
+      </View>
       <TextInput
         value={value}
         onChangeText={onChangeText}
@@ -143,9 +152,9 @@ export default function EditProfileScreen() {
         numberOfLines={multiline ? 3 : 1}
         className={`bg-white border rounded-xl px-4 py-3 text-gray-800 ${
           errors[errorKey || ''] ? 'border-red-500' : 'border-gray-300'
-        } ${multiline ? 'h-20' : 'h-12'}`}
+        } ${multiline ? 'h-20' : 'h-12'} ${locked ? 'bg-gray-100' : ''}`}
         placeholderTextColor="#9ca3af"
-        editable={!loading}
+        editable={!loading && !locked}
       />
       {errors[errorKey || ''] && (
         <Text className="text-red-500 text-sm mt-1">{errors[errorKey || '']}</Text>
@@ -226,20 +235,29 @@ export default function EditProfileScreen() {
             </Text>
             
             {renderInputField(
-              "Full Name *",
+              "Full Name",
               formData.name,
               (text) => setFormData({...formData, name: text}),
               "Enter your full name",
               "default",
               false,
-              "name"
+              "name",
+              true  // Locked - cannot be changed
             )}
             
+            {/* Warning message for locked name */}
+            <View className="flex-row items-start bg-yellow-50 border border-yellow-300 rounded-lg px-3 py-2 mb-4 -mt-2">
+              <Ionicons name="warning" size={16} color="#f59e0b" />
+              <Text className="text-yellow-700 text-xs ml-2 flex-1">
+                Name cannot be changed for security reasons
+              </Text>
+            </View>
+            
             {renderInputField(
-              "Email Address *",
+              "Email Address",
               formData.email,
               (text) => setFormData({...formData, email: text}),
-              "Enter your email",
+              "your.email@example.com",
               "email-address",
               false,
               "email"
@@ -249,20 +267,10 @@ export default function EditProfileScreen() {
               "Phone Number",
               formData.phone,
               (text) => setFormData({...formData, phone: text}),
-              "+509 XXXX-XXXX",
+              "Enter phone number",
               "phone-pad",
               false,
               "phone"
-            )}
-            
-            {renderInputField(
-              "Date of Birth",
-              formData.dateOfBirth,
-              (text) => setFormData({...formData, dateOfBirth: text}),
-              "MM/DD/YYYY",
-              "default",
-              false,
-              "dateOfBirth"
             )}
           </View>
 

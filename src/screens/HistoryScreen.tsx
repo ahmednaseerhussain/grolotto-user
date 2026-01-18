@@ -18,7 +18,7 @@ export default function HistoryScreen() {
   const language = useAppStore(s => s.language);
   const gamePlays = useAppStore(s => s.gamePlays);
   const vendors = useAppStore(s => s.vendors);
-  const [filter, setFilter] = useState<"all" | "won" | "lost" | "pending">("all");
+  const [filter, setFilter] = useState<"all" | "won" | "lost" | "pending">("lost");
   const [stateFilter, setStateFilter] = useState<"all" | "FL" | "NY" | "GA" | "TX">("all");
   
   // Date filtering states

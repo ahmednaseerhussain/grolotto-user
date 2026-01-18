@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
+import { Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -12,15 +13,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const hasCompletedOnboarding = useAppStore(s => s.hasCompletedOnboarding);
-
-  // ⚠️ REMOVED: Destructive reset logic that caused infinite loops
-  // If you need to reset app state, use a dedicated reset button in settings
-  // or clear app data from device settings
-
-  // DEBUG: Force reset onboarding for testing - comment out when not needed
-  // useEffect(() => {
-  //   resetOnboarding();
-  // }, []);
 
   const handleSplashComplete = () => {
     setShowSplash(false);
