@@ -3,11 +3,7 @@ import { View, Text, ScrollView, Pressable, TextInput, Modal, ActivityIndicator 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { 
-  subscribeToDraws, 
-  createDraw, 
-  updateDraw 
-} from "../api/firebase-service";
+import { lotteryAPI, getErrorMessage } from "../api/apiClient";
 
 interface DrawResult {
   id: string;
@@ -36,22 +32,30 @@ export default function ResultPublishing() {
     jackpot: ""
   });
 
-  // Subscribe to real-time Firebase draws
-  useEffect(() => {
-    const unsubscribe = subscribeToDraws((draws) => {
-      setResults(draws as DrawResult[]);
+  const fetchRounds = async () => {
+    try {
+      setLoading(true);
+      const response = await lotteryAPI.getLotteryRounds();
+      setResults((response.data || response) as DrawResult[]);
+    } catch (error) {
+      console.error("Failed to load rounds:", getErrorMessage(error));
+    } finally {
       setLoading(false);
-    });
+    }
+  };
 
-    return () => unsubscribe();
+  useEffect(() => {
+    fetchRounds();
   }, []);
 
   const publishResult = async (resultId: string) => {
     try {
-      await updateDraw(resultId, { 
-        status: "published", 
-        publishedAt: new Date().toISOString() 
-      });
+      const result = results.find(r => r.id === resultId);
+      const winningNumbers = result?.winningNumbers
+        ? { [result.gameType]: result.winningNumbers.split("-").map(Number) }
+        : {};
+      await lotteryAPI.publishResults(resultId, winningNumbers);
+      await fetchRounds();
       setSuccessMessage("Result published and notifications sent!");
       setTimeout(() => setSuccessMessage(""), 2000);
     } catch (error) {
@@ -71,21 +75,12 @@ export default function ResultPublishing() {
       const today = new Date().toISOString().split("T")[0];
       const currentTime = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 
-      const drawData = {
-        id: drawId,
-        gameType: newResult.gameType,
-        drawDate: today,
-        date: new Date().toISOString(),
-        drawTime: currentTime,
-        winningNumbers: newResult.winningNumbers,
-        jackpot: newResult.jackpot ? parseInt(newResult.jackpot) : 0,
-        status: "published",
-        publishedAt: new Date().toISOString()
-      };
+      const winningNumbers = { [newResult.gameType]: newResult.winningNumbers.split("-").map(n => parseInt(n.trim()) || 0) };
 
-      console.log("[ResultPublishing] Creating draw with data:", JSON.stringify(drawData, null, 2));
-      await createDraw(drawData);
-      console.log("[ResultPublishing] Draw created successfully!");
+      console.log("[ResultPublishing] Publishing results with data:", JSON.stringify({ drawId, winningNumbers }, null, 2));
+      await lotteryAPI.publishResults(drawId, winningNumbers);
+      await fetchRounds();
+      console.log("[ResultPublishing] Results published successfully!");
 
       setSuccessMessage("Result published successfully!");
       setNewResult({ gameType: "", winningNumbers: "", jackpot: "" });

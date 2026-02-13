@@ -1,145 +1,88 @@
-import React, { useState } from "react";
+import React from "react";
 import { View, Text, Pressable, ScrollView, StyleSheet, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
 import { getTranslation } from "../utils/translations";
-import PaymentModal from "./PaymentModal";
 
 interface Reward {
   id: string;
   title: string;
   description: string;
-  amount: number;
-  minDeposit?: number;
+  amount: string;
   badge: string;
   badgeColor: string;
   icon: keyof typeof Ionicons.glyphMap;
   iconBg: string;
-  claimed: boolean;
-  claimable: boolean;
 }
 
 export default function RewardsScreen() {
   const navigation = useNavigation();
   const language = useAppStore(s => s.language);
-  const user = useAppStore(s => s.user);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
 
   const t = (key: string) => getTranslation(key as any, language);
 
+  // Rewards are defined as app features — backend integration pending
   const rewards: Reward[] = [
     {
       id: "1",
       title: "Welcome Bonus",
       description: "Get 20% extra on your first deposit",
-      amount: 20, // 20% bonus
-      minDeposit: 100,
+      amount: "20% Bonus",
       badge: "New User",
       badgeColor: "#f59e0b",
       icon: "gift",
       iconBg: "#fef3c7",
-      claimed: false,
-      claimable: true,
     },
     {
       id: "2",
       title: "Daily Spin",
       description: "Spin the wheel for a chance to win up to G500",
-      amount: 500,
+      amount: "G500",
       badge: "Daily",
       badgeColor: "#8b5cf6",
       icon: "refresh-circle",
       iconBg: "#ede9fe",
-      claimed: false,
-      claimable: true,
     },
     {
       id: "3",
       title: "First Deposit Bonus",
       description: "100% match on deposits over G500",
-      amount: 100, // 100% bonus
-      minDeposit: 500,
+      amount: "100% Bonus",
       badge: "Deposit",
       badgeColor: "#3b82f6",
       icon: "wallet",
       iconBg: "#dbeafe",
-      claimed: false,
-      claimable: true,
     },
     {
       id: "4",
       title: "Refer a Friend",
       description: "Get G100 for each friend who joins and plays",
-      amount: 100,
+      amount: "G100",
       badge: "Referral",
       badgeColor: "#10b981",
       icon: "people",
       iconBg: "#d1fae5",
-      claimed: false,
-      claimable: false,
     },
     {
       id: "5",
       title: "Loyalty Reward",
       description: "Play 10 games and get G50 bonus",
-      amount: 50,
+      amount: "G50",
       badge: "Loyalty",
       badgeColor: "#ef4444",
       icon: "star",
       iconBg: "#fee2e2",
-      claimed: false,
-      claimable: false,
     },
   ];
 
   const handleRewardPress = (reward: Reward) => {
-    if (reward.claimed) {
-      Alert.alert("Already Claimed", "You have already claimed this reward.");
-      return;
-    }
-
-    if (!reward.claimable) {
-      Alert.alert("Not Available", "Complete the requirements to unlock this reward.");
-      return;
-    }
-
-    setSelectedReward(reward);
-
-    // Handle different reward types
-    if (reward.id === "1" || reward.id === "3") {
-      // Deposit bonuses - show payment modal
-      setShowPaymentModal(true);
-    } else if (reward.id === "2") {
-      // Daily Spin - navigate to spin wheel (or show alert for now)
-      Alert.alert(
-        "Daily Spin 🎡",
-        "Spin the wheel to win up to G500!\n\nThis feature is coming soon.",
-        [{ text: "OK" }]
-      );
-    } else if (reward.id === "4") {
-      // Referral - show referral code
-      Alert.alert(
-        "Refer a Friend 👥",
-        `Your referral code: ${user?.id?.toUpperCase().slice(0, 6) || "REFER123"}\n\nShare this code with friends. When they sign up and play, you both get G100!`,
-        [
-          { text: "Cancel", style: "cancel" },
-          { text: "Share Code", onPress: () => {
-            // Share functionality would go here
-            Alert.alert("Coming Soon", "Share functionality will be available soon!");
-          }}
-        ]
-      );
-    } else if (reward.id === "5") {
-      // Loyalty - show progress
-      Alert.alert(
-        "Loyalty Reward ⭐",
-        "Play 10 games to unlock G50 bonus.\n\nYour progress: 0/10 games",
-        [{ text: "OK" }]
-      );
-    }
+    Alert.alert(
+      "Coming Soon",
+      `"${reward.title}" will be available in a future update. Stay tuned!`,
+      [{ text: "OK" }]
+    );
   };
 
   return (
@@ -193,37 +136,17 @@ export default function RewardsScreen() {
                   <Text style={styles.rewardDescription}>{reward.description}</Text>
 
                   {/* Amount Display */}
-                  <View style={styles.rewardAmountContainer}>
-                    {reward.id === "1" || reward.id === "3" ? (
-                      <Text style={styles.rewardAmount}>{reward.amount}% Bonus</Text>
-                    ) : (
-                      <Text style={styles.rewardAmount}>G{reward.amount}</Text>
-                    )}
-                    {reward.minDeposit && (
-                      <Text style={styles.minDeposit}>
-                        Min. deposit: G{reward.minDeposit}
-                      </Text>
-                    )}
-                  </View>
+                  <Text style={styles.rewardAmount}>{reward.amount}</Text>
                 </View>
 
                 {/* Arrow */}
                 <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
               </View>
 
-              {/* Claimed/Locked Status */}
-              {reward.claimed && (
-                <View style={styles.claimedBanner}>
-                  <Ionicons name="checkmark-circle" size={16} color="#10b981" />
-                  <Text style={styles.claimedText}>Claimed</Text>
-                </View>
-              )}
-              {!reward.claimable && !reward.claimed && (
-                <View style={[styles.claimedBanner, { backgroundColor: "#fef3c7" }]}>
-                  <Ionicons name="lock-closed" size={16} color="#f59e0b" />
-                  <Text style={[styles.claimedText, { color: "#f59e0b" }]}>Locked</Text>
-                </View>
-              )}
+              <View style={[styles.claimedBanner, { backgroundColor: "#fef3c7" }]}>
+                <Ionicons name="time-outline" size={16} color="#f59e0b" />
+                <Text style={[styles.claimedText, { color: "#f59e0b" }]}>Coming Soon</Text>
+              </View>
             </Pressable>
           ))}
         </View>
@@ -233,31 +156,11 @@ export default function RewardsScreen() {
           <View style={styles.infoCard}>
             <Ionicons name="information-circle" size={24} color="#3b82f6" />
             <Text style={styles.infoText}>
-              Complete challenges and make deposits to unlock more rewards!
+              Rewards and bonuses are coming soon! Stay tuned for exciting offers.
             </Text>
           </View>
         </View>
       </ScrollView>
-
-      {/* Payment Modal */}
-      <PaymentModal
-        visible={showPaymentModal}
-        onClose={() => {
-          setShowPaymentModal(false);
-          setSelectedReward(null);
-        }}
-        onPaymentSuccess={() => {
-          setShowPaymentModal(false);
-          if (selectedReward) {
-            Alert.alert(
-              "Bonus Activated! 🎉",
-              `You will receive ${selectedReward.amount}% bonus on your deposit!`,
-              [{ text: "Great!" }]
-            );
-          }
-          setSelectedReward(null);
-        }}
-      />
     </SafeAreaView>
   );
 }
@@ -381,10 +284,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#f59e0b",
-  },
-  minDeposit: {
-    fontSize: 12,
-    color: "#9ca3af",
   },
   claimedBanner: {
     flexDirection: "row",

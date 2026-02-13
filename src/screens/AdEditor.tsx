@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, Modal, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { 
-  createAdvertisement, 
-  updateAdvertisement as updateAdInFirebase,
-  getAdvertisements
-} from "../api/firebase-service";
+import { adminAPI, getErrorMessage } from "../api/apiClient";
 
 interface AdEditorProps {
   visible: boolean;
@@ -76,7 +72,8 @@ export default function AdEditor({ visible, onClose, adId }: AdEditorProps) {
   useEffect(() => {
     if (adId && visible) {
       const loadAd = async () => {
-        const ads = await getAdvertisements();
+        const response = await adminAPI.getAdvertisements();
+        const ads = response.data || response;
         setAdvertisements(ads);
         const ad: any = ads.find((a: any) => a.id === adId);
         if (ad) {
@@ -166,18 +163,17 @@ export default function AdEditor({ visible, onClose, adId }: AdEditorProps) {
 
       if (adId) {
         // Edit mode
-        await updateAdInFirebase(adId, adData);
+        await adminAPI.updateAdvertisement(adId, adData);
         setSuccessMessage("Advertisement updated successfully!");
       } else {
-        // Create mode - generate ID and add required fields
+        // Create mode
         const newAd = {
           ...adData,
-          id: `ad_${Date.now()}`,
           clicks: 0,
           impressions: 0,
           imageUrl: undefined
         };
-        await createAdvertisement(newAd);
+        await adminAPI.createAdvertisement(newAd);
         setSuccessMessage("Advertisement created successfully!");
       }
 

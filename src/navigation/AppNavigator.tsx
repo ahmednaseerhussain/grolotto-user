@@ -37,7 +37,16 @@ import RewardsScreen from "../screens/RewardsScreen";
 import AdminDashboard from "../screens/AdminDashboard";
 import AdminPayoutManagement from "../screens/AdminPayoutManagement";
 import AdminPayoutProcessing from "../screens/AdminPayoutProcessing";
-// Admin screens removed - now handled by AdminNavigator
+import PlayerManagement from "../screens/PlayerManagement";
+import AdminUserManagement from "../screens/AdminUserManagement";
+import DrawGameManagement from "../screens/DrawGameManagement";
+import GameSettings from "../screens/GameSettings";
+import PaymentManagement from "../screens/PaymentManagement";
+import ResultPublishing from "../screens/ResultPublishing";
+import ReportsAnalytics from "../screens/ReportsAnalytics";
+import TchalaManager from "../screens/TchalaManager";
+
+import { authAPI, tokenStorage } from "../api/apiClient";
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -66,11 +75,18 @@ export type RootStackParamList = {
   AdminDashboard: undefined;
   AdminPayoutManagement: undefined;
   AdminPayoutProcessing: { payout: any };
+  PlayerManagement: undefined;
+  AdminUserManagement: undefined;
+  DrawGameManagement: undefined;
+  GameSettings: undefined;
+  PaymentManagement: undefined;
+  ResultPublishing: undefined;
+  ReportsAnalytics: undefined;
+  TchalaManager: undefined;
   ResultsScreen: undefined;
   SettingsScreen: undefined;
   EditProfileScreen: undefined;
   HistoryScreen: undefined;
-  PaymentConfirmation: { gamePlay: any };
   PaymentScreen: undefined;
   PaymentProfileScreen: undefined;
   TransactionHistory: undefined;
@@ -84,6 +100,30 @@ export default function AppNavigator() {
   const isAuthenticated = useAppStore(s => s.isAuthenticated);
   const hasCompletedOnboarding = useAppStore(s => s.hasCompletedOnboarding);
   const user = useAppStore(s => s.user);
+
+  // On app launch, validate existing session or restore from stored token
+  React.useEffect(() => {
+    const restoreSession = async () => {
+      try {
+        const token = await tokenStorage.getAccessToken();
+        if (token && !isAuthenticated) {
+          // Token exists but store says not authenticated — try restoring session
+          const profile = await authAPI.getProfile();
+          if (profile) {
+            useAppStore.getState().setUser(profile);
+          }
+        } else if (!token && isAuthenticated) {
+          // Store says authenticated but no token — force logout
+          useAppStore.getState().logout();
+        }
+      } catch {
+        // Token invalid/expired and refresh failed — clear stale state
+        await tokenStorage.clearTokens();
+        useAppStore.getState().logout();
+      }
+    };
+    restoreSession();
+  }, []);
 
   const handleSplashComplete = () => {
     setShowSplash(false);
@@ -152,6 +192,14 @@ export default function AppNavigator() {
               <Stack.Screen name="AdminPayoutManagement" component={AdminPayoutManagement} />
               <Stack.Screen name="AdminPayoutProcessing" component={AdminPayoutProcessing} />
               <Stack.Screen name="AdvertisementManager" component={AdvertisementManager} />
+              <Stack.Screen name="PlayerManagement" component={PlayerManagement} />
+              <Stack.Screen name="AdminUserManagement" component={AdminUserManagement} />
+              <Stack.Screen name="DrawGameManagement" component={DrawGameManagement} />
+              <Stack.Screen name="GameSettings" component={GameSettings} />
+              <Stack.Screen name="PaymentManagement" component={PaymentManagement} />
+              <Stack.Screen name="ResultPublishing" component={ResultPublishing} />
+              <Stack.Screen name="ReportsAnalytics" component={ReportsAnalytics} />
+              <Stack.Screen name="TchalaManager" component={TchalaManager} />
               
               {/* Shared screens accessible to admin */}
               <Stack.Screen name="NumberSelection" component={NumberSelection} />

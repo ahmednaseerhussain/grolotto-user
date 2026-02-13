@@ -1,8 +1,9 @@
-import React, { useState } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, Modal } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, ScrollView, Pressable, TextInput, Modal, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { tchalaAPI, getErrorMessage } from "../api/apiClient";
 
 interface DreamEntry {
   id: string;
@@ -16,48 +17,14 @@ interface DreamEntry {
   addedDate: string;
 }
 
-const mockDreamEntries: DreamEntry[] = [
-  {
-    id: "1",
-    kreyol: "Dlo",
-    english: "Water",
-    french: "Eau",
-    spanish: "Agua", 
-    luckyNumbers: [12, 21, 33],
-    category: "Nature",
-    isActive: true,
-    addedDate: "2024-01-15"
-  },
-  {
-    id: "2", 
-    kreyol: "Chen",
-    english: "Dog",
-    french: "Chien",
-    spanish: "Perro",
-    luckyNumbers: [45, 54, 67],
-    category: "Animals",
-    isActive: true,
-    addedDate: "2024-01-16"
-  },
-  {
-    id: "3",
-    kreyol: "Kay",
-    english: "House", 
-    french: "Maison",
-    spanish: "Casa",
-    luckyNumbers: [18, 81, 29],
-    category: "Objects",
-    isActive: true,
-    addedDate: "2024-01-17"
-  }
-];
-
 const categories = ["All", "Nature", "Animals", "Objects", "People", "Actions", "Colors", "Numbers"];
 
 export default function TchalaManager() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const [dreamEntries, setDreamEntries] = useState<DreamEntry[]>(mockDreamEntries);
+  const [dreamEntries, setDreamEntries] = useState<DreamEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -69,6 +36,40 @@ export default function TchalaManager() {
     luckyNumbers: "",
     category: "Nature"
   });
+
+  const fetchDreams = useCallback(async () => {
+    try {
+      const data = await tchalaAPI.getAllDreams();
+      const dreams = data?.dreams || data?.data || data || [];
+      if (Array.isArray(dreams)) {
+        setDreamEntries(dreams.map((d: any) => ({
+          id: d.id || String(Math.random()),
+          kreyol: d.kreyol || d.word || "",
+          english: d.english || d.translation || "",
+          french: d.french || "",
+          spanish: d.spanish || "",
+          luckyNumbers: d.luckyNumbers || d.numbers || [],
+          category: d.category || "Other",
+          isActive: d.isActive !== false,
+          addedDate: d.addedDate || d.createdAt || "",
+        })));
+      }
+    } catch (err) {
+      Alert.alert("Error", getErrorMessage(err));
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDreams();
+  }, [fetchDreams]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchDreams();
+  };
 
   const filteredEntries = dreamEntries.filter(entry => {
     const matchesSearch = 
@@ -162,7 +163,15 @@ export default function TchalaManager() {
       </View>
 
       {/* Dream Entries */}
-      <ScrollView className="flex-1 p-4">
+      {loading ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#9333ea" />
+          <Text className="text-slate-400 mt-4">Loading dream entries...</Text>
+        </View>
+      ) : (
+      <ScrollView className="flex-1 p-4" refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#9333ea" />
+      }>
         {filteredEntries.map((entry) => (
           <View key={entry.id} className="bg-slate-800 rounded-lg p-4 mb-4 border border-slate-700">
             {/* Entry Header */}
@@ -242,6 +251,7 @@ export default function TchalaManager() {
           </View>
         )}
       </ScrollView>
+      )}
 
       {/* Add Entry Modal */}
       <Modal visible={showAddModal} animationType="slide" presentationStyle="pageSheet">

@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView, Alert, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
 import { getTranslation } from "../utils/translations";
+import { vendorAPI, authAPI, getErrorMessage } from "../api/apiClient";
 
 export default function VendorDashboard() {
   const navigation = useNavigation();
@@ -21,15 +22,36 @@ export default function VendorDashboard() {
   // Currency formatting function
   const formatCurrency = (amount: number) => {
     const symbol = currency === "HTG" ? "G" : "$";
-    const rate = currency === "HTG" ? 150 : 1; // Approximate HTG to USD rate
+    const rate = currency === "HTG" ? 150 : 1;
     const convertedAmount = amount * rate;
     return `${symbol}${convertedAmount.toFixed(2)}`;
   };
   
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [vendorStats, setVendorStats] = useState<any>(null);
   
-  // Find current vendor data
-  const currentVendor = vendors.find(v => v.email === user?.email);
+  // Fetch vendor profile and stats from API
+  useEffect(() => {
+    const fetchVendorData = async () => {
+      try {
+        const [profile, stats] = await Promise.all([
+          vendorAPI.getMyVendorProfile(),
+          vendorAPI.getMyVendorStats(),
+        ]);
+        if (profile) {
+          // Update local store with real vendor data
+          useAppStore.getState().updateVendor(profile.id, profile);
+        }
+        if (stats) setVendorStats(stats);
+      } catch (e) {
+        console.warn('VendorDashboard fetch error:', getErrorMessage(e));
+      }
+    };
+    fetchVendorData();
+  }, []);
+  
+  // Find current vendor data — match by userId, not email
+  const currentVendor = vendors.find(v => (v as any).userId === user?.id);
   
   // Calculate vendor stats
   const vendorGamePlays = gamePlays.filter(game => game.vendorId === currentVendor?.id);
@@ -75,9 +97,9 @@ export default function VendorDashboard() {
         {
           text: t("logout"),
           style: "destructive",
-          onPress: () => {
+          onPress: async () => {
+            await authAPI.logout();
             logout();
-            // Navigation will automatically happen due to state change
           }
         }
       ]

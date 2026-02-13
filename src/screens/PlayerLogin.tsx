@@ -4,19 +4,21 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
+import { authAPI, getErrorMessage } from "../api/apiClient";
 
 export default function PlayerLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   
   const navigation = useNavigation();
   const setUser = useAppStore(s => s.setUser);
 
   const handleLogin = async () => {
-    const allUsers = useAppStore.getState().allUsers;
-    
     if (!email || !password) {
       Alert.alert("Error", "Please enter both email and password");
       return;
@@ -24,23 +26,46 @@ export default function PlayerLogin() {
 
     setLoading(true);
     
-    // Check credentials against demo users
-    const user = allUsers.find(u => 
-      u.role === "player" && 
-      (u.email === email || u.name.toLowerCase() === email.toLowerCase()) &&
-      password === "123" // Simple demo password
-    );
-    
-    if (user) {
-      setUser(user);
-    } else {
-      Alert.alert(
-        "Invalid Credentials", 
-        "Demo Player Accounts:\n• themepam89@groloto.com / 123\n• themepam89 / 123"
-      );
+    try {
+      const data = await authAPI.login(email, password);
+      if (data.user.role !== 'player') {
+        Alert.alert("Error", "This login is for players only.");
+        return;
+      }
+      setUser(data.user);
+    } catch (error) {
+      Alert.alert("Login Failed", getErrorMessage(error));
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleSignUp = async () => {
+    if (!name || !email || !password) {
+      Alert.alert("Error", "Please fill in name, email and password");
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert("Error", "Password must be at least 6 characters");
+      return;
+    }
+
+    setLoading(true);
     
-    setLoading(false);
+    try {
+      const data = await authAPI.register({
+        email,
+        password,
+        name,
+        role: 'player',
+        phone: phone || undefined,
+      });
+      setUser(data.user);
+    } catch (error) {
+      Alert.alert("Sign Up Failed", getErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBackToEntry = () => {
@@ -62,12 +87,40 @@ export default function PlayerLogin() {
         <View style={styles.logoIcon}>
           <Ionicons name="person" size={48} color="#3b82f6" />
         </View>
-        <Text style={styles.title}>Welcome Back</Text>
-        <Text style={styles.subtitle}>Sign in to your player account</Text>
+        <Text style={styles.title}>{isSignUp ? "Create Account" : "Welcome Back"}</Text>
+        <Text style={styles.subtitle}>{isSignUp ? "Sign up for a player account" : "Sign in to your player account"}</Text>
       </View>
 
-      {/* Login Form */}
+      {/* Login/Signup Form */}
       <View style={styles.formContainer}>
+        {isSignUp && (
+          <>
+            <View style={styles.inputContainer}>
+              <Ionicons name="person-outline" size={20} color="#6b7280" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Full Name"
+                placeholderTextColor="#9ca3af"
+                value={name}
+                onChangeText={setName}
+                autoCapitalize="words"
+                autoCorrect={false}
+              />
+            </View>
+            <View style={styles.inputContainer}>
+              <Ionicons name="call-outline" size={20} color="#6b7280" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Phone (optional)"
+                placeholderTextColor="#9ca3af"
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
+                autoCorrect={false}
+              />
+            </View>
+          </>
+        )}
         <View style={styles.inputContainer}>
           <Ionicons name="mail" size={20} color="#6b7280" style={styles.inputIcon} />
           <TextInput
@@ -108,32 +161,30 @@ export default function PlayerLogin() {
 
         <Pressable 
           style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-          onPress={handleLogin}
+          onPress={isSignUp ? handleSignUp : handleLogin}
           disabled={loading}
         >
           <Text style={styles.loginButtonText}>
-            {loading ? "Signing In..." : "Sign In"}
+            {loading ? (isSignUp ? "Creating Account..." : "Signing In...") : (isSignUp ? "Create Account" : "Sign In")}
           </Text>
         </Pressable>
 
-        {/* Demo Credentials */}
-        <View style={styles.demoContainer}>
-          <Text style={styles.demoTitle}>Demo Credentials:</Text>
-          <Text style={styles.demoText}>Email: themepam89</Text>
-          <Text style={styles.demoText}>Password: 123</Text>
-        </View>
       </View>
 
       {/* Footer Links */}
       <View style={styles.footer}>
-        <Pressable style={styles.linkButton}>
-          <Text style={styles.linkText}>Forgot Password?</Text>
-        </Pressable>
+        {!isSignUp && (
+          <Pressable style={styles.linkButton}>
+            <Text style={styles.linkText}>Forgot Password?</Text>
+          </Pressable>
+        )}
         
         <View style={styles.signupContainer}>
-          <Text style={styles.signupText}>Don't have an account? </Text>
-          <Pressable>
-            <Text style={styles.signupLink}>Sign Up</Text>
+          <Text style={styles.signupText}>
+            {isSignUp ? "Already have an account? " : "Don't have an account? "}
+          </Text>
+          <Pressable onPress={() => { setIsSignUp(!isSignUp); setName(""); setPhone(""); }}>
+            <Text style={styles.signupLink}>{isSignUp ? "Sign In" : "Sign Up"}</Text>
           </Pressable>
         </View>
       </View>

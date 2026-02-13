@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
+import { authAPI, getErrorMessage } from "../api/apiClient";
 
 export default function VendorLogin() {
   const [email, setEmail] = useState("");
@@ -22,19 +23,18 @@ export default function VendorLogin() {
 
     setLoading(true);
     
-    // Simple vendor login - just ONE credential to remember
-    if (email === "vendor" && password === "123") {
-      setUser({
-        id: "vendor1",
-        name: "Lucky Numbers GA",
-        email: "lucky@groloto.com",
-        role: "vendor"
-      });
-    } else {
-      Alert.alert("Error", "Use: vendor / 123");
+    try {
+      const data = await authAPI.login(email, password);
+      if (data.user.role !== 'vendor') {
+        Alert.alert("Error", "This login is for vendors only.");
+        return;
+      }
+      setUser(data.user);
+    } catch (error) {
+      Alert.alert("Invalid Credentials", getErrorMessage(error));
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   const handleBackToEntry = () => {
@@ -109,13 +109,6 @@ export default function VendorLogin() {
             {loading ? "Signing In..." : "Access Dashboard"}
           </Text>
         </Pressable>
-
-        {/* Demo Credentials */}
-        <View style={styles.demoContainer}>
-          <Text style={styles.demoTitle}>Demo Credentials:</Text>
-          <Text style={styles.demoText}>Email: vendor</Text>
-          <Text style={styles.demoText}>Password: 123</Text>
-        </View>
       </View>
 
       {/* Footer Links */}

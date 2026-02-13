@@ -3,7 +3,7 @@ import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator } from 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { subscribeToUsers, updateUser } from "../api/firebase-service";
+import { adminAPI, getErrorMessage } from "../api/apiClient";
 
 interface Player {
   id: string;
@@ -27,15 +27,20 @@ export default function PlayerManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<"all" | "active" | "suspended" | "pending">("all");
 
-  // Subscribe to real-time Firebase users (filter for players)
-  useEffect(() => {
-    const unsubscribe = subscribeToUsers((users) => {
-      const playerUsers = users.filter((user: any) => user.role === "player");
-      setPlayers(playerUsers as Player[]);
+  const fetchPlayers = async () => {
+    try {
+      setLoading(true);
+      const response = await adminAPI.getAllUsers(1, 50, "player");
+      setPlayers((response.data || response) as Player[]);
+    } catch (error) {
+      console.error("Failed to load players:", getErrorMessage(error));
+    } finally {
       setLoading(false);
-    });
+    }
+  };
 
-    return () => unsubscribe();
+  useEffect(() => {
+    fetchPlayers();
   }, []);
 
   const filteredPlayers = players.filter(player => {
@@ -48,16 +53,15 @@ export default function PlayerManagement() {
   const handlePlayerAction = async (playerId: string, action: "suspend" | "activate" | "delete") => {
     try {
       if (action === "suspend") {
-        await updateUser(playerId, { status: "suspended" });
+        await adminAPI.suspendUser(playerId);
       } else if (action === "activate") {
-        await updateUser(playerId, { status: "active" });
+        await adminAPI.activateUser(playerId);
       } else if (action === "delete") {
-        // Note: Firebase service doesn't have delete user yet - you may need to add it
-        // For now, just suspend the user
-        await updateUser(playerId, { status: "suspended" });
+        await adminAPI.suspendUser(playerId);
       }
+      await fetchPlayers();
     } catch (error) {
-      console.error("Failed to update player:", error);
+      console.error("Failed to update player:", getErrorMessage(error));
     }
   };
 

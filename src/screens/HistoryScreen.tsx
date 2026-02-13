@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, ScrollView, FlatList, Alert, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,6 +8,7 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useAppStore } from "../state/appStore";
 import { getTranslation } from "../utils/translations";
+import { lotteryAPI, getErrorMessage } from "../api/apiClient";
 
 
 
@@ -20,6 +21,7 @@ export default function HistoryScreen() {
   const vendors = useAppStore(s => s.vendors);
   const [filter, setFilter] = useState<"all" | "won" | "lost" | "pending">("lost");
   const [stateFilter, setStateFilter] = useState<"all" | "FL" | "NY" | "GA" | "TX">("all");
+  const [apiTickets, setApiTickets] = useState<any[]>([]);
   
   // Date filtering states
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -32,27 +34,47 @@ export default function HistoryScreen() {
   
   const t = (key: string) => getTranslation(key as any, language);
 
+  // Fetch ticket history from backend
+  useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        const data = await lotteryAPI.getMyTickets(1, 100, filter === 'all' ? undefined : filter);
+        if (data?.tickets) setApiTickets(data.tickets);
+      } catch (e) {
+        console.warn('Failed to fetch tickets:', getErrorMessage(e));
+      }
+    };
+    fetchTickets();
+  }, [filter]);
+
   const getCurrencySymbol = () => currency === "USD" ? "$" : "G";
 
-  // Get player's games
-  const playerGames = user ? gamePlays.filter(game => game.playerId === user.id) : [];
+  // Use API data if available, fall back to local store
+  const playerGames = apiTickets.length > 0 
+    ? apiTickets 
+    : (user ? gamePlays.filter(game => game.playerId === user.id) : []);
   
   // Convert gamePlays to display format
   const gameHistory = playerGames.map(game => {
-    const vendor = vendors.find(v => v.id === game.vendorId);
-    const vendorName = vendor?.displayName || `${vendor?.firstName} ${vendor?.lastName}` || "Unknown Vendor";
+    // API tickets use drawState/createdAt/vendorName; local gamePlays use draw/timestamp/vendorId
+    const isApiTicket = 'drawState' in game;
+    const vendorName = isApiTicket
+      ? (game as any).vendorName || "Unknown Vendor"
+      : (() => { const v = vendors.find(v => v.id === game.vendorId); return v?.displayName || `${v?.firstName} ${v?.lastName}` || "Unknown Vendor"; })();
+    const ts = isApiTicket ? new Date((game as any).createdAt) : new Date(game.timestamp);
+    const state = isApiTicket ? (game as any).drawState : game.draw;
     
     return {
       id: game.id,
-      date: new Date(game.timestamp).toLocaleDateString(),
-      time: new Date(game.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-      timestamp: new Date(game.timestamp),
+      date: ts.toLocaleDateString(),
+      time: ts.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+      timestamp: ts,
       vendor: vendorName,
-      state: game.draw.toUpperCase(),
-      gameType: game.gameType.toUpperCase(),
-      numbers: game.numbers,
-      betAmount: game.betAmount,
-      currency: game.currency,
+      state: (state || '').toUpperCase(),
+      gameType: (game.gameType || '').toUpperCase(),
+      numbers: game.numbers || [],
+      betAmount: game.betAmount || 0,
+      currency: game.currency || currency,
       status: game.status,
       winAmount: game.winAmount || 0,
     };

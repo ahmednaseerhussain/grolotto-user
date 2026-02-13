@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppStore } from "../state/appStore";
 import { Vendor, VendorDocument } from "../state/appStore";
+import { authAPI, vendorAPI, getErrorMessage } from "../api/apiClient";
 
 export default function VendorRegistration() {
   const [formData, setFormData] = useState({
@@ -44,8 +45,7 @@ export default function VendorRegistration() {
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Mots de passe ne correspondent pas";
     }
-    if (!documents.idCard) newErrors.idCard = "Carte d'identité requise";
-    if (!documents.businessLicense) newErrors.businessLicense = "Licence d'affaires requise";
+    // Documents are optional until upload endpoint is available
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -57,42 +57,29 @@ export default function VendorRegistration() {
     setIsLoading(true);
 
     try {
-      const newVendor: Vendor = {
-        id: Date.now().toString(),
+      // First register the user account
+      const authData = await authAPI.register({
+        email: formData.email,
+        password: formData.password,
+        name: `${formData.firstName} ${formData.lastName}`,
+        role: 'vendor',
+        phone: formData.phone,
+      });
+
+      // Then submit vendor registration details
+      await vendorAPI.registerVendor({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         phone: formData.phone,
         dateOfBirth: formData.dateOfBirth,
-        businessName: formData.businessName,
-        displayName: `${formData.firstName} ${formData.lastName}`,
-        
-        status: "pending",
-        applicationDate: Date.now(),
-        
-        documents: [documents.idCard!, documents.businessLicense!],
-        
-        draws: {
-          NY: { enabled: false, games: { senp: { enabled: true, minAmount: 1, maxAmount: 100 }, maryaj: { enabled: false, minAmount: 1, maxAmount: 100 }, loto3: { enabled: false, minAmount: 1, maxAmount: 100 }, loto4: { enabled: false, minAmount: 1, maxAmount: 100 }, loto5: { enabled: false, minAmount: 1, maxAmount: 100 } } },
-          FL: { enabled: false, games: { senp: { enabled: true, minAmount: 1, maxAmount: 100 }, maryaj: { enabled: false, minAmount: 1, maxAmount: 100 }, loto3: { enabled: false, minAmount: 1, maxAmount: 100 }, loto4: { enabled: false, minAmount: 1, maxAmount: 100 }, loto5: { enabled: false, minAmount: 1, maxAmount: 100 } } },
-          GA: { enabled: false, games: { senp: { enabled: true, minAmount: 1, maxAmount: 100 }, maryaj: { enabled: false, minAmount: 1, maxAmount: 100 }, loto3: { enabled: false, minAmount: 1, maxAmount: 100 }, loto4: { enabled: false, minAmount: 1, maxAmount: 100 }, loto5: { enabled: false, minAmount: 1, maxAmount: 100 } } },
-          TX: { enabled: false, games: { senp: { enabled: true, minAmount: 1, maxAmount: 100 }, maryaj: { enabled: false, minAmount: 1, maxAmount: 100 }, loto3: { enabled: false, minAmount: 1, maxAmount: 100 }, loto4: { enabled: false, minAmount: 1, maxAmount: 100 }, loto5: { enabled: false, minAmount: 1, maxAmount: 100 } } },
-          PA: { enabled: false, games: { senp: { enabled: true, minAmount: 1, maxAmount: 100 }, maryaj: { enabled: false, minAmount: 1, maxAmount: 100 }, loto3: { enabled: false, minAmount: 1, maxAmount: 100 }, loto4: { enabled: false, minAmount: 1, maxAmount: 100 }, loto5: { enabled: false, minAmount: 1, maxAmount: 100 } } },
-          CT: { enabled: false, games: { senp: { enabled: true, minAmount: 1, maxAmount: 100 }, maryaj: { enabled: false, minAmount: 1, maxAmount: 100 }, loto3: { enabled: false, minAmount: 1, maxAmount: 100 }, loto4: { enabled: false, minAmount: 1, maxAmount: 100 }, loto5: { enabled: false, minAmount: 1, maxAmount: 100 } } },
-          TN: { enabled: false, games: { senp: { enabled: true, minAmount: 1, maxAmount: 100 }, maryaj: { enabled: false, minAmount: 1, maxAmount: 100 }, loto3: { enabled: false, minAmount: 1, maxAmount: 100 }, loto4: { enabled: false, minAmount: 1, maxAmount: 100 }, loto5: { enabled: false, minAmount: 1, maxAmount: 100 } } },
-          NJ: { enabled: false, games: { senp: { enabled: true, minAmount: 1, maxAmount: 100 }, maryaj: { enabled: false, minAmount: 1, maxAmount: 100 }, loto3: { enabled: false, minAmount: 1, maxAmount: 100 }, loto4: { enabled: false, minAmount: 1, maxAmount: 100 }, loto5: { enabled: false, minAmount: 1, maxAmount: 100 } } },
-        },
-        
-        totalRevenue: 0,
-        availableBalance: 0,
-        totalPlayers: 0,
-        rating: 0,
-        totalTicketsSold: 0,
-        isActive: false,
-      };
+        businessName: formData.businessName || undefined,
+      });
 
-      addVendor(newVendor);
-      
+      // Set user in store so the app navigates to authenticated state
+      // Vendor status will be 'pending' — dashboard will show pending message
+      useAppStore.getState().setUser(authData.user);
+
       Alert.alert(
         "Demande soumise",
         "Votre demande d'inscription vendeur a été soumise. Vous recevrez un email lorsque votre compte sera approuvé.",
@@ -100,25 +87,37 @@ export default function VendorRegistration() {
       );
 
     } catch (error) {
-      Alert.alert("Erreur", "Une erreur s'est produite. Veuillez réessayer.");
+      Alert.alert("Erreur", getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDocumentUpload = (type: "idCard" | "businessLicense") => {
-    // In a real app, this would open document picker
-    const mockDocument: VendorDocument = {
-      type: type === "idCard" ? "id_card" : "business_license",
-      url: `mock-${type}-${Date.now()}.jpg`,
-      uploadedAt: Date.now(),
-      verified: false,
-    };
-    
-    setDocuments(prev => ({
-      ...prev,
-      [type]: mockDocument,
-    }));
+    // Document upload requires a file picker + backend upload endpoint
+    // For now, show a placeholder indicating the document was "selected"
+    Alert.alert(
+      "Document Upload",
+      "Document upload will be available in a future update. For now, your registration will be reviewed manually.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Continue Without Document",
+          onPress: () => {
+            const placeholder: VendorDocument = {
+              type: type === "idCard" ? "id_card" : "business_license",
+              url: `pending-${type}`,
+              uploadedAt: Date.now(),
+              verified: false,
+            };
+            setDocuments(prev => ({
+              ...prev,
+              [type]: placeholder,
+            }));
+          },
+        },
+      ]
+    );
   };
 
   const updateFormData = (field: string, value: string) => {

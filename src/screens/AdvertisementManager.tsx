@@ -3,11 +3,7 @@ import { View, Text, ScrollView, Pressable, TextInput, Modal, ActivityIndicator 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { 
-  subscribeToAdvertisements, 
-  updateAdvertisement as updateAdInFirebase,
-  deleteAdvertisement as deleteAdFromFirebase
-} from "../api/firebase-service";
+import { adminAPI, getErrorMessage } from "../api/apiClient";
 import AdEditor from "./AdEditor";
 
 const adTypes = ["All", "Slideshow", "Banner", "Popup"];
@@ -41,14 +37,20 @@ export default function AdvertisementManager() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [adToDelete, setAdToDelete] = useState<string | null>(null);
 
-  // Subscribe to real-time Firebase updates
-  useEffect(() => {
-    const unsubscribe = subscribeToAdvertisements((ads) => {
-      setAdvertisements(ads as Advertisement[]);
+  const fetchAdvertisements = async () => {
+    try {
+      setLoading(true);
+      const response = await adminAPI.getAdvertisements();
+      setAdvertisements((response.data || response) as Advertisement[]);
+    } catch (error) {
+      console.error("Failed to load advertisements:", getErrorMessage(error));
+    } finally {
       setLoading(false);
-    });
+    }
+  };
 
-    return () => unsubscribe();
+  useEffect(() => {
+    fetchAdvertisements();
   }, []);
 
   const filteredAds = advertisements.filter((ad) => {
@@ -90,9 +92,14 @@ export default function AdvertisementManager() {
   const toggleAdStatus = async (adId: string) => {
     const ad = advertisements.find((a) => a.id === adId);
     if (ad) {
-      await updateAdInFirebase(adId, { 
-        status: ad.status === "active" ? "paused" : "active" 
-      });
+      try {
+        await adminAPI.updateAdvertisement(adId, { 
+          status: ad.status === "active" ? "paused" : "active" 
+        });
+        await fetchAdvertisements();
+      } catch (error) {
+        console.error("Failed to toggle ad status:", getErrorMessage(error));
+      }
     }
   };
 
@@ -103,7 +110,12 @@ export default function AdvertisementManager() {
 
   const confirmDelete = async () => {
     if (adToDelete) {
-      await deleteAdFromFirebase(adToDelete);
+      try {
+        await adminAPI.deleteAdvertisement(adToDelete);
+        await fetchAdvertisements();
+      } catch (error) {
+        console.error("Failed to delete advertisement:", getErrorMessage(error));
+      }
       setDeleteModalVisible(false);
       setAdToDelete(null);
     }

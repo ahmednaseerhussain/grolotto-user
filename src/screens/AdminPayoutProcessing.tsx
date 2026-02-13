@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useAppStore, Payout, PayoutMethodType } from "../state/appStore";
 import { getTranslation } from "../utils/translations";
+import { adminAPI, getErrorMessage } from "../api/apiClient";
 
 interface RouteParams {
   payout: Payout;
@@ -76,8 +77,8 @@ export default function AdminPayoutProcessing() {
     setProcessing(true);
     
     try {
-      // Simulate API call for payment processing
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Process payout via backend API
+      await adminAPI.processVendorPayout(payout.id);
       
       // Generate confirmation code if not provided
       const finalConfirmationCode = confirmationCode.trim() || 

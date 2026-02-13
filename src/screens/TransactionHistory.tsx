@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { walletAPI, getErrorMessage } from "../api/apiClient";
 
 export default function TransactionHistory() {
   const insets = useSafeAreaInsets();
@@ -13,8 +14,24 @@ export default function TransactionHistory() {
   const currency = useAppStore(s => s.currency);
   const getTransactionHistory = useAppStore(s => s.getTransactionHistory);
   const [filter, setFilter] = useState<"all" | "deposit" | "bet_payment" | "winning_payout">("all");
+  const [apiTransactions, setApiTransactions] = useState<any[]>([]);
 
-  const transactions = user ? getTransactionHistory(user.id) : [];
+  // Fetch real transactions from backend
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const data = await walletAPI.getTransactions(1, 100, filter === 'all' ? undefined : filter);
+        if (data?.transactions) setApiTransactions(data.transactions);
+      } catch (e) {
+        console.warn('Failed to fetch transactions:', getErrorMessage(e));
+      }
+    };
+    fetchTransactions();
+  }, [filter]);
+
+  // Use API data if available, fall back to local store
+  const localTransactions = user ? getTransactionHistory(user.id) : [];
+  const transactions = apiTransactions.length > 0 ? apiTransactions : localTransactions;
   
   const filteredTransactions = filter === "all" 
     ? transactions 

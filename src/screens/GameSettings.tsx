@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
 import { getTranslation } from "../utils/translations";
-import { subscribeToGameSettings, updateGameSettings } from "../api/firebase-service";
+import { adminAPI, getErrorMessage } from "../api/apiClient";
 
 export default function GameSettings() {
   const navigation = useNavigation();
@@ -22,16 +22,24 @@ export default function GameSettings() {
   const t = (key: string) => getTranslation(key as any, language);
   const getCurrencySymbol = () => currency === "USD" ? "$" : "G";
 
-  // Subscribe to real-time Firebase game settings
+  // Fetch game settings from API
   useEffect(() => {
-    const unsubscribe = subscribeToGameSettings((settings) => {
-      if (settings) {
-        setLocalSettings(settings);
+    const fetchSettings = async () => {
+      try {
+        setLoading(true);
+        const response = await adminAPI.getAppSettings();
+        const settings = response.data || response;
+        if (settings) {
+          setLocalSettings(settings);
+        }
+      } catch (error) {
+        console.error("Failed to load settings:", getErrorMessage(error));
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
 
-    return () => unsubscribe();
+    fetchSettings();
   }, []);
 
   const updateSetting = (key: keyof typeof localSettings, value: any) => {
@@ -60,12 +68,15 @@ export default function GameSettings() {
 
   const saveSettings = async () => {
     try {
-      await updateGameSettings(localSettings);
+      const entries = Object.entries(localSettings);
+      for (const [key, value] of entries) {
+        await adminAPI.updateAppSetting(key, JSON.stringify(value));
+      }
       setHasChanges(false);
       setSuccessMessage("Game settings updated successfully!");
       setTimeout(() => setSuccessMessage(""), 2000);
     } catch (error) {
-      console.error("Failed to save settings:", error);
+      console.error("Failed to save settings:", getErrorMessage(error));
     }
   };
 

@@ -1,106 +1,31 @@
-import React, { useState } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, Modal } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, ScrollView, Pressable, TextInput, Modal, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { adminAPI, getErrorMessage } from "../api/apiClient";
 
 interface AdminUser {
   id: string;
-  username: string;
+  name: string;
   email: string;
-  role: "super_admin" | "admin" | "moderator" | "support";
-  status: "active" | "suspended" | "pending";
-  lastLogin: string;
+  role: string;
+  status: string;
+  lastLogin?: string;
   createdAt: string;
-  permissions: string[];
-  avatar?: string;
+  phone?: string;
 }
 
-interface ActivityLog {
-  id: string;
-  adminId: string;
-  adminName: string;
-  action: string;
-  details: string;
-  timestamp: string;
-  ipAddress: string;
-}
-
-const mockAdminUsers: AdminUser[] = [
-  {
-    id: "1",
-    username: "superadmin",
-    email: "admin@groloto.com",
-    role: "super_admin",
-    status: "active",
-    lastLogin: "2024-03-15 14:30",
-    createdAt: "2024-01-01",
-    permissions: ["all"]
-  },
-  {
-    id: "2",
-    username: "admin_jean",
-    email: "jean.admin@groloto.com",
-    role: "admin",
-    status: "active",
-    lastLogin: "2024-03-15 12:15",
-    createdAt: "2024-01-15",
-    permissions: ["players", "vendors", "games", "results", "payments"]
-  },
-  {
-    id: "3",
-    username: "mod_marie",
-    email: "marie.mod@groloto.com",
-    role: "moderator",
-    status: "active",
-    lastLogin: "2024-03-14 18:45",
-    createdAt: "2024-02-01",
-    permissions: ["players", "results", "reports"]
-  },
-  {
-    id: "4",
-    username: "support_pierre",
-    email: "pierre.support@groloto.com",
-    role: "support",
-    status: "suspended",
-    lastLogin: "2024-03-10 09:20",
-    createdAt: "2024-02-15",
-    permissions: ["players", "reports"]
-  }
-];
-
-const mockActivityLogs: ActivityLog[] = [
-  {
-    id: "1",
-    adminId: "1",
-    adminName: "superadmin",
-    action: "User Login",
-    details: "Successful admin login",
-    timestamp: "2024-03-15 14:30:12",
-    ipAddress: "192.168.1.100"
-  },
-  {
-    id: "2",
-    adminId: "2",
-    adminName: "admin_jean",
-    action: "Player Suspended",
-    details: "Suspended player ID: 12345 for suspicious activity",
-    timestamp: "2024-03-15 12:15:34",
-    ipAddress: "192.168.1.101"
-  },
-  {
-    id: "3",
-    adminId: "3",
-    adminName: "mod_marie",
-    action: "Results Published",
-    details: "Published Senp results for 2024-03-14",
-    timestamp: "2024-03-14 18:45:22",
-    ipAddress: "192.168.1.102"
-  }
-];
+const roleColors: Record<string, string> = {
+  super_admin: "bg-red-600",
+  admin: "bg-blue-600",
+  moderator: "bg-purple-600",
+  support: "bg-green-600",
+  vendor: "bg-orange-600",
+  player: "bg-cyan-600",
+};
 
 const roles = [
-  { key: "super_admin", name: "Super Admin", color: "bg-red-600", permissions: "All Permissions" },
   { key: "admin", name: "Admin", color: "bg-blue-600", permissions: "Most Operations" },
   { key: "moderator", name: "Moderator", color: "bg-purple-600", permissions: "Limited Operations" },
   { key: "support", name: "Support", color: "bg-green-600", permissions: "Read-Only + Reports" }
@@ -109,23 +34,45 @@ const roles = [
 export default function AdminUserManagement() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const [adminUsers, setAdminUsers] = useState<AdminUser[]>(mockAdminUsers);
-  const [activityLogs] = useState<ActivityLog[]>(mockActivityLogs);
-  const [activeTab, setActiveTab] = useState<"users" | "activity">("users");
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"all" | "admins" | "vendors" | "players">("all");
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [newUser, setNewUser] = useState({
-    username: "",
+    name: "",
     email: "",
-    role: "moderator" as AdminUser["role"]
+    password: "",
+    role: "moderator"
   });
 
-  const getRoleColor = (role: AdminUser["role"]) => {
-    const roleData = roles.find(r => r.key === role);
-    return roleData?.color || "bg-gray-600";
+  const fetchUsers = useCallback(async () => {
+    try {
+      const data = await adminAPI.getAllUsers(1, 200);
+      const userList = data.users || data.data || data || [];
+      setUsers(Array.isArray(userList) ? userList : []);
+    } catch (err) {
+      Alert.alert("Error", getErrorMessage(err));
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchUsers();
   };
 
-  const getStatusColor = (status: AdminUser["status"]) => {
+  const getRoleColor = (role: string) => roleColors[role] || "bg-gray-600";
+
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "active": return "bg-green-500";
       case "suspended": return "bg-red-500";
@@ -134,37 +81,51 @@ export default function AdminUserManagement() {
     }
   };
 
-  const toggleUserStatus = (userId: string) => {
-    setAdminUsers(prev => prev.map(user =>
-      user.id === userId 
-        ? { ...user, status: user.status === "active" ? "suspended" : "active" as const }
-        : user
-    ));
-  };
-
-  const addNewUser = () => {
-    if (newUser.username && newUser.email) {
-      const user: AdminUser = {
-        id: Date.now().toString(),
-        username: newUser.username,
-        email: newUser.email,
-        role: newUser.role,
-        status: "pending",
-        lastLogin: "Never",
-        createdAt: new Date().toISOString().split("T")[0],
-        permissions: ["players", "reports"]
-      };
-
-      setAdminUsers(prev => [user, ...prev]);
-      setNewUser({ username: "", email: "", role: "moderator" });
-      setShowAddModal(false);
+  const toggleUserStatus = async (user: AdminUser) => {
+    if (user.role === "super_admin") return;
+    setActionLoading(user.id);
+    try {
+      if (user.status === "active") {
+        await adminAPI.suspendUser(user.id);
+      } else {
+        await adminAPI.activateUser(user.id);
+      }
+      // Refresh list after action
+      await fetchUsers();
+    } catch (err) {
+      Alert.alert("Error", getErrorMessage(err));
+    } finally {
+      setActionLoading(null);
     }
   };
 
-  const filteredUsers = adminUsers.filter(user =>
-    user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const addNewUser = () => {
+    Alert.alert(
+      "Not Available",
+      "Admin user creation requires a dedicated admin registration endpoint. Please create admin accounts through the backend directly."
+    );
+    setShowAddModal(false);
+  };
+
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = (user.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (activeTab === "all") return matchesSearch;
+    if (activeTab === "admins") return matchesSearch && (user.role === "admin" || user.role === "super_admin");
+    if (activeTab === "vendors") return matchesSearch && user.role === "vendor";
+    if (activeTab === "players") return matchesSearch && user.role === "player";
+    return matchesSearch;
+  });
+
+  if (loading) {
+    return (
+      <View className="flex-1 bg-slate-900 items-center justify-center" style={{ paddingTop: insets.top }}>
+        <ActivityIndicator size="large" color="#3b82f6" />
+        <Text className="text-slate-400 mt-4">Loading users...</Text>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-slate-900" style={{ paddingTop: insets.top }}>
@@ -173,39 +134,24 @@ export default function AdminUserManagement() {
         <Pressable onPress={() => navigation.goBack()} className="mr-4">
           <Ionicons name="arrow-back" size={24} color="#e2e8f0" />
         </Pressable>
-        <Text className="text-xl font-bold text-slate-100 flex-1">Admin User Management</Text>
-        {activeTab === "users" && (
-          <Pressable 
-            onPress={() => setShowAddModal(true)}
-            className="bg-blue-600 px-4 py-2 rounded-lg"
-          >
-            <Text className="text-white font-medium">Add Admin</Text>
-          </Pressable>
-        )}
+        <Text className="text-xl font-bold text-slate-100 flex-1">User Management</Text>
       </View>
 
       {/* Tab Navigation */}
       <View className="flex-row bg-slate-800 border-b border-slate-700">
-        <Pressable
-          onPress={() => setActiveTab("users")}
-          className={`flex-1 py-4 ${activeTab === "users" ? "border-b-2 border-blue-500" : ""}`}
-        >
-          <Text className={`text-center font-medium ${
-            activeTab === "users" ? "text-blue-400" : "text-slate-400"
-          }`}>
-            Admin Users ({adminUsers.length})
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={() => setActiveTab("activity")}
-          className={`flex-1 py-4 ${activeTab === "activity" ? "border-b-2 border-blue-500" : ""}`}
-        >
-          <Text className={`text-center font-medium ${
-            activeTab === "activity" ? "text-blue-400" : "text-slate-400"
-          }`}>
-            Activity Log ({activityLogs.length})
-          </Text>
-        </Pressable>
+        {(["all", "admins", "vendors", "players"] as const).map(tab => (
+          <Pressable
+            key={tab}
+            onPress={() => setActiveTab(tab)}
+            className={`flex-1 py-3 ${activeTab === tab ? "border-b-2 border-blue-500" : ""}`}
+          >
+            <Text className={`text-center text-sm font-medium ${
+              activeTab === tab ? "text-blue-400" : "text-slate-400"
+            }`}>
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </Text>
+          </Pressable>
+        ))}
       </View>
 
       {/* Search */}
@@ -222,115 +168,81 @@ export default function AdminUserManagement() {
         </View>
       </View>
 
-      <ScrollView className="flex-1 p-4">
-        {activeTab === "users" ? (
-          <View>
-            {filteredUsers.map((user) => (
-              <View key={user.id} className="bg-slate-800 rounded-lg p-4 mb-4 border border-slate-700">
-                {/* User Header */}
-                <View className="flex-row items-center justify-between mb-3">
-                  <View className="flex-row items-center flex-1">
-                    <View className="bg-blue-600 w-12 h-12 rounded-full items-center justify-center mr-3">
-                      <Text className="text-white font-bold text-lg">
-                        {user.username.charAt(0).toUpperCase()}
-                      </Text>
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-slate-100 font-semibold text-lg">{user.username}</Text>
-                      <Text className="text-slate-400 text-sm">{user.email}</Text>
-                    </View>
+      <ScrollView className="flex-1 p-4" refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />
+      }>
+        {filteredUsers.length === 0 ? (
+          <View className="items-center py-16">
+            <Ionicons name="people-outline" size={64} color="#475569" />
+            <Text className="text-slate-400 text-lg mt-4">No users found</Text>
+          </View>
+        ) : (
+          filteredUsers.map((user) => (
+            <View key={user.id} className="bg-slate-800 rounded-lg p-4 mb-4 border border-slate-700">
+              {/* User Header */}
+              <View className="flex-row items-center justify-between mb-3">
+                <View className="flex-row items-center flex-1">
+                  <View className="bg-blue-600 w-12 h-12 rounded-full items-center justify-center mr-3">
+                    <Text className="text-white font-bold text-lg">
+                      {(user.name || user.email).charAt(0).toUpperCase()}
+                    </Text>
                   </View>
-                  <View className={`px-3 py-1 rounded-full ${getStatusColor(user.status)}`}>
-                    <Text className="text-white text-xs font-medium capitalize">{user.status}</Text>
-                  </View>
-                </View>
-
-                {/* Role and Permissions */}
-                <View className="mb-4">
-                  <View className="flex-row items-center justify-between mb-2">
-                    <Text className="text-slate-400 text-sm">Role</Text>
-                    <View className={`px-3 py-1 rounded-full ${getRoleColor(user.role)}`}>
-                      <Text className="text-white text-xs font-medium capitalize">
-                        {user.role.replace('_', ' ')}
-                      </Text>
-                    </View>
-                  </View>
-                  
-                  <View className="bg-slate-700 rounded-lg p-3">
-                    <Text className="text-slate-400 text-sm mb-2">Permissions</Text>
-                    <View className="flex-row flex-wrap">
-                      {user.permissions.map((permission, index) => (
-                        <View key={index} className="bg-slate-600 px-2 py-1 rounded-full mr-2 mb-1">
-                          <Text className="text-slate-300 text-xs capitalize">{permission}</Text>
-                        </View>
-                      ))}
-                    </View>
+                  <View className="flex-1">
+                    <Text className="text-slate-100 font-semibold text-lg">{user.name || "Unnamed"}</Text>
+                    <Text className="text-slate-400 text-sm">{user.email}</Text>
                   </View>
                 </View>
+                <View className={`px-3 py-1 rounded-full ${getStatusColor(user.status)}`}>
+                  <Text className="text-white text-xs font-medium capitalize">{user.status}</Text>
+                </View>
+              </View>
 
-                {/* Activity Info */}
-                <View className="flex-row justify-between mb-4">
+              {/* Role */}
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-slate-400 text-sm">Role</Text>
+                <View className={`px-3 py-1 rounded-full ${getRoleColor(user.role)}`}>
+                  <Text className="text-white text-xs font-medium capitalize">
+                    {user.role.replace('_', ' ')}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Activity Info */}
+              <View className="flex-row justify-between mb-4">
+                <View>
+                  <Text className="text-slate-400 text-sm mb-1">Joined</Text>
+                  <Text className="text-slate-100 text-sm">
+                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
+                  </Text>
+                </View>
+                {user.phone && (
                   <View>
-                    <Text className="text-slate-400 text-sm mb-1">Last Login</Text>
-                    <Text className="text-slate-100">{user.lastLogin}</Text>
+                    <Text className="text-slate-400 text-sm mb-1">Phone</Text>
+                    <Text className="text-slate-100 text-sm">{user.phone}</Text>
                   </View>
-                  <View>
-                    <Text className="text-slate-400 text-sm mb-1">Created</Text>
-                    <Text className="text-slate-100">{user.createdAt}</Text>
-                  </View>
-                </View>
+                )}
+              </View>
 
-                {/* Action Buttons */}
-                <View className="flex-row justify-between">
-                  <Pressable 
-                    onPress={() => toggleUserStatus(user.id)}
-                    className={`flex-1 py-3 rounded-lg mr-2 ${
-                      user.status === "active" ? "bg-red-600" : "bg-green-600"
-                    }`}
-                    disabled={user.role === "super_admin"}
-                  >
+              {/* Action Buttons */}
+              <View className="flex-row">
+                <Pressable 
+                  onPress={() => toggleUserStatus(user)}
+                  className={`flex-1 py-3 rounded-lg items-center justify-center ${
+                    user.status === "active" ? "bg-red-600" : "bg-green-600"
+                  }`}
+                  disabled={user.role === "super_admin" || actionLoading === user.id}
+                >
+                  {actionLoading === user.id ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
                     <Text className="text-white text-center font-medium">
                       {user.status === "active" ? "Suspend" : "Activate"}
                     </Text>
-                  </Pressable>
-
-                  <Pressable className="flex-1 bg-slate-700 py-3 rounded-lg mx-1">
-                    <Text className="text-slate-300 text-center font-medium">Edit Permissions</Text>
-                  </Pressable>
-                  
-                  <Pressable className="flex-1 bg-blue-600 py-3 rounded-lg ml-2">
-                    <Text className="text-white text-center font-medium">View Activity</Text>
-                  </Pressable>
-                </View>
+                  )}
+                </Pressable>
               </View>
-            ))}
-          </View>
-        ) : (
-          <View>
-            <Text className="text-slate-100 text-lg font-semibold mb-4">Recent Admin Activity</Text>
-            {activityLogs.map((log) => (
-              <View key={log.id} className="bg-slate-800 rounded-lg p-4 mb-4 border border-slate-700">
-                <View className="flex-row items-center justify-between mb-2">
-                  <Text className="text-slate-100 font-semibold">{log.action}</Text>
-                  <Text className="text-slate-400 text-sm">{log.timestamp}</Text>
-                </View>
-                
-                <Text className="text-slate-300 mb-3">{log.details}</Text>
-                
-                <View className="flex-row justify-between items-center">
-                  <View className="flex-row items-center">
-                    <View className="bg-blue-600 w-8 h-8 rounded-full items-center justify-center mr-3">
-                      <Text className="text-white text-xs font-bold">
-                        {log.adminName.charAt(0).toUpperCase()}
-                      </Text>
-                    </View>
-                    <Text className="text-slate-400 text-sm">{log.adminName}</Text>
-                  </View>
-                  <Text className="text-slate-500 text-sm">{log.ipAddress}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
+            </View>
+          ))
         )}
       </ScrollView>
 
@@ -349,12 +261,12 @@ export default function AdminUserManagement() {
 
           <ScrollView className="flex-1 p-4">
             <View className="mb-4">
-              <Text className="text-slate-400 text-sm mb-2">Username *</Text>
+              <Text className="text-slate-400 text-sm mb-2">Name *</Text>
               <TextInput
-                placeholder="Enter username"
+                placeholder="Enter full name"
                 placeholderTextColor="#64748b"
-                value={newUser.username}
-                onChangeText={(text) => setNewUser(prev => ({ ...prev, username: text }))}
+                value={newUser.name}
+                onChangeText={(text) => setNewUser(prev => ({ ...prev, name: text }))}
                 className="bg-slate-800 text-slate-100 px-4 py-3 rounded-lg border border-slate-600"
               />
             </View>
@@ -373,10 +285,10 @@ export default function AdminUserManagement() {
 
             <View className="mb-6">
               <Text className="text-slate-400 text-sm mb-3">Role</Text>
-              {roles.slice(1).map((role) => (
+              {roles.map((role) => (
                 <Pressable
                   key={role.key}
-                  onPress={() => setNewUser(prev => ({ ...prev, role: role.key as AdminUser["role"] }))}
+                  onPress={() => setNewUser(prev => ({ ...prev, role: role.key }))}
                   className={`p-4 rounded-lg mb-3 border ${
                     newUser.role === role.key 
                       ? "border-blue-500 bg-slate-700" 
@@ -399,6 +311,13 @@ export default function AdminUserManagement() {
                 </Pressable>
               ))}
             </View>
+
+            <View className="bg-slate-800 rounded-lg p-4 border border-yellow-600/30">
+              <Text className="text-yellow-400 font-medium mb-2">Note</Text>
+              <Text className="text-slate-400 text-sm">
+                Admin account creation requires backend access. Contact a super admin to create new admin accounts.
+              </Text>
+            </View>
           </ScrollView>
         </View>
       </Modal>
@@ -407,24 +326,26 @@ export default function AdminUserManagement() {
       <View className="bg-slate-800 p-4 border-t border-slate-700">
         <View className="flex-row justify-between">
           <View className="items-center">
-            <Text className="text-slate-400 text-sm">Total Admins</Text>
-            <Text className="text-slate-100 text-xl font-bold">{adminUsers.length}</Text>
+            <Text className="text-slate-400 text-sm">Total</Text>
+            <Text className="text-slate-100 text-xl font-bold">{users.length}</Text>
           </View>
           <View className="items-center">
             <Text className="text-slate-400 text-sm">Active</Text>
             <Text className="text-green-400 text-xl font-bold">
-              {adminUsers.filter(u => u.status === "active").length}
+              {users.filter(u => u.status === "active").length}
             </Text>
           </View>
           <View className="items-center">
             <Text className="text-slate-400 text-sm">Suspended</Text>
             <Text className="text-red-400 text-xl font-bold">
-              {adminUsers.filter(u => u.status === "suspended").length}
+              {users.filter(u => u.status === "suspended").length}
             </Text>
           </View>
           <View className="items-center">
-            <Text className="text-slate-400 text-sm">Recent Actions</Text>
-            <Text className="text-blue-400 text-xl font-bold">{activityLogs.length}</Text>
+            <Text className="text-slate-400 text-sm">Vendors</Text>
+            <Text className="text-blue-400 text-xl font-bold">
+              {users.filter(u => u.role === "vendor").length}
+            </Text>
           </View>
         </View>
       </View>

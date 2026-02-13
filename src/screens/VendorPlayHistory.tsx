@@ -1,8 +1,9 @@
-import React, { useState } from "react";
-import { View, Text, Pressable, StyleSheet, ScrollView, TextInput } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppStore } from "../state/appStore";
+import { vendorAPI, getErrorMessage } from "../api/apiClient";
 
 const FILTER_OPTIONS = [
   { key: "all", label: "Tous", icon: "apps" },
@@ -37,13 +38,41 @@ export default function VendorPlayHistory() {
   const [selectedGameType, setSelectedGameType] = useState<string | null>(null);
   const [selectedState, setSelectedState] = useState<string>("all");
   const [selectedDraw] = useState<string | null>(null);
+  const [apiPlays, setApiPlays] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  const currentVendor = vendors.find(v => v.email === user?.email) || vendors[0]; // For testing, use first vendor if no match
-  
-  console.log("Debug - User email:", user?.email);
-  console.log("Debug - Available vendors:", vendors.map(v => ({ id: v.id, email: v.email })));
-  console.log("Debug - Current vendor:", currentVendor?.id);
-  console.log("Debug - Total game plays:", gamePlays.length);
+  const currentVendor = vendors.find(v => (v as any).userId === user?.id) || vendors[0];
+
+  // Fetch play history from API
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        setLoading(true);
+        const data = await vendorAPI.getPlayHistory(1, 200);
+        if (data?.plays) {
+          // Map API fields to local format
+          setApiPlays(data.plays.map((p: any) => ({
+            id: p.id,
+            playerId: p.playerId,
+            vendorId: currentVendor?.id,
+            draw: p.drawState || p.draw,
+            gameType: p.gameType,
+            numbers: p.numbers || [],
+            betAmount: p.betAmount || 0,
+            currency: p.currency || 'USD',
+            timestamp: new Date(p.createdAt || p.timestamp).getTime(),
+            status: p.status || 'pending',
+            winAmount: p.winAmount || 0,
+          })));
+        }
+      } catch (e) {
+        console.warn('VendorPlayHistory fetch error:', getErrorMessage(e));
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchHistory();
+  }, []);
   
   if (!currentVendor) {
     return (
@@ -61,13 +90,10 @@ export default function VendorPlayHistory() {
     );
   }
 
-  // Filter game plays for this vendor
-  // Temporarily show all game plays for debugging
-  const vendorGamePlays = gamePlays; // gamePlays.filter(game => game.vendorId === currentVendor.id);
-  
-  console.log("Debug - Vendor game plays:", vendorGamePlays.length);
-  console.log("Debug - Looking for vendorId:", currentVendor.id);
-  console.log("Debug - All game plays vendor IDs:", gamePlays.map(g => g.vendorId));
+  // Use API data if available, fall back to local store
+  const vendorGamePlays = apiPlays.length > 0 
+    ? apiPlays 
+    : gamePlays.filter(game => game.vendorId === currentVendor.id);
   
   // Apply filters
   const filteredGamePlays = vendorGamePlays.filter(game => {
@@ -99,7 +125,7 @@ export default function VendorPlayHistory() {
     if (selectedDraw && game.draw !== selectedDraw) return false;
     
     // Search filter (by numbers)
-    if (searchQuery && !game.numbers.some(num => num.toString().includes(searchQuery))) {
+    if (searchQuery && !game.numbers.some((num: any) => num.toString().includes(searchQuery))) {
       return false;
     }
     
@@ -251,7 +277,7 @@ export default function VendorPlayHistory() {
                     styles.gameTypeChipText,
                     selectedGameType === gameType && styles.gameTypeChipTextActive
                   ]}>
-                    {gameType.toUpperCase()} ({count})
+                    {gameType.toUpperCase()} ({count as number})
                   </Text>
                 </Pressable>
               ))}
@@ -337,7 +363,7 @@ export default function VendorPlayHistory() {
                       </View>
                       
                       <View style={styles.gameNumbers}>
-                        {game.numbers.map((number, index) => (
+                        {game.numbers.map((number: any, index: number) => (
                           <View key={index} style={styles.numberBall}>
                             <Text style={styles.numberText}>{number.toString().padStart(2, '0')}</Text>
                           </View>

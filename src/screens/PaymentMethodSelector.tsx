@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, Modal, Pressable, StyleSheet, ScrollView, TextInput } from "react-native";
+import { View, Text, Modal, Pressable, StyleSheet, ScrollView, TextInput, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppStore, PaymentMethodType } from "../state/appStore";
+import { paymentAPI, getErrorMessage } from "../api/apiClient";
 
 interface PaymentMethodSelectorProps {
   visible: boolean;
@@ -53,13 +54,15 @@ export default function PaymentMethodSelector({
 
   const getCurrencySymbol = () => currency === "USD" ? "$" : "G";
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (!selectedMethod || !user) return;
 
     setProcessing(true);
 
-    // Simulate payment processing
-    setTimeout(() => {
+    try {
+      // Create payment intent via backend
+      await paymentAPI.createPaymentIntent(amount, currency);
+
       // Create transaction record
       const transaction = {
         id: Date.now().toString(),
@@ -74,9 +77,12 @@ export default function PaymentMethodSelector({
       };
 
       processPayment(transaction);
-      setProcessing(false);
       onPaymentComplete(selectedMethod);
-    }, 1500);
+    } catch (err) {
+      Alert.alert("Payment Failed", getErrorMessage(err));
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const needsCardDetails = selectedMethod === "debit_card";

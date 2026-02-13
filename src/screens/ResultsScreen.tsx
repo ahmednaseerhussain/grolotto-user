@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAppStore } from '../state/appStore';
 import { getTranslation } from '../utils/translations';
+import { lotteryAPI, getErrorMessage } from '../api/apiClient';
 
 const { width } = Dimensions.get('window');
 
@@ -37,77 +38,62 @@ export default function ResultsScreen() {
   const t = (key: string) => getTranslation(key as any, language);
   const getCurrencySymbol = () => currency === "USD" ? "$" : "G";
 
-  // Sliding messages for different results
+  const [lotteryRounds, setLotteryRounds] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch lottery rounds from backend
+  useEffect(() => {
+    const fetchResults = async () => {
+      try {
+        const data = await lotteryAPI.getLotteryRounds();
+        if (Array.isArray(data)) setLotteryRounds(data);
+        else if (data?.rounds) setLotteryRounds(data.rounds);
+      } catch (e) {
+        console.warn('Failed to fetch lottery rounds:', getErrorMessage(e));
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchResults();
+  }, []);
+
+  // Generic sliding messages (no fake data)
   const slidingMessages = [
-    "🎉 New FL Midday results: 8 23 59 97 - 3 winners today!",
-    "💰 Georgia Evening jackpot now at $45,000 - Play now!",
-    "🔥 Hot numbers this week: 23, 59, 78 - Most drawn!",
-    "⭐ NY Evening draw in 2 hours - Current jackpot $28,500",
     "📱 Enable push notifications for instant results",
-    "🏆 This week's biggest winner: $75,000 from Texas!",
-    "⚡ Fastest payouts in Haiti - Money in under 1 hour!"
+    "🎲 Play responsibly - set your daily limits in Settings",
+    "💰 Check your wallet balance before placing bets",
+    "⭐ Rate your vendor after each game for better service",
   ];
 
-  // Sample daily results data - cycling through actual states
-  const dailyResults: DailyResult[] = [
-    {
-      id: '1',
-      gameType: 'FL',
-      gameTypeDisplay: 'Florida Midday',
-      time: 'Midday',
-      numbers: '8 23 59 97',
-      drawTime: '12:30 PM',
-      date: 'Today',
-      jackpot: '15,000',
-      winners: 3,
-      status: 'live'
-    },
-    {
-      id: '2',
-      gameType: 'NY',
-      gameTypeDisplay: 'New York Evening',
-      time: 'Evening',
-      numbers: '12 45 78 90',
-      drawTime: '7:30 PM', 
-      date: 'Today',
-      jackpot: '25,000',
-      winners: 5,
-      status: 'live'
-    },
-    {
-      id: '3',
-      gameType: 'GA',
-      gameTypeDisplay: 'Georgia Midday',
-      time: 'Midday',
-      numbers: '03 16 29 84',
-      drawTime: '1:00 PM',
-      date: 'Today',
-      jackpot: '18,500',
-      winners: 2,
-      status: 'final'
-    },
-    {
-      id: '4',
-      gameType: 'TX',
-      gameTypeDisplay: 'Texas Evening',
-      time: 'Evening',
-      numbers: '07 31 52 68',
-      drawTime: '8:00 PM',
-      date: 'Today', 
-      jackpot: '32,000',
-      winners: 8,
-      status: 'final'
-    }
-  ];
+  // Build results from API data, fallback to empty
+  const dailyResults: DailyResult[] = lotteryRounds.length > 0
+    ? lotteryRounds.map((round: any, idx: number) => ({
+        id: round.id || String(idx),
+        gameType: (round.drawState || round.state || 'FL') as DailyResult['gameType'],
+        gameTypeDisplay: `${round.drawState || round.state || 'FL'} ${round.session || ''}`.trim(),
+        time: round.session || round.drawTime || '',
+        numbers: Array.isArray(round.winningNumbers)
+          ? Object.values(round.winningNumbers).flat().join(' ')
+          : typeof round.winningNumbers === 'object' && round.winningNumbers
+            ? Object.values(round.winningNumbers).flat().join(' ')
+            : String(round.winningNumbers || 'Pending'),
+        drawTime: round.drawTime || '',
+        date: round.date || 'Today',
+        jackpot: round.jackpot ? String(round.jackpot) : undefined,
+        winners: round.winnersCount || 0,
+        status: round.status === 'completed' ? 'final' : 'live',
+      }))
+    : [];
 
   // Auto-slide functionality for results
   useEffect(() => {
+    if (dailyResults.length === 0) return;
     const interval = setInterval(() => {
       slideToNext();
-    }, 4000); // Change every 4 seconds
+    }, 4000);
 
     return () => clearInterval(interval);
-  }, [currentResultIndex]);
+  }, [currentResultIndex, dailyResults.length]);
 
   // Auto-slide functionality for messages
   useEffect(() => {
@@ -148,6 +134,7 @@ export default function ResultsScreen() {
   }, [currentMessageIndex]);
 
   const slideToNext = () => {
+    if (dailyResults.length === 0) return;
     const nextIndex = (currentResultIndex + 1) % dailyResults.length;
     
     // Fade out current result
@@ -192,7 +179,7 @@ export default function ResultsScreen() {
     }
   };
 
-  const currentResult = dailyResults[currentResultIndex];
+  const currentResult = dailyResults.length > 0 ? dailyResults[currentResultIndex % dailyResults.length] : null;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
@@ -365,6 +352,7 @@ export default function ResultsScreen() {
         </View>
 
         {/* Today Results - cycling through actual results */}
+        {currentResult ? (
         <Animated.View style={{
           backgroundColor: '#fbbf24',
           borderRadius: 20,
@@ -446,6 +434,17 @@ export default function ResultsScreen() {
             </Text>
           </View>
         </Animated.View>
+        ) : (
+          <View style={{ backgroundColor: '#f3f4f6', borderRadius: 20, padding: 30, marginBottom: 20, alignItems: 'center' }}>
+            <Ionicons name="hourglass-outline" size={48} color="#9ca3af" />
+            <Text style={{ fontSize: 16, fontWeight: '600', color: '#6b7280', marginTop: 12 }}>
+              {loading ? 'Loading results...' : 'No results available yet'}
+            </Text>
+            <Text style={{ fontSize: 13, color: '#9ca3af', marginTop: 4, textAlign: 'center' }}>
+              Results will appear here when draws are completed
+            </Text>
+          </View>
+        )}
 
         {/* Sliding Messages Banner */}
         <View style={{

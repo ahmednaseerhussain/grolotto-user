@@ -1,8 +1,9 @@
-import React, { useState } from "react";
-import { View, Text, ScrollView, Pressable, Switch } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, ScrollView, Pressable, Switch, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { adminAPI, getErrorMessage } from "../api/apiClient";
 
 interface GameType {
   id: string;
@@ -25,39 +26,84 @@ interface StateLottery {
   drawTime: string;
 }
 
-const mockGameTypes: GameType[] = [
-  { id: "1", name: "Senp", type: "senp", isActive: true, drawTime: "20:00", maxNumber: 99, minBet: 1, maxBet: 100, commission: 15 },
-  { id: "2", name: "Maryaj", type: "maryaj", isActive: true, drawTime: "20:00", maxNumber: 99, minBet: 2, maxBet: 200, commission: 20 },
-  { id: "3", name: "Loto 3", type: "loto3", isActive: true, drawTime: "19:30", maxNumber: 999, minBet: 1, maxBet: 50, commission: 25 },
-  { id: "4", name: "Loto 4", type: "loto4", isActive: false, drawTime: "19:30", maxNumber: 9999, minBet: 1, maxBet: 25, commission: 30 },
-  { id: "5", name: "Loto 5", type: "loto5", isActive: false, drawTime: "19:30", maxNumber: 99999, minBet: 1, maxBet: 10, commission: 35 }
-];
-
-const mockStateLotteries: StateLottery[] = [
-  { id: "1", state: "NY", name: "New York Lottery", isActive: true, drawDays: ["Mon", "Wed", "Sat"], drawTime: "23:00" },
-  { id: "2", state: "GA", name: "Georgia Lottery", isActive: true, drawDays: ["Tue", "Fri"], drawTime: "23:00" },
-  { id: "3", state: "FL", name: "Florida Lottery", isActive: true, drawDays: ["Wed", "Sat"], drawTime: "23:00" },
-  { id: "4", state: "TX", name: "Texas Lottery", isActive: false, drawDays: ["Mon", "Thu", "Sat"], drawTime: "22:00" }
-];
-
 export default function DrawGameManagement() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const [gameTypes, setGameTypes] = useState<GameType[]>(mockGameTypes);
-  const [stateLotteries, setStateLotteries] = useState<StateLottery[]>(mockStateLotteries);
+  const [gameTypes, setGameTypes] = useState<GameType[]>([]);
+  const [stateLotteries, setStateLotteries] = useState<StateLottery[]>([]);
   const [activeTab, setActiveTab] = useState<"games" | "states">("games");
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const toggleGameStatus = (gameId: string) => {
-    setGameTypes(prev => prev.map(game => 
-      game.id === gameId ? { ...game, isActive: !game.isActive } : game
-    ));
-  };
+  const fetchData = useCallback(async () => {
+    try {
+      setError(null);
+      const settings = await adminAPI.getAppSettings();
 
-  const toggleStateStatus = (stateId: string) => {
-    setStateLotteries(prev => prev.map(state => 
-      state.id === stateId ? { ...state, isActive: !state.isActive } : state
-    ));
-  };
+      if (settings?.gameTypes && Array.isArray(settings.gameTypes)) {
+        setGameTypes(settings.gameTypes);
+      } else {
+        const defaults: GameType[] = [
+          { id: "senp", name: "Senp", type: "senp", isActive: settings?.senp_enabled !== false, drawTime: settings?.senp_drawTime || "20:00", maxNumber: 99, minBet: Number(settings?.senp_minBet) || 1, maxBet: Number(settings?.senp_maxBet) || 100, commission: Number(settings?.senp_commission) || 15 },
+          { id: "maryaj", name: "Maryaj", type: "maryaj", isActive: settings?.maryaj_enabled !== false, drawTime: settings?.maryaj_drawTime || "20:00", maxNumber: 99, minBet: Number(settings?.maryaj_minBet) || 2, maxBet: Number(settings?.maryaj_maxBet) || 200, commission: Number(settings?.maryaj_commission) || 20 },
+          { id: "loto3", name: "Loto 3", type: "loto3", isActive: settings?.loto3_enabled !== false, drawTime: settings?.loto3_drawTime || "19:30", maxNumber: 999, minBet: Number(settings?.loto3_minBet) || 1, maxBet: Number(settings?.loto3_maxBet) || 50, commission: Number(settings?.loto3_commission) || 25 },
+          { id: "loto4", name: "Loto 4", type: "loto4", isActive: settings?.loto4_enabled !== false, drawTime: settings?.loto4_drawTime || "19:30", maxNumber: 9999, minBet: Number(settings?.loto4_minBet) || 1, maxBet: Number(settings?.loto4_maxBet) || 25, commission: Number(settings?.loto4_commission) || 30 },
+          { id: "loto5", name: "Loto 5", type: "loto5", isActive: settings?.loto5_enabled !== false, drawTime: settings?.loto5_drawTime || "19:30", maxNumber: 99999, minBet: Number(settings?.loto5_minBet) || 1, maxBet: Number(settings?.loto5_maxBet) || 10, commission: Number(settings?.loto5_commission) || 35 },
+        ];
+        setGameTypes(defaults);
+      }
+
+      if (settings?.stateLotteries && Array.isArray(settings.stateLotteries)) {
+        setStateLotteries(settings.stateLotteries);
+      } else {
+        const defaultStates: StateLottery[] = [
+          { id: "NY", state: "NY", name: "New York Lottery", isActive: settings?.NY_enabled !== false, drawDays: settings?.NY_drawDays || ["Mon", "Wed", "Sat"], drawTime: settings?.NY_drawTime || "23:00" },
+          { id: "GA", state: "GA", name: "Georgia Lottery", isActive: settings?.GA_enabled !== false, drawDays: settings?.GA_drawDays || ["Tue", "Fri"], drawTime: settings?.GA_drawTime || "23:00" },
+          { id: "FL", state: "FL", name: "Florida Lottery", isActive: settings?.FL_enabled !== false, drawDays: settings?.FL_drawDays || ["Wed", "Sat"], drawTime: settings?.FL_drawTime || "23:00" },
+          { id: "TX", state: "TX", name: "Texas Lottery", isActive: settings?.TX_enabled !== false, drawDays: settings?.TX_drawDays || ["Mon", "Thu", "Sat"], drawTime: settings?.TX_drawTime || "22:00" },
+        ];
+        setStateLotteries(defaultStates);
+      }
+    } catch (err) {
+      const msg = getErrorMessage(err);
+      setError(msg);
+      Alert.alert("Error", msg);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const toggleGameStatus = useCallback(async (gameId: string) => {
+    const game = gameTypes.find(g => g.id === gameId);
+    if (!game) return;
+    try {
+      await adminAPI.updateAppSetting(`${game.type}_enabled`, String(!game.isActive));
+      setGameTypes(prev => prev.map(g =>
+        g.id === gameId ? { ...g, isActive: !g.isActive } : g
+      ));
+    } catch (err) {
+      Alert.alert("Error", getErrorMessage(err));
+    }
+  }, [gameTypes]);
+
+  const toggleStateStatus = useCallback(async (stateId: string) => {
+    const st = stateLotteries.find(s => s.id === stateId);
+    if (!st) return;
+    try {
+      await adminAPI.updateAppSetting(`${st.state}_enabled`, String(!st.isActive));
+      setStateLotteries(prev => prev.map(s =>
+        s.id === stateId ? { ...s, isActive: !s.isActive } : s
+      ));
+    } catch (err) {
+      Alert.alert("Error", getErrorMessage(err));
+    }
+  }, [stateLotteries]);
 
   return (
     <View className="flex-1 bg-slate-900" style={{ paddingTop: insets.top }}>
@@ -96,8 +142,26 @@ export default function DrawGameManagement() {
         </Pressable>
       </View>
 
-      <ScrollView className="flex-1 p-4">
-        {activeTab === "games" ? (
+      <ScrollView
+        className="flex-1 p-4"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} tintColor="#60a5fa" />
+        }
+      >
+        {loading ? (
+          <View className="items-center justify-center py-20">
+            <ActivityIndicator size="large" color="#3b82f6" />
+            <Text className="text-slate-400 mt-4">Loading game settings...</Text>
+          </View>
+        ) : error ? (
+          <View className="items-center justify-center py-20">
+            <Ionicons name="alert-circle" size={48} color="#ef4444" />
+            <Text className="text-red-400 mt-4 text-center">{error}</Text>
+            <Pressable onPress={fetchData} className="mt-4 bg-blue-600 px-6 py-3 rounded-lg">
+              <Text className="text-white font-medium">Retry</Text>
+            </Pressable>
+          </View>
+        ) : activeTab === "games" ? (
           /* Game Types Tab */
           <View>
             <Text className="text-slate-300 text-lg font-semibold mb-4">Local Game Types</Text>

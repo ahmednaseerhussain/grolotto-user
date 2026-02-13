@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
 import { getTranslation } from "../utils/translations";
+import { authAPI, getErrorMessage } from "../api/apiClient";
 
 export default function EditProfileScreen() {
   const navigation = useNavigation();
@@ -85,20 +86,25 @@ export default function EditProfileScreen() {
     setLoading(true);
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Call backend API to update profile
+      const updatedData = await authAPI.updateProfile({
+        name: formData.name.trim(),
+        phone: formData.phone.trim(),
+        address: formData.address.trim(),
+        city: formData.city.trim(),
+        country: formData.country.trim(),
+      });
       
-      // Update user in store
+      // Update user in store with server-confirmed data
       if (user) {
         const updatedUser = {
           ...user,
-          name: formData.name.trim(),
-          email: formData.email.trim().toLowerCase(),
-          phone: formData.phone.trim(),
-          dateOfBirth: formData.dateOfBirth.trim(),
-          address: formData.address.trim(),
-          city: formData.city.trim(),
-          country: formData.country.trim(),
+          name: updatedData.name || formData.name.trim(),
+          phone: updatedData.phone || formData.phone.trim(),
+          address: updatedData.address || formData.address.trim(),
+          city: updatedData.city || formData.city.trim(),
+          country: updatedData.country || formData.country.trim(),
+          dateOfBirth: updatedData.dateOfBirth || user.dateOfBirth,
           updatedAt: new Date().toISOString(),
         };
         
@@ -116,7 +122,7 @@ export default function EditProfileScreen() {
         );
       }
     } catch (error) {
-      Alert.alert("Error", "Failed to update profile. Please try again.");
+      Alert.alert("Error", getErrorMessage(error));
       console.error("Profile update error:", error);
     } finally {
       setLoading(false);

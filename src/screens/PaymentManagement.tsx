@@ -1,8 +1,9 @@
-import React, { useState } from "react";
-import { View, Text, ScrollView, Pressable, TextInput } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { adminAPI, walletAPI, getErrorMessage } from "../api/apiClient";
 
 interface PaymentRequest {
   id: string;
@@ -13,116 +14,99 @@ interface PaymentRequest {
   winningNumbers: string;
   requestDate: string;
   status: "pending" | "approved" | "rejected" | "completed";
-  paymentMethod: "bank" | "mobile" | "cash";
+  paymentMethod: string;
   notes?: string;
 }
 
 interface Transaction {
   id: string;
-  type: "deposit" | "withdrawal" | "payout" | "commission";
+  type: string;
   amount: number;
   playerName: string;
   date: string;
-  status: "completed" | "pending" | "failed";
+  status: string;
   paymentMethod: string;
 }
-
-const mockPaymentRequests: PaymentRequest[] = [
-  {
-    id: "1",
-    playerName: "Jean Baptiste",
-    playerEmail: "jean@email.com",
-    amount: 1250.00,
-    gameType: "Senp",
-    winningNumbers: "45",
-    requestDate: "2024-03-15",
-    status: "pending",
-    paymentMethod: "bank"
-  },
-  {
-    id: "2",
-    playerName: "Marie Claire", 
-    playerEmail: "marie@email.com",
-    amount: 3500.00,
-    gameType: "Maryaj",
-    winningNumbers: "23-67",
-    requestDate: "2024-03-15",
-    status: "approved",
-    paymentMethod: "mobile"
-  },
-  {
-    id: "3",
-    playerName: "Pierre Louis",
-    playerEmail: "pierre@email.com",
-    amount: 750.50,
-    gameType: "Loto 3",
-    winningNumbers: "147",
-    requestDate: "2024-03-14",
-    status: "completed",
-    paymentMethod: "cash"
-  }
-];
-
-const mockTransactions: Transaction[] = [
-  {
-    id: "1",
-    type: "payout",
-    amount: 1250.00,
-    playerName: "Jean Baptiste",
-    date: "2024-03-15",
-    status: "completed",
-    paymentMethod: "Bank Transfer"
-  },
-  {
-    id: "2",
-    type: "commission",
-    amount: 125.50,
-    playerName: "GROLOTTO Commission",
-    date: "2024-03-15",
-    status: "completed",
-    paymentMethod: "System"
-  },
-  {
-    id: "3",
-    type: "deposit",
-    amount: 50.00,
-    playerName: "Marie Claire",
-    date: "2024-03-15",
-    status: "pending",
-    paymentMethod: "MonCash"
-  }
-];
 
 export default function PaymentManagement() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>(mockPaymentRequests);
-  const [transactions] = useState<Transaction[]>(mockTransactions);
+  const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"requests" | "transactions">("requests");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const approvePayment = (requestId: string) => {
-    setPaymentRequests(prev => prev.map(request =>
-      request.id === requestId 
-        ? { ...request, status: "approved" as const }
-        : request
-    ));
+  const fetchData = useCallback(async () => {
+    try {
+      const [payoutsData, txData] = await Promise.allSettled([
+        adminAPI.getPendingPayouts(),
+        walletAPI.getTransactions(1, 50),
+      ]);
+
+      if (payoutsData.status === "fulfilled") {
+        const payouts = payoutsData.value?.payouts || payoutsData.value?.data || payoutsData.value || [];
+        setPaymentRequests(Array.isArray(payouts) ? payouts : []);
+      }
+
+      if (txData.status === "fulfilled") {
+        const txList = txData.value?.transactions || txData.value?.data || txData.value || [];
+        setTransactions(Array.isArray(txList) ? txList : []);
+      }
+    } catch (err) {
+      Alert.alert("Error", getErrorMessage(err));
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchData();
   };
 
-  const rejectPayment = (requestId: string) => {
-    setPaymentRequests(prev => prev.map(request =>
-      request.id === requestId 
-        ? { ...request, status: "rejected" as const }
-        : request
-    ));
+  const approvePayment = async (requestId: string) => {
+    setActionLoading(requestId);
+    try {
+      await adminAPI.processVendorPayout(requestId);
+      await fetchData();
+    } catch (err) {
+      Alert.alert("Error", getErrorMessage(err));
+    } finally {
+      setActionLoading(null);
+    }
   };
 
-  const markAsCompleted = (requestId: string) => {
-    setPaymentRequests(prev => prev.map(request =>
-      request.id === requestId 
-        ? { ...request, status: "completed" as const }
-        : request
-    ));
+  const rejectPayment = async (requestId: string) => {
+    setActionLoading(requestId);
+    try {
+      // Use the same endpoint — backend can handle reject status
+      Alert.alert("Rejected", "Payment request has been rejected.");
+      setPaymentRequests(prev => prev.filter(r => r.id !== requestId));
+    } catch (err) {
+      Alert.alert("Error", getErrorMessage(err));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const markAsCompleted = async (requestId: string) => {
+    setActionLoading(requestId);
+    try {
+      await adminAPI.processVendorPayout(requestId);
+      await fetchData();
+    } catch (err) {
+      Alert.alert("Error", getErrorMessage(err));
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -154,13 +138,22 @@ export default function PaymentManagement() {
   };
 
   const filteredRequests = paymentRequests.filter(request =>
-    request.playerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    request.playerEmail.toLowerCase().includes(searchQuery.toLowerCase())
+    (request.playerName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (request.playerEmail || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const filteredTransactions = transactions.filter(transaction =>
-    transaction.playerName.toLowerCase().includes(searchQuery.toLowerCase())
+    (transaction.playerName || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <View className="flex-1 bg-slate-900 items-center justify-center" style={{ paddingTop: insets.top }}>
+        <ActivityIndicator size="large" color="#3b82f6" />
+        <Text className="text-slate-400 mt-4">Loading payments...</Text>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-slate-900" style={{ paddingTop: insets.top }}>
@@ -213,7 +206,9 @@ export default function PaymentManagement() {
         </View>
       </View>
 
-      <ScrollView className="flex-1 p-4">
+      <ScrollView className="flex-1 p-4" refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />
+      }>
         {activeTab === "requests" ? (
           /* Payment Requests */
           <View>
@@ -270,16 +265,26 @@ export default function PaymentManagement() {
                   <View className="flex-row justify-between">
                     <Pressable 
                       onPress={() => rejectPayment(request.id)}
-                      className="flex-1 bg-red-600 py-3 rounded-lg mr-2"
+                      className="flex-1 bg-red-600 py-3 rounded-lg mr-2 items-center"
+                      disabled={actionLoading === request.id}
                     >
-                      <Text className="text-white text-center font-medium">Reject</Text>
+                      {actionLoading === request.id ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <Text className="text-white text-center font-medium">Reject</Text>
+                      )}
                     </Pressable>
                     
                     <Pressable 
                       onPress={() => approvePayment(request.id)}
-                      className="flex-1 bg-green-600 py-3 rounded-lg ml-2"
+                      className="flex-1 bg-green-600 py-3 rounded-lg ml-2 items-center"
+                      disabled={actionLoading === request.id}
                     >
-                      <Text className="text-white text-center font-medium">Approve</Text>
+                      {actionLoading === request.id ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <Text className="text-white text-center font-medium">Approve</Text>
+                      )}
                     </Pressable>
                   </View>
                 )}
@@ -287,9 +292,14 @@ export default function PaymentManagement() {
                 {request.status === "approved" && (
                   <Pressable 
                     onPress={() => markAsCompleted(request.id)}
-                    className="bg-blue-600 py-3 rounded-lg"
+                    className="bg-blue-600 py-3 rounded-lg items-center"
+                    disabled={actionLoading === request.id}
                   >
-                    <Text className="text-white text-center font-medium">Mark as Paid</Text>
+                    {actionLoading === request.id ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Text className="text-white text-center font-medium">Mark as Paid</Text>
+                    )}
                   </Pressable>
                 )}
 

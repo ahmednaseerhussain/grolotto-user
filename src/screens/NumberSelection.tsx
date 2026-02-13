@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useAppStore } from "../state/appStore";
 import { getTranslation } from "../utils/translations";
 import PaymentModal from "./PaymentModal";
+import { lotteryAPI, getErrorMessage } from "../api/apiClient";
 
 interface RouteParams {
   vendor: any; // Use the full Vendor type from store
@@ -362,56 +363,68 @@ export default function NumberSelection() {
     );
   };
 
-  const completePurchase = () => {
-    // Save each selection as a game play
-    gameSelections.forEach(selection => {
-      const gamePlay = {
-        id: `${Date.now()}-${selection.id}`,
-        playerId: user?.id || "player1",
-        vendorId: vendor.id,
-        draw: selection.state as any,
-        gameType: selection.gameType.toLowerCase() as any,
-        numbers: selection.numbers,
-        betAmount: selection.betAmount,
-        currency: selection.currency as any,
-        timestamp: Date.now(),
-        status: "pending" as const,
-      };
-      
-      addGamePlay(gamePlay);
-    });
+  const completePurchase = async () => {
+    // Place each bet through the real API
+    try {
+      for (const selection of gameSelections) {
+        const result = await lotteryAPI.placeBet({
+          vendorId: vendor.id,
+          drawState: selection.state,
+          gameType: selection.gameType.toLowerCase(),
+          numbers: selection.numbers,
+          betAmount: selection.betAmount,
+          currency: selection.currency,
+        });
+        
+        // Also update local store for immediate UI feedback
+        const gamePlay = {
+          id: result.ticketId || `${Date.now()}-${selection.id}`,
+          playerId: user?.id || "",
+          vendorId: vendor.id,
+          draw: selection.state as any,
+          gameType: selection.gameType.toLowerCase() as any,
+          numbers: selection.numbers,
+          betAmount: selection.betAmount,
+          currency: selection.currency as any,
+          timestamp: Date.now(),
+          status: "pending" as const,
+        };
+        addGamePlay(gamePlay);
+      }
 
-    // Show success message and navigate back
-    Alert.alert(
-      "Purchase Successful! 🎉",
-      `${gameSelections.length} bet(s) placed for ${getCurrencySymbol()}${getTotalBet()}\n\nYour numbers are now in play. Good luck!`,
-      [
-        {
-          text: "Rate Vendor ⭐",
-          onPress: () => {
-            (navigation as any).navigate("VendorRating", { 
-              vendor, 
-              gamePlay: gameSelections[0] // Pass first game for context
-            });
+      Alert.alert(
+        "Purchase Successful! 🎉",
+        `${gameSelections.length} bet(s) placed for ${getCurrencySymbol()}${getTotalBet()}\n\nYour numbers are now in play. Good luck!`,
+        [
+          {
+            text: "Rate Vendor ⭐",
+            onPress: () => {
+              (navigation as any).navigate("VendorRating", { 
+                vendor, 
+                gamePlay: gameSelections[0]
+              });
+            }
+          },
+          {
+            text: "View History",
+            onPress: () => {
+              navigation.navigate("HistoryScreen" as never);
+            }
+          },
+          {
+            text: "Place More Bets",
+            style: "cancel",
+            onPress: () => {
+              setGameSelections([]);
+              setSelectedNumbers([]);
+              setBetAmount("");
+            }
           }
-        },
-        {
-          text: "View History",
-          onPress: () => {
-            navigation.navigate("HistoryScreen" as never);
-          }
-        },
-        {
-          text: "Place More Bets",
-          style: "cancel",
-          onPress: () => {
-            setGameSelections([]);
-            setSelectedNumbers([]);
-            setBetAmount("");
-          }
-        }
-      ]
-    );
+        ]
+      );
+    } catch (error) {
+      Alert.alert("Bet Failed", getErrorMessage(error));
+    }
   };
 
   return (

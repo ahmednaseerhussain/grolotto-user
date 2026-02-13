@@ -1,10 +1,11 @@
-import React, { useState } from "react";
-import { View, Text, Pressable, StyleSheet, ScrollView, Alert } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, Pressable, StyleSheet, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
 import { getTranslation } from "../utils/translations";
+import { vendorAPI, getErrorMessage } from "../api/apiClient";
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
@@ -26,8 +27,40 @@ export default function TodayPlayersWinners() {
   
   const [selectedState, setSelectedState] = useState("all");
   const [isExporting, setIsExporting] = useState(false);
+  const [apiPlays, setApiPlays] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   
   const t = (key: string) => getTranslation(key as any, language);
+
+  // Fetch today's play data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const data = await vendorAPI.getPlayHistory(1, 500);
+        if (data?.plays) {
+          setApiPlays(data.plays.map((p: any) => ({
+            id: p.id,
+            playerId: p.playerId,
+            vendorId: p.vendorId,
+            draw: p.drawState || p.draw,
+            gameType: p.gameType,
+            numbers: p.numbers || [],
+            betAmount: p.betAmount || 0,
+            currency: p.currency || 'USD',
+            timestamp: new Date(p.createdAt || p.timestamp).getTime(),
+            status: p.status || 'pending',
+            winAmount: p.winAmount || 0,
+          })));
+        }
+      } catch (e) {
+        console.warn('TodayPlayersWinners fetch error:', getErrorMessage(e));
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
   
   // Currency formatting function
   const formatCurrency = (amount: number) => {
@@ -37,14 +70,17 @@ export default function TodayPlayersWinners() {
     return `${symbol}${convertedAmount.toFixed(2)}`;
   };
 
-  const currentVendor = vendors.find(v => v.email === user?.email);
+  const currentVendor = vendors.find(v => (v as any).userId === user?.id);
   
   // Get today's date
   const today = new Date();
   const todayString = today.toDateString();
   
+  // Use API data if available, fall back to local store
+  const allPlays = apiPlays.length > 0 ? apiPlays : gamePlays;
+  
   // Filter today's games for current vendor
-  const todayGames = gamePlays.filter(game => 
+  const todayGames = allPlays.filter(game => 
     game.vendorId === currentVendor?.id && 
     new Date(game.timestamp).toDateString() === todayString &&
     (selectedState === "all" || game.draw === selectedState)
@@ -58,13 +94,9 @@ export default function TodayPlayersWinners() {
     const players = new Set(stateGames.map(g => g.playerId));
     const totalPlayed = stateGames.reduce((sum, game) => sum + game.betAmount, 0);
     
-    // Mock winners data (in a real app, this would come from results/winning numbers)
-    // Use game ID for consistent "random" winners to avoid data changing on re-renders
-    const winners = stateGames.filter(game => {
-      const seed = game.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-      return (seed % 100) > 85; // 15% win rate for demo
-    });
-    const totalWon = winners.reduce((sum, game) => sum + (game.betAmount * 5), 0); // 5x payout for demo
+    // Winners come from games with status 'won' (set by backend after results are published)
+    const winners = stateGames.filter(game => (game as any).status === 'won');
+    const totalWon = winners.reduce((sum, game) => sum + ((game as any).winAmount || 0), 0);
     
     acc[state.key] = {
       state: state.label,
@@ -83,7 +115,7 @@ export default function TodayPlayersWinners() {
         gameType: game.gameType,
         numbers: game.numbers,
         betAmount: game.betAmount,
-        winAmount: game.betAmount * 5,
+        winAmount: (game as any).winAmount || 0,
         timestamp: game.timestamp
       })),
       totalPlayers: players.size,

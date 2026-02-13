@@ -6,6 +6,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
 import { getTranslation } from "../utils/translations";
 import PaymentModal from "./PaymentModal";
+import { vendorAPI, walletAPI, adminAPI, getErrorMessage } from "../api/apiClient";
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -161,6 +162,33 @@ export default function PlayerDashboard() {
   const [showBalance, setShowBalance] = useState(true); // Hide/Show balance functionality
   
   const t = (key: string) => getTranslation(key as any, language);
+
+  // Fetch real data from backend on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [vendorData, walletData] = await Promise.all([
+          vendorAPI.getActiveVendors(),
+          walletAPI.getWallet(),
+        ]);
+        if (vendorData) useAppStore.getState().setVendors(vendorData);
+        if (walletData && user) {
+          useAppStore.getState().updateUser({ ...user, balance: walletData.balance });
+        }
+      } catch (e) {
+        // silently fail; user can pull-to-refresh
+        console.warn('PlayerDashboard fetch error:', getErrorMessage(e));
+      }
+      try {
+        const adsData = await adminAPI.getAdvertisements();
+        if (Array.isArray(adsData)) {
+          useAppStore.getState().resetAdvertisements();
+          adsData.forEach((ad: any) => useAppStore.getState().addAdvertisement(ad));
+        }
+      } catch { /* ads are optional */ }
+    };
+    fetchData();
+  }, []);
   
   // Filter active vendors
   const activeVendors = vendors.filter(v => v.status === "approved" && v.isActive);
@@ -195,7 +223,7 @@ export default function PlayerDashboard() {
         {
           text: t("logout"),
           style: "destructive",
-          onPress: () => logout()
+          onPress: async () => { await (await import('../api/apiClient')).authAPI.logout(); logout(); }
         }
       ]
     );

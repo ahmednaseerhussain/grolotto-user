@@ -84,7 +84,7 @@ export default function WelcomeSlides() {
           <PagerView
             style={{ flex: 1 }}
             initialPage={0}
-            onPageSelected={(e) => setCurrentPage(e.nativeEvent.position)}
+            onPageSelected={(e: any) => setCurrentPage(e.nativeEvent.position)}
           >
             {slides.map((slide, index) => (
               <View key={index} className="flex-1 justify-center items-center px-8">

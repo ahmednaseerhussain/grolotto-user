@@ -3,6 +3,7 @@ import { View, Text, TextInput, Pressable, StyleSheet, Alert } from "react-nativ
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppStore } from "../state/appStore";
+import { authAPI, getErrorMessage } from "../api/apiClient";
 
 export default function AdminLogin() {
   const [username, setUsername] = useState("");
@@ -20,28 +21,18 @@ export default function AdminLogin() {
 
     setLoading(true);
     
-    // Simple hardcoded admin login for demo
-    const isValidUsername = username.toLowerCase() === "admin" || username.toLowerCase() === "admin@groloto.com";
-    const isValidPassword = password === "admin123";
-    
-    if (isValidUsername && isValidPassword) {
-      // Create admin user and log in
-      setUser({
-        id: "admin1",
-        email: "admin@groloto.com",
-        name: "System Admin",
-        role: "admin",
-        isVerified: true,
-        balance: 0,
-      });
-    } else {
-      Alert.alert(
-        "Invalid Credentials",
-        "Demo Admin Account:\n• Username: admin\n• Password: admin123"
-      );
+    try {
+      const data = await authAPI.login(username, password);
+      if (data.user.role !== 'admin') {
+        Alert.alert("Error", "This login is for administrators only.");
+        return;
+      }
+      setUser(data.user);
+    } catch (error) {
+      Alert.alert("Login Failed", getErrorMessage(error));
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (
@@ -105,13 +96,6 @@ export default function AdminLogin() {
             {loading ? "Signing In..." : "Sign In"}
           </Text>
         </Pressable>
-
-        {/* Demo Credentials */}
-        <View style={styles.demoContainer}>
-          <Text style={styles.demoTitle}>Demo Credentials:</Text>
-          <Text style={styles.demoText}>Username: admin</Text>
-          <Text style={styles.demoText}>Password: admin123</Text>
-        </View>
       </View>
 
       {/* Footer */}

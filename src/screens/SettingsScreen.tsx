@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore, Language, Currency } from "../state/appStore";
 import { getTranslation } from "../utils/translations";
+import { authAPI } from "../api/apiClient";
 
 const languages = [
   { code: "ht" as Language, name: "Kreyòl Ayisyen", flag: "🇭🇹", nativeName: "Kreyòl" },
@@ -52,7 +53,7 @@ export default function SettingsScreen() {
         { 
           text: t("signOut"), 
           style: "destructive",
-          onPress: logout
+          onPress: async () => { await authAPI.logout(); logout(); }
         }
       ]
     );
@@ -66,7 +67,13 @@ export default function SettingsScreen() {
         { text: "Cancel", style: "cancel" },
         { 
           text: "Clear", 
-          onPress: () => Alert.alert("Success", "Cache cleared successfully")
+          onPress: async () => {
+            try {
+              const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+              await AsyncStorage.clear();
+              Alert.alert("Success", "Cache cleared successfully. Restart the app.");
+            } catch { Alert.alert("Error", "Failed to clear cache"); }
+          }
         }
       ]
     );

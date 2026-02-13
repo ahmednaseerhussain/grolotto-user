@@ -5,34 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore, Payout, PayoutMethodType } from "../state/appStore";
 import { getTranslation } from "../utils/translations";
-
-// Demo data for testing
-const demoPayouts: Payout[] = [
-  {
-    id: "payout1",
-    vendorId: "vendor1", 
-    amount: 250.00,
-    method: "moncash",
-    requestDate: Date.now() - 86400000,
-    status: "pending",
-  },
-  {
-    id: "payout2", 
-    vendorId: "vendor2",
-    amount: 1000.00,
-    method: "ach",
-    requestDate: Date.now() - 172800000,
-    status: "pending",
-  },
-  {
-    id: "payout3",
-    vendorId: "vendor1",
-    amount: 500.00, 
-    method: "natcash",
-    requestDate: Date.now() - 259200000,
-    status: "approved",
-  }
-];
+import { adminAPI, getErrorMessage } from "../api/apiClient";
 
 export default function AdminPayoutManagement() {
   const navigation = useNavigation();
@@ -42,11 +15,26 @@ export default function AdminPayoutManagement() {
   
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "paid" | "rejected">("all");
+  const [loading, setLoading] = useState(false);
   
   const t = (key: string) => getTranslation(key as any, language);
+
+  // Fetch pending payouts from backend on mount
+  React.useEffect(() => {
+    const fetchPayouts = async () => {
+      setLoading(true);
+      try {
+        await adminAPI.getPendingPayouts();
+      } catch (e) {
+        console.warn('Failed to fetch payouts:', getErrorMessage(e));
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPayouts();
+  }, []);
   
-  // Combine demo data with real payouts for testing
-  const allPayouts = [...demoPayouts, ...payouts];
+  const allPayouts = payouts;
   
   const filteredPayouts = allPayouts.filter(payout => {
     const vendor = vendors.find(v => v.id === payout.vendorId);

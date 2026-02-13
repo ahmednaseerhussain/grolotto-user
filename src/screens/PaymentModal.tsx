@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, Modal, StyleSheet, Keyboard, TouchableWithoutFeedback } from "react-native";
+import { View, Text, ScrollView, Pressable, TextInput, Modal, StyleSheet, Keyboard, TouchableWithoutFeedback, Linking, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppStore, PaymentMethodType } from "../state/appStore";
 import Animated, { FadeIn, FadeInDown, SlideInDown } from "react-native-reanimated";
+import { paymentAPI, getErrorMessage } from "../api/apiClient";
 
 const PAYMENT_METHODS = [
   {
@@ -108,19 +109,36 @@ export default function PaymentModal({ visible, onClose, onPaymentSuccess, amoun
     (!needsCardDetails || (isValidCardNumber && isValidExpiry && isValidCVV)) &&
     (!needsPhoneNumber || isValidPhone);
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (!canProceed || !user) return;
 
     Keyboard.dismiss();
     setProcessing(true);
 
-    // Simulate payment processing
-    setTimeout(() => {
+    try {
+      const parsedAmount = parseFloat(amount);
+      
+      if (selectedMethod === 'debit_card') {
+        // Use MoonPay for card payments
+        const paymentData = await paymentAPI.createPaymentIntent(parsedAmount, currency);
+        if (paymentData.paymentUrl) {
+          // Open MoonPay widget in browser
+          Linking.openURL(paymentData.paymentUrl);
+          setProcessing(false);
+          handleClose();
+          return;
+        }
+      }
+
+      // For MonCash / NatCash, create a payment intent and show the transaction reference
+      const paymentData = await paymentAPI.createPaymentIntent(parsedAmount, currency);
+      
+      // Record the transaction locally as well
       const transaction = {
-        id: Date.now().toString(),
+        id: paymentData.externalTransactionId || Date.now().toString(),
         userId: user.id,
         type: propAmount ? ("bet_payment" as const) : ("deposit" as const),
-        amount: parseFloat(amount),
+        amount: parsedAmount,
         currency,
         paymentMethod: selectedMethod,
         status: "completed" as const,
@@ -129,19 +147,21 @@ export default function PaymentModal({ visible, onClose, onPaymentSuccess, amoun
           ? `Bet payment via ${PAYMENT_METHODS.find(m => m.type === selectedMethod)?.name}`
           : `Deposit via ${PAYMENT_METHODS.find(m => m.type === selectedMethod)?.name}`,
       };
-
       processPayment(transaction);
+      
       setProcessing(false);
       setShowSuccess(true);
 
-      // Close modal and call success callback
       setTimeout(() => {
         if (onPaymentSuccess) {
           onPaymentSuccess();
         }
         handleClose();
       }, 2000);
-    }, 1500);
+    } catch (error) {
+      setProcessing(false);
+      Alert.alert("Payment Failed", getErrorMessage(error));
+    }
   };
 
   if (showSuccess) {

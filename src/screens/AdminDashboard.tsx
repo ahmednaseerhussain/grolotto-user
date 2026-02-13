@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
+import { adminAPI, authAPI, getErrorMessage } from "../api/apiClient";
 
 export default function AdminDashboard() {
   const navigation = useNavigation();
@@ -12,7 +13,23 @@ export default function AdminDashboard() {
   const getSystemStats = useAppStore(s => s.getSystemStats);
   const advertisements = useAppStore(s => s.advertisements);
 
-  const stats = getSystemStats();
+  const [apiStats, setApiStats] = useState<any>(null);
+  
+  // Fetch real stats from backend
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await adminAPI.getSystemStats();
+        if (data) setApiStats(data);
+      } catch (e) {
+        console.warn('Failed to fetch admin stats:', getErrorMessage(e));
+      }
+    };
+    fetchStats();
+  }, []);
+  
+  const localStats = getSystemStats();
+  const stats = apiStats || localStats;
 
   const handleFeaturePress = (featureId: string) => {
     switch (featureId) {
@@ -40,6 +57,9 @@ export default function AdminDashboard() {
       case "users":
         (navigation as any).navigate("AdminUserManagement");
         break;
+      case "tchala":
+        (navigation as any).navigate("TchalaManager");
+        break;
       case "settings":
         // Global settings screen
         break;
@@ -55,7 +75,7 @@ export default function AdminDashboard() {
       title: "Player Management",
       subtitle: "Manage all registered players",
       icon: "people",
-      count: "1,247 Active",
+      count: `${stats.totalPlayers || 0} Active`,
       color: "#10b981"
     },
     {
@@ -71,7 +91,7 @@ export default function AdminDashboard() {
       title: "Game Management",  
       subtitle: "Configure lottery games",
       icon: "dice",
-      count: "8 States",
+      count: "4 States",
       color: "#8b5cf6"
     },
     {
@@ -87,7 +107,7 @@ export default function AdminDashboard() {
       title: "Payment Management",
       subtitle: "Handle payouts and transactions",
       icon: "card", 
-      count: "12 Pending",
+      count: `${stats.pendingPayouts || 0} Pending`,
       color: "#06b6d4"
     },
     {
@@ -119,8 +139,16 @@ export default function AdminDashboard() {
       title: "Admin Users", 
       subtitle: "Manage admin accounts",
       icon: "shield-checkmark",
-      count: "3 Admins",
+      count: "Manage",
       color: "#dc2626"
+    },
+    {
+      id: "tchala",
+      title: "Tchala Dictionary",
+      subtitle: "Manage dream number entries",
+      icon: "moon",
+      count: "Dreams",
+      color: "#9333ea"
     }
   ];
 
@@ -142,7 +170,7 @@ export default function AdminDashboard() {
           <Pressable style={styles.notificationButton}>
             <Ionicons name="notifications" size={20} color="#6b7280" />
           </Pressable>
-          <Pressable onPress={logout} style={styles.logoutButton}>
+          <Pressable onPress={async () => { await authAPI.logout(); logout(); }} style={styles.logoutButton}>
             <Ionicons name="log-out" size={20} color="#ffffff" />
           </Pressable>
         </View>

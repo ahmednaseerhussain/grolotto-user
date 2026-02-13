@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore, PaymentMethodType } from "../state/appStore";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
+import { paymentAPI, getErrorMessage } from "../api/apiClient";
 
 const PAYMENT_METHODS = [
   {
@@ -99,15 +100,21 @@ export default function PaymentScreen() {
     (!needsPhoneNumber || isValidPhone) &&
     (!needsGiftCard || isValidGiftCard);
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (!canProceed || !user) return;
 
     setProcessing(true);
 
-    // Simulate payment processing
-    setTimeout(() => {
+    try {
+      // Create real payment intent via backend
+      const paymentResult = await paymentAPI.createPaymentIntent(
+        parseFloat(amount),
+        currency
+      );
+
+      // If payment intent created, process locally for wallet update
       const transaction = {
-        id: Date.now().toString(),
+        id: paymentResult.transactionId || Date.now().toString(),
         userId: user.id,
         type: "deposit" as const,
         amount: parseFloat(amount),
@@ -133,7 +140,11 @@ export default function PaymentScreen() {
         setPhoneNumber("");
         navigation.goBack();
       }, 2000);
-    }, 1500);
+    } catch (error) {
+      setProcessing(false);
+      const { Alert } = require("react-native");
+      Alert.alert("Payment Failed", getErrorMessage(error));
+    }
   };
 
   if (showSuccess) {

@@ -3,7 +3,7 @@ import { View, Text, Pressable, ActivityIndicator, Platform, ScrollView } from "
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { subscribeToAdvertisements, updateAdvertisement } from "../api/firebase-service";
+import { adminAPI, getErrorMessage } from "../api/apiClient";
 
 // Conditionally import PagerView for native platforms only
 let PagerView: any = null;
@@ -15,25 +15,21 @@ if (Platform.OS !== 'web') {
   }
 }
 
-// Mock lottery results data
-const mockResults = {
-  today: {
-    date: new Date().toLocaleDateString(),
-    draws: [
-      { state: "GA", time: "12:00 PM", senp: "47", maryaj: "47-23", loto3: "472", loto4: "4729" },
-      { state: "NY", time: "1:00 PM", senp: "83", maryaj: "83-15", loto3: "831", loto4: "8315" },
-      { state: "FL", time: "6:30 PM", senp: "29", maryaj: "29-64", loto3: "296", loto4: "2964", loto5: "29641" },
-    ]
-  },
-  yesterday: {
-    date: new Date(Date.now() - 86400000).toLocaleDateString(),
-    draws: [
-      { state: "GA", time: "12:00 PM", senp: "15", maryaj: "15-92", loto3: "159", loto4: "1592" },
-      { state: "NY", time: "1:00 PM", senp: "68", maryaj: "68-41", loto3: "684", loto4: "6841" },
-      { state: "CT", time: "7:00 PM", senp: "33", maryaj: "33-77", loto3: "337", loto4: "3377" },
-    ]
-  }
-};
+// Lottery results will be fetched from API
+interface DrawResult {
+  state: string;
+  time: string;
+  senp?: string;
+  maryaj?: string;
+  loto3?: string;
+  loto4?: string;
+  loto5?: string;
+}
+
+interface DayResults {
+  date: string;
+  draws: DrawResult[];
+}
 
 export default function AdvertisementSlides() {
   const navigation = useNavigation();
@@ -41,19 +37,57 @@ export default function AdvertisementSlides() {
   const [autoSlide, setAutoSlide] = useState(true);
   const [advertisements, setAdvertisements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [todayResults, setTodayResults] = useState<DayResults>({ date: new Date().toLocaleDateString(), draws: [] });
+  const [yesterdayResults, setYesterdayResults] = useState<DayResults>({ date: new Date(Date.now() - 86400000).toLocaleDateString(), draws: [] });
 
-  // Subscribe to real-time Firebase advertisements
+  // Fetch lottery results from API
   useEffect(() => {
-    const unsubscribe = subscribeToAdvertisements((ads) => {
-      // Filter only active ads and sort by order
-      const activeAds = ads
-        .filter((ad: any) => ad.status === "active")
-        .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
-      setAdvertisements(activeAds);
-      setLoading(false);
-    });
+    const fetchResults = async () => {
+      try {
+        const { lotteryAPI } = await import('../api/apiClient');
+        const data = await lotteryAPI.getLotteryRounds();
+        const rounds = Array.isArray(data) ? data : data?.rounds || [];
+        
+        const today = new Date().toDateString();
+        const yesterday = new Date(Date.now() - 86400000).toDateString();
+        
+        const todayDraws = rounds.filter((r: any) => new Date(r.date).toDateString() === today);
+        const yesterdayDraws = rounds.filter((r: any) => new Date(r.date).toDateString() === yesterday);
+        
+        const mapDraws = (draws: any[]): DrawResult[] => draws.map((r: any) => ({
+          state: r.drawState || r.state || '',
+          time: r.drawTime || '',
+          ...(r.winningNumbers || {}),
+        }));
+        
+        if (todayDraws.length > 0) setTodayResults({ date: new Date().toLocaleDateString(), draws: mapDraws(todayDraws) });
+        if (yesterdayDraws.length > 0) setYesterdayResults({ date: new Date(Date.now() - 86400000).toLocaleDateString(), draws: mapDraws(yesterdayDraws) });
+      } catch (e) {
+        // Results are optional for this screen
+      }
+    };
+    fetchResults();
+  }, []);
 
-    return () => unsubscribe();
+  // Fetch advertisements from API
+  useEffect(() => {
+    const fetchAdvertisements = async () => {
+      try {
+        setLoading(true);
+        const response = await adminAPI.getAdvertisements();
+        const ads = response.data || response;
+        const activeAds = (Array.isArray(ads) ? ads : [])
+          .filter((ad: any) => ad.status === "active")
+          .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+        setAdvertisements(activeAds);
+      } catch (error) {
+        console.error("Failed to load advertisements:", getErrorMessage(error));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAdvertisements();
   }, []);
 
   // Auto-slide functionality
@@ -71,28 +105,18 @@ export default function AdvertisementSlides() {
   // Track impressions when ad is viewed
   const trackImpression = async (adId: string) => {
     try {
-      const ad = advertisements.find((a: any) => a.id === adId);
-      if (ad) {
-        await updateAdvertisement(adId, {
-          impressions: (ad.impressions || 0) + 1
-        });
-      }
+      await adminAPI.recordAdImpression(adId);
     } catch (error) {
-      console.error("Failed to track impression:", error);
+      console.error("Failed to track impression:", getErrorMessage(error));
     }
   };
 
   // Track clicks when ad CTA is pressed
   const trackClick = async (adId: string) => {
     try {
-      const ad = advertisements.find((a: any) => a.id === adId);
-      if (ad) {
-        await updateAdvertisement(adId, {
-          clicks: (ad.clicks || 0) + 1
-        });
-      }
+      await adminAPI.recordAdClick(adId);
     } catch (error) {
-      console.error("Failed to track click:", error);
+      console.error("Failed to track click:", getErrorMessage(error));
     }
   };
 
@@ -126,11 +150,11 @@ export default function AdvertisementSlides() {
               <Ionicons name="trophy" size={48} color="white" />
             </View>
             <Text className="text-white text-3xl font-bold mb-2">Today's Results</Text>
-            <Text className="text-blue-200 text-lg">{mockResults.today.date}</Text>
+            <Text className="text-blue-200 text-lg">{todayResults.date}</Text>
           </View>
 
           <View className="space-y-4">
-            {mockResults.today.draws.map((draw, index) => (
+            {todayResults.draws.map((draw, index) => (
               <View key={index} className="bg-white/10 rounded-2xl p-4">
                 <View className="flex-row items-center justify-between mb-3">
                   <Text className="text-white text-xl font-bold">{draw.state}</Text>
@@ -184,11 +208,11 @@ export default function AdvertisementSlides() {
               <Ionicons name="time" size={48} color="white" />
             </View>
             <Text className="text-white text-3xl font-bold mb-2">Yesterday's Results</Text>
-            <Text className="text-gray-300 text-lg">{mockResults.yesterday.date}</Text>
+            <Text className="text-gray-300 text-lg">{yesterdayResults.date}</Text>
           </View>
 
           <View className="space-y-4">
-            {mockResults.yesterday.draws.map((draw, index) => (
+            {yesterdayResults.draws.map((draw, index) => (
               <View key={index} className="bg-white/10 rounded-2xl p-4">
                 <View className="flex-row items-center justify-between mb-3">
                   <Text className="text-white text-xl font-bold">{draw.state}</Text>

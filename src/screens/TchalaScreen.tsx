@@ -6,21 +6,32 @@ import { useNavigation } from "@react-navigation/native";
 import { useTchalaStore } from "../state/tchalaStore";
 import { useAppStore } from "../state/appStore";
 import { getTranslation } from "../utils/translations";
+import { tchalaAPI, getErrorMessage } from "../api/apiClient";
 
 export default function TchalaScreen() {
   const navigation = useNavigation();
   const { searchResults, searchDream, clearSearch } = useTchalaStore();
   const language = useAppStore(s => s.language);
   const [searchQuery, setSearchQuery] = useState("");
+  const [apiResults, setApiResults] = useState<any[]>([]);
   
   const t = (key: string) => getTranslation(key as any, language);
 
-  const handleSearch = (query: string) => {
+  const handleSearch = async (query: string) => {
     setSearchQuery(query);
     if (query.trim()) {
-      searchDream(query);
+      // Try API first, fall back to local store
+      try {
+        const data = await tchalaAPI.searchDreams(query, language);
+        if (Array.isArray(data)) setApiResults(data);
+      } catch {
+        // Fall back to local search
+        searchDream(query);
+        setApiResults([]);
+      }
     } else {
       clearSearch();
+      setApiResults([]);
     }
   };
 

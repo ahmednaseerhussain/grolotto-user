@@ -1,8 +1,9 @@
-import React, { useState } from "react";
-import { View, Text, ScrollView, Pressable } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { adminAPI, getErrorMessage } from "../api/apiClient";
 
 interface RevenueData {
   date: string;
@@ -21,36 +22,63 @@ interface GameStats {
   playerCount: number;
 }
 
-const mockRevenueData: RevenueData[] = [
-  { date: "2024-03-15", revenue: 12500, bets: 245, payouts: 8750, profit: 3750 },
-  { date: "2024-03-14", revenue: 15200, bets: 298, payouts: 10640, profit: 4560 },
-  { date: "2024-03-13", revenue: 9800, bets: 189, payouts: 6860, profit: 2940 },
-  { date: "2024-03-12", revenue: 18300, bets: 356, payouts: 12810, profit: 5490 },
-  { date: "2024-03-11", revenue: 11900, bets: 234, payouts: 8330, profit: 3570 },
-  { date: "2024-03-10", revenue: 14600, bets: 287, payouts: 10220, profit: 4380 },
-  { date: "2024-03-09", revenue: 16800, bets: 324, payouts: 11760, profit: 5040 }
-];
-
-const mockGameStats: GameStats[] = [
-  { gameType: "Senp", totalBets: 1250, totalRevenue: 25000, totalPayouts: 17500, profit: 7500, playerCount: 145 },
-  { gameType: "Maryaj", totalBets: 890, totalRevenue: 35600, totalPayouts: 24920, profit: 10680, playerCount: 98 },
-  { gameType: "Loto 3", totalBets: 567, totalRevenue: 17010, totalPayouts: 11907, profit: 5103, playerCount: 78 },
-  { gameType: "NY Lottery", totalBets: 234, totalRevenue: 46800, totalPayouts: 32760, profit: 14040, playerCount: 156 },
-  { gameType: "GA Lottery", totalBets: 189, totalRevenue: 37800, totalPayouts: 26460, profit: 11340, playerCount: 123 }
-];
-
 export default function ReportsAnalytics() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const [selectedPeriod, setSelectedPeriod] = useState<"7d" | "30d" | "90d">("7d");
   const [activeTab, setActiveTab] = useState<"overview" | "games" | "players">("overview");
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [revenueData, setRevenueData] = useState<RevenueData[]>([]);
+  const [gameStats, setGameStats] = useState<GameStats[]>([]);
+  const [systemStats, setSystemStats] = useState<any>(null);
 
-  const totalRevenue = mockRevenueData.reduce((sum, day) => sum + day.revenue, 0);
-  const totalBets = mockRevenueData.reduce((sum, day) => sum + day.bets, 0);
-  const totalPayouts = mockRevenueData.reduce((sum, day) => sum + day.payouts, 0);
-  const totalProfit = mockRevenueData.reduce((sum, day) => sum + day.profit, 0);
+  const fetchData = useCallback(async () => {
+    try {
+      setError(null);
+      const stats = await adminAPI.getSystemStats();
+      setSystemStats(stats);
 
-  const maxRevenue = Math.max(...mockRevenueData.map(d => d.revenue));
+      // Map system stats to revenue/game data if available
+      if (stats?.revenueData && Array.isArray(stats.revenueData)) {
+        setRevenueData(stats.revenueData);
+      } else if (stats) {
+        // Build summary from available stats
+        const today = new Date();
+        const summary: RevenueData[] = [{
+          date: today.toISOString().split('T')[0],
+          revenue: Number(stats.totalRevenue) || 0,
+          bets: Number(stats.totalBets) || 0,
+          payouts: Number(stats.totalPayouts) || 0,
+          profit: (Number(stats.totalRevenue) || 0) - (Number(stats.totalPayouts) || 0),
+        }];
+        setRevenueData(summary);
+      }
+
+      if (stats?.gameStats && Array.isArray(stats.gameStats)) {
+        setGameStats(stats.gameStats);
+      }
+    } catch (err) {
+      const msg = getErrorMessage(err);
+      setError(msg);
+      Alert.alert("Error", msg);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const totalRevenue = revenueData.reduce((sum, day) => sum + day.revenue, 0);
+  const totalBets = revenueData.reduce((sum, day) => sum + day.bets, 0);
+  const totalPayouts = revenueData.reduce((sum, day) => sum + day.payouts, 0);
+  const totalProfit = revenueData.reduce((sum, day) => sum + day.profit, 0);
+
+  const maxRevenue = revenueData.length > 0 ? Math.max(...revenueData.map(d => d.revenue)) : 1;
 
   return (
     <View className="flex-1 bg-slate-900" style={{ paddingTop: insets.top }}>
@@ -101,7 +129,26 @@ export default function ReportsAnalytics() {
         ))}
       </View>
 
-      <ScrollView className="flex-1 p-4">
+      <ScrollView
+        className="flex-1 p-4"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} tintColor="#60a5fa" />
+        }
+      >
+        {loading ? (
+          <View className="items-center justify-center py-20">
+            <ActivityIndicator size="large" color="#3b82f6" />
+            <Text className="text-slate-400 mt-4">Loading analytics...</Text>
+          </View>
+        ) : error ? (
+          <View className="items-center justify-center py-20">
+            <Ionicons name="alert-circle" size={48} color="#ef4444" />
+            <Text className="text-red-400 mt-4 text-center">{error}</Text>
+            <Pressable onPress={fetchData} className="mt-4 bg-blue-600 px-6 py-3 rounded-lg">
+              <Text className="text-white font-medium">Retry</Text>
+            </Pressable>
+          </View>
+        ) : <>
         {activeTab === "overview" && (
           <View>
             {/* Key Metrics */}
@@ -148,7 +195,7 @@ export default function ReportsAnalytics() {
               <Text className="text-slate-100 text-lg font-semibold mb-4">Daily Revenue</Text>
               <View className="h-40 justify-end">
                 <View className="flex-row items-end justify-between h-32">
-                  {mockRevenueData.map((day, index) => (
+                  {revenueData.map((day, index) => (
                     <View key={index} className="flex-1 mx-1 items-center">
                       <View 
                         className="bg-blue-500 w-full rounded-t"
@@ -168,7 +215,7 @@ export default function ReportsAnalytics() {
             {/* Daily Breakdown */}
             <View className="bg-slate-800 rounded-lg p-4 border border-slate-700">
               <Text className="text-slate-100 text-lg font-semibold mb-4">Daily Breakdown</Text>
-              {mockRevenueData.slice(0, 5).map((day) => (
+              {revenueData.slice(0, 5).map((day) => (
                 <View key={day.date} className="flex-row justify-between items-center py-3 border-b border-slate-700 last:border-b-0">
                   <Text className="text-slate-300">{day.date}</Text>
                   <View className="flex-row items-center">
@@ -184,7 +231,7 @@ export default function ReportsAnalytics() {
         {activeTab === "games" && (
           <View>
             <Text className="text-slate-100 text-lg font-semibold mb-4">Game Performance</Text>
-            {mockGameStats.map((game) => (
+            {gameStats.length > 0 ? gameStats.map((game) => (
               <View key={game.gameType} className="bg-slate-800 rounded-lg p-4 mb-4 border border-slate-700">
                 <View className="flex-row items-center justify-between mb-3">
                   <Text className="text-slate-100 font-semibold text-lg">{game.gameType}</Text>
@@ -215,7 +262,12 @@ export default function ReportsAnalytics() {
                   </View>
                 </View>
               </View>
-            ))}
+            )) : (
+              <View className="bg-slate-800 rounded-lg p-6 items-center border border-slate-700">
+                <Ionicons name="bar-chart-outline" size={48} color="#64748b" />
+                <Text className="text-slate-400 mt-4 text-center">No game statistics available yet.{"\n"}Data will appear once games are played.</Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -226,45 +278,33 @@ export default function ReportsAnalytics() {
             <View className="grid grid-cols-2 gap-4 mb-6">
               <View className="bg-slate-800 rounded-lg p-4 border border-slate-700">
                 <Text className="text-slate-400 text-sm mb-1">Active Players</Text>
-                <Text className="text-slate-100 text-2xl font-bold">1,247</Text>
-                <Text className="text-green-400 text-sm">+23 this week</Text>
+                <Text className="text-slate-100 text-2xl font-bold">{systemStats?.totalPlayers ?? '—'}</Text>
               </View>
 
               <View className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-                <Text className="text-slate-400 text-sm mb-1">New Signups</Text>
-                <Text className="text-slate-100 text-2xl font-bold">89</Text>
-                <Text className="text-blue-400 text-sm">This week</Text>
+                <Text className="text-slate-400 text-sm mb-1">Total Vendors</Text>
+                <Text className="text-slate-100 text-2xl font-bold">{systemStats?.totalVendors ?? '—'}</Text>
               </View>
 
               <View className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-                <Text className="text-slate-400 text-sm mb-1">Avg Bet Size</Text>
-                <Text className="text-slate-100 text-2xl font-bold">$12.50</Text>
-                <Text className="text-yellow-400 text-sm">+$1.20</Text>
+                <Text className="text-slate-400 text-sm mb-1">Total Bets</Text>
+                <Text className="text-slate-100 text-2xl font-bold">{totalBets.toLocaleString()}</Text>
               </View>
 
               <View className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-                <Text className="text-slate-400 text-sm mb-1">Retention Rate</Text>
-                <Text className="text-slate-100 text-2xl font-bold">78.5%</Text>
-                <Text className="text-green-400 text-sm">30-day</Text>
+                <Text className="text-slate-400 text-sm mb-1">Net Profit</Text>
+                <Text className="text-slate-100 text-2xl font-bold">${totalProfit.toLocaleString()}</Text>
               </View>
             </View>
 
-            <View className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-              <Text className="text-slate-100 text-lg font-semibold mb-4">Top Players (by Revenue)</Text>
-              {["Jean Baptiste", "Marie Claire", "Pierre Louis", "Sophie Duval", "Michel Jean"].map((name, index) => (
-                <View key={name} className="flex-row justify-between items-center py-3 border-b border-slate-700 last:border-b-0">
-                  <View className="flex-row items-center">
-                    <View className="bg-blue-600 w-8 h-8 rounded-full items-center justify-center mr-3">
-                      <Text className="text-white text-sm font-bold">{index + 1}</Text>
-                    </View>
-                    <Text className="text-slate-300">{name}</Text>
-                  </View>
-                  <Text className="text-green-400 font-medium">${(2500 - index * 300).toLocaleString()}</Text>
-                </View>
-              ))}
+            <View className="bg-slate-800 rounded-lg p-6 items-center border border-slate-700">
+              <Ionicons name="people-outline" size={48} color="#64748b" />
+              <Text className="text-slate-400 mt-4 text-center">Detailed player analytics will be available{"\n"}in a future update.</Text>
             </View>
           </View>
         )}
+        </>
+        }
       </ScrollView>
 
       {/* Export Options */}
