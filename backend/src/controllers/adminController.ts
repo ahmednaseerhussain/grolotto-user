@@ -24,7 +24,7 @@ export async function getAllUsers(req: Request, res: Response, next: NextFunctio
 
 export async function approveVendor(req: Request, res: Response, next: NextFunction) {
   try {
-    await adminService.approveVendor(req.params.id);
+    await adminService.approveVendor(req.params.vendorId);
     res.json({ message: 'Vendor approved' });
   } catch (error) {
     next(error);
@@ -33,7 +33,7 @@ export async function approveVendor(req: Request, res: Response, next: NextFunct
 
 export async function rejectVendor(req: Request, res: Response, next: NextFunction) {
   try {
-    await adminService.rejectVendor(req.params.id, req.body.reason || '');
+    await adminService.rejectVendor(req.params.vendorId, req.body.reason || '');
     res.json({ message: 'Vendor rejected' });
   } catch (error) {
     next(error);
@@ -42,7 +42,7 @@ export async function rejectVendor(req: Request, res: Response, next: NextFuncti
 
 export async function suspendVendor(req: Request, res: Response, next: NextFunction) {
   try {
-    await adminService.suspendVendor(req.params.id);
+    await adminService.suspendVendor(req.params.vendorId);
     res.json({ message: 'Vendor suspended' });
   } catch (error) {
     next(error);
@@ -51,7 +51,7 @@ export async function suspendVendor(req: Request, res: Response, next: NextFunct
 
 export async function activateVendor(req: Request, res: Response, next: NextFunction) {
   try {
-    await adminService.activateVendor(req.params.id);
+    await adminService.activateVendor(req.params.vendorId);
     res.json({ message: 'Vendor activated' });
   } catch (error) {
     next(error);
@@ -60,7 +60,7 @@ export async function activateVendor(req: Request, res: Response, next: NextFunc
 
 export async function suspendUser(req: Request, res: Response, next: NextFunction) {
   try {
-    await adminService.suspendUser(req.params.id);
+    await adminService.suspendUser(req.params.userId);
     res.json({ message: 'User suspended' });
   } catch (error) {
     next(error);
@@ -69,7 +69,7 @@ export async function suspendUser(req: Request, res: Response, next: NextFunctio
 
 export async function activateUser(req: Request, res: Response, next: NextFunction) {
   try {
-    await adminService.activateUser(req.params.id);
+    await adminService.activateUser(req.params.userId);
     res.json({ message: 'User activated' });
   } catch (error) {
     next(error);
@@ -106,7 +106,7 @@ export async function getPendingPayouts(req: Request, res: Response, next: NextF
 export async function processVendorPayout(req: Request, res: Response, next: NextFunction) {
   try {
     const result = await adminService.processVendorPayout(
-      req.params.id,
+      req.params.payoutId,
       req.body.action,
       req.user!.id,
       req.body.notes,
@@ -140,7 +140,7 @@ export async function createAdvertisement(req: Request, res: Response, next: Nex
 
 export async function updateAdvertisement(req: Request, res: Response, next: NextFunction) {
   try {
-    await adminService.updateAdvertisement(req.params.id, req.body);
+    await adminService.updateAdvertisement(req.params.adId, req.body);
     res.json({ message: 'Advertisement updated' });
   } catch (error) {
     next(error);
@@ -149,7 +149,7 @@ export async function updateAdvertisement(req: Request, res: Response, next: Nex
 
 export async function deleteAdvertisement(req: Request, res: Response, next: NextFunction) {
   try {
-    await adminService.deleteAdvertisement(req.params.id);
+    await adminService.deleteAdvertisement(req.params.adId);
     res.json({ message: 'Advertisement deleted' });
   } catch (error) {
     next(error);
@@ -158,7 +158,7 @@ export async function deleteAdvertisement(req: Request, res: Response, next: Nex
 
 export async function recordAdClick(req: Request, res: Response, next: NextFunction) {
   try {
-    await adminService.recordAdClick(req.params.id);
+    await adminService.recordAdClick(req.params.adId);
     res.json({ message: 'Click recorded' });
   } catch (error) {
     next(error);
@@ -167,7 +167,7 @@ export async function recordAdClick(req: Request, res: Response, next: NextFunct
 
 export async function recordAdImpression(req: Request, res: Response, next: NextFunction) {
   try {
-    await adminService.recordAdImpression(req.params.id);
+    await adminService.recordAdImpression(req.params.adId);
     res.json({ message: 'Impression recorded' });
   } catch (error) {
     next(error);

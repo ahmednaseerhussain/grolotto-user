@@ -75,7 +75,7 @@ export default function PaymentManagement() {
   const approvePayment = async (requestId: string) => {
     setActionLoading(requestId);
     try {
-      await adminAPI.processVendorPayout(requestId);
+      await adminAPI.processVendorPayout(requestId, { action: 'approved' });
       await fetchData();
     } catch (err) {
       Alert.alert("Error", getErrorMessage(err));
@@ -87,9 +87,8 @@ export default function PaymentManagement() {
   const rejectPayment = async (requestId: string) => {
     setActionLoading(requestId);
     try {
-      // Use the same endpoint — backend can handle reject status
-      Alert.alert("Rejected", "Payment request has been rejected.");
-      setPaymentRequests(prev => prev.filter(r => r.id !== requestId));
+      await adminAPI.processVendorPayout(requestId, { action: 'rejected' });
+      await fetchData();
     } catch (err) {
       Alert.alert("Error", getErrorMessage(err));
     } finally {
@@ -100,7 +99,7 @@ export default function PaymentManagement() {
   const markAsCompleted = async (requestId: string) => {
     setActionLoading(requestId);
     try {
-      await adminAPI.processVendorPayout(requestId);
+      await adminAPI.processVendorPayout(requestId, { action: 'approved' });
       await fetchData();
     } catch (err) {
       Alert.alert("Error", getErrorMessage(err));

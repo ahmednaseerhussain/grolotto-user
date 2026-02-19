@@ -4,48 +4,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
-
-const getTranslation = (lang: string, key: string) => {
-  const translations: any = {
-    ht: {
-      welcome: "Byenveni",
-      chooseRole: "Chwazi kijan ou vle konekte",
-      playLottery: "Jwe Loto",
-      playerDesc: "Jwe ak nimewo favori ou yo",
-      manageLottery: "Jere Loto",
-      vendorDesc: "Jere tiraj ak klyan ou yo",
-    },
-    en: {
-      welcome: "Welcome",
-      chooseRole: "Choose how you want to connect",
-      playLottery: "Play Lottery",
-      playerDesc: "Play with your favorite numbers",
-      manageLottery: "Manage Lottery",
-      vendorDesc: "Manage draws and your clients",
-    },
-    fr: {
-      welcome: "Bienvenue",
-      chooseRole: "Choisissez comment vous connecter",
-      playLottery: "Jouer à la Loterie",
-      playerDesc: "Jouez avec vos numéros favoris",
-      manageLottery: "Gérer la Loterie",
-      vendorDesc: "Gérez les tirages et vos clients",
-    },
-    es: {
-      welcome: "Bienvenido",
-      chooseRole: "Elige cómo conectarte",
-      playLottery: "Jugar Lotería",
-      playerDesc: "Juega con tus números favoritos",
-      manageLottery: "Administrar Lotería",
-      vendorDesc: "Administra sorteos y tus clientes",
-    },
-  };
-  return translations[lang]?.[key] || translations.en[key];
-};
+import { getTranslation } from "../utils/translations";
 
 export default function LoginEntryScreen() {
   const navigation = useNavigation();
   const language = useAppStore(s => s.language);
+  const t = (key: string) => getTranslation(key as any, language);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -66,10 +30,10 @@ export default function LoginEntryScreen() {
           </View>
           <Text style={styles.title}>GROLOTTO</Text>
           <Text style={styles.welcome}>
-            {getTranslation(language, "welcome")}
+            {t("welcome")}
           </Text>
           <Text style={styles.subtitle}>
-            {getTranslation(language, "chooseRole")}
+            {t("chooseRole")}
           </Text>
         </View>
 
@@ -84,10 +48,10 @@ export default function LoginEntryScreen() {
             </View>
             <View style={styles.optionContent}>
               <Text style={styles.optionTitle}>
-                {getTranslation(language, "playLottery")}
+                {t("playLottery")}
               </Text>
               <Text style={styles.optionDescription}>
-                {getTranslation(language, "playerDesc")}
+                {t("playerDesc")}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color="#6b7280" />
@@ -103,10 +67,10 @@ export default function LoginEntryScreen() {
             </View>
             <View style={styles.optionContent}>
               <Text style={styles.optionTitle}>
-                {getTranslation(language, "manageLottery")}
+                {t("manageLottery")}
               </Text>
               <Text style={styles.optionDescription}>
-                {getTranslation(language, "vendorDesc")}
+                {t("vendorDesc")}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color="#6b7280" />

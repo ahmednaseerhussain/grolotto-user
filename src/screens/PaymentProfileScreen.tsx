@@ -17,21 +17,14 @@ interface AddPaymentModalProps {
 const AddPaymentModal = ({ visible, type, onClose, onAdd }: AddPaymentModalProps) => {
   const [selectedType, setSelectedType] = useState<PaymentMethodType | PayoutMethodType | null>(null);
   const [displayName, setDisplayName] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [accountNumber, setAccountNumber] = useState("");
-  const [bankName, setBankName] = useState("");
 
   const depositMethods = [
-    { type: "debit_card" as PaymentMethodType, name: "Debit Card", icon: "card" as const, color: "#3b82f6" },
     { type: "moncash" as PaymentMethodType, name: "MonCash", icon: "wallet" as const, color: "#ef4444" },
-    { type: "natcash" as PaymentMethodType, name: "NatCash", icon: "cash" as const, color: "#10b981" },
   ];
 
   const payoutMethods = [
-    { type: "ach" as PayoutMethodType, name: "ACH Bank Transfer", icon: "business" as const, color: "#3b82f6" },
     { type: "moncash" as PayoutMethodType, name: "MonCash", icon: "wallet" as const, color: "#ef4444" },
-    { type: "natcash" as PayoutMethodType, name: "NatCash", icon: "cash" as const, color: "#10b981" },
   ];
 
   const methods = type === "deposit" ? depositMethods : payoutMethods;
@@ -49,25 +42,12 @@ const AddPaymentModal = ({ visible, type, onClose, onAdd }: AddPaymentModalProps
       isDefault: false,
     };
 
-    if (selectedType === "debit_card") {
-      if (!cardNumber || cardNumber.length < 4) {
-        Alert.alert("Error", "Please enter a valid card number");
-        return;
-      }
-      methodData.lastFourDigits = cardNumber.slice(-4);
-    } else if (selectedType === "moncash" || selectedType === "natcash") {
+    if (selectedType === "moncash") {
       if (!phoneNumber || phoneNumber.length < 8) {
         Alert.alert("Error", "Please enter a valid phone number");
         return;
       }
       methodData.phoneNumber = phoneNumber;
-    } else if (selectedType === "ach") {
-      if (!accountNumber || !bankName) {
-        Alert.alert("Error", "Please enter account number and bank name");
-        return;
-      }
-      methodData.accountNumber = accountNumber;
-      methodData.bankName = bankName;
     }
 
     onAdd(methodData);
@@ -78,15 +58,10 @@ const AddPaymentModal = ({ visible, type, onClose, onAdd }: AddPaymentModalProps
   const resetForm = () => {
     setSelectedType(null);
     setDisplayName("");
-    setCardNumber("");
     setPhoneNumber("");
-    setAccountNumber("");
-    setBankName("");
   };
 
-  const needsCardDetails = selectedType === "debit_card";
-  const needsPhoneNumber = selectedType === "moncash" || selectedType === "natcash";
-  const needsBankDetails = selectedType === "ach";
+  const needsPhoneNumber = selectedType === "moncash";
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
@@ -147,26 +122,6 @@ const AddPaymentModal = ({ visible, type, onClose, onAdd }: AddPaymentModalProps
               </View>
             )}
 
-            {/* Card Details */}
-            {needsCardDetails && (
-              <View className="mb-5">
-                <Text className="text-sm font-semibold text-gray-700 mb-2">
-                  Card Number <Text className="text-red-500">*</Text>
-                </Text>
-                <TextInput
-                  className="border-2 border-gray-200 rounded-xl p-4 text-base text-gray-900 bg-gray-50"
-                  placeholder="1234 5678 9012 3456"
-                  keyboardType="numeric"
-                  maxLength={19}
-                  value={cardNumber}
-                  onChangeText={setCardNumber}
-                />
-                <Text className="text-xs text-green-600 mt-2">
-                  🔒 Your card info is secure and encrypted
-                </Text>
-              </View>
-            )}
-
             {/* Phone Number */}
             {needsPhoneNumber && (
               <View className="mb-5">
@@ -181,39 +136,6 @@ const AddPaymentModal = ({ visible, type, onClose, onAdd }: AddPaymentModalProps
                   onChangeText={setPhoneNumber}
                 />
               </View>
-            )}
-
-            {/* Bank Details */}
-            {needsBankDetails && (
-              <>
-                <View className="mb-5">
-                  <Text className="text-sm font-semibold text-gray-700 mb-2">
-                    Bank Name <Text className="text-red-500">*</Text>
-                  </Text>
-                  <TextInput
-                    className="border-2 border-gray-200 rounded-xl p-4 text-base text-gray-900 bg-gray-50"
-                    placeholder="e.g., Bank of America"
-                    value={bankName}
-                    onChangeText={setBankName}
-                  />
-                </View>
-                <View className="mb-5">
-                  <Text className="text-sm font-semibold text-gray-700 mb-2">
-                    Account Number <Text className="text-red-500">*</Text>
-                  </Text>
-                  <TextInput
-                    className="border-2 border-gray-200 rounded-xl p-4 text-base text-gray-900 bg-gray-50"
-                    placeholder="Enter account number"
-                    keyboardType="numeric"
-                    value={accountNumber}
-                    onChangeText={setAccountNumber}
-                    secureTextEntry
-                  />
-                  <Text className="text-xs text-green-600 mt-2">
-                    🔒 Your banking info is secure and encrypted
-                  </Text>
-                </View>
-              </>
             )}
           </ScrollView>
 
@@ -248,14 +170,8 @@ const PaymentMethodCard = ({
 }) => {
   const getIcon = (type: string) => {
     switch (type) {
-      case "debit_card":
-        return { name: "card" as const, color: "#3b82f6" };
       case "moncash":
         return { name: "wallet" as const, color: "#ef4444" };
-      case "natcash":
-        return { name: "cash" as const, color: "#10b981" };
-      case "ach":
-        return { name: "business" as const, color: "#3b82f6" };
       default:
         return { name: "wallet" as const, color: "#6b7280" };
     }
@@ -264,12 +180,8 @@ const PaymentMethodCard = ({
   const icon = getIcon(method.type);
 
   const getMethodDetails = () => {
-    if (method.lastFourDigits) {
-      return `•••• ${method.lastFourDigits}`;
-    } else if (method.phoneNumber) {
+    if (method.phoneNumber) {
       return method.phoneNumber;
-    } else if (method.bankName && method.accountNumber) {
-      return `${method.bankName} - ••••${method.accountNumber?.slice(-4)}`;
     }
     return "";
   };
@@ -424,8 +336,8 @@ export default function PaymentProfileScreen() {
               </Text>
               <Text className="text-blue-700 text-sm leading-5">
                 {activeTab === "deposit"
-                  ? "Add payment methods to quickly recharge your wallet and place bets. Your default method will be pre-selected."
-                  : "Add payout methods to receive your winnings. Choose from ACH bank transfer or mobile payment options like MonCash and NatCash."}
+                  ? "Add MonCash as your payment method to quickly recharge your wallet and place bets."
+                  : "Add MonCash as your payout method to receive your winnings."}
               </Text>
             </View>
           </View>

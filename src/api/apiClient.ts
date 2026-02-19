@@ -7,11 +7,10 @@ import { Platform } from 'react-native';
 const getBaseUrl = () => {
   if (__DEV__) {
     return Platform.OS === 'android'
-      ? 'https://hypnagogic-cade-coccic.ngrok-free.dev/api'
-      : 'https://hypnagogic-cade-coccic.ngrok-free.dev/api';
+      ? 'http://10.0.2.2:3000/api'
+      : 'http://localhost:3000/api';
   }
-  // Replace with your production URL
-  return 'https://api.groloto.com/api';
+  return 'https://grolotto-user.onrender.com/api';
 };
 
 const TOKEN_KEY = 'groloto_access_token';
@@ -20,7 +19,7 @@ const REFRESH_KEY = 'groloto_refresh_token';
 // ─── Axios instance ──────────────────────────────────────
 const api: AxiosInstance = axios.create({
   baseURL: getBaseUrl(),
-  timeout: 15000,
+  timeout: 30000,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -233,6 +232,26 @@ export const vendorAPI = {
     const res = await api.get(`/vendors/${vendorId}/reviews`);
     return res.data;
   },
+
+  async getNumberLimits() {
+    const res = await api.get('/vendors/me/number-limits');
+    return res.data;
+  },
+
+  async createNumberLimit(data: { drawState: string; number: string; betLimit: number }) {
+    const res = await api.post('/vendors/me/number-limits', data);
+    return res.data;
+  },
+
+  async updateNumberLimit(limitId: string, data: { betLimit?: number; isStopped?: boolean }) {
+    const res = await api.put(`/vendors/me/number-limits/${limitId}`, data);
+    return res.data;
+  },
+
+  async deleteNumberLimit(limitId: string) {
+    const res = await api.delete(`/vendors/me/number-limits/${limitId}`);
+    return res.data;
+  },
 };
 
 // ═════════════════════════════════════════════════════════
@@ -295,11 +314,16 @@ export const walletAPI = {
 };
 
 // ═════════════════════════════════════════════════════════
-//  PAYMENT API (MoonPay)
+//  PAYMENT API (MonCash)
 // ═════════════════════════════════════════════════════════
 export const paymentAPI = {
   async createPaymentIntent(amount: number, currency = 'USD') {
     const res = await api.post('/payments/intent', { amount, currency });
+    return res.data;
+  },
+
+  async verifyPayment(orderId: string, transactionId?: string) {
+    const res = await api.post('/payments/verify', { orderId, transactionId });
     return res.data;
   },
 
@@ -368,8 +392,8 @@ export const adminAPI = {
     return res.data;
   },
 
-  async processVendorPayout(payoutId: string) {
-    const res = await api.post(`/admin/payouts/${payoutId}/process`);
+  async processVendorPayout(payoutId: string, data: { action: 'approved' | 'rejected'; notes?: string; transferReference?: string }) {
+    const res = await api.post(`/admin/payouts/${payoutId}/process`, data);
     return res.data;
   },
 
@@ -416,6 +440,16 @@ export const tchalaAPI = {
 
   async getAllDreams(language = 'en') {
     const res = await api.get('/tchala/all', { params: { language } });
+    return res.data;
+  },
+};
+
+// ═════════════════════════════════════════════════════════
+//  ADVERTISEMENT API (Public)
+// ═════════════════════════════════════════════════════════
+export const advertisementAPI = {
+  async getActiveAds() {
+    const res = await api.get('/advertisements/active');
     return res.data;
   },
 };

@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
 import { authAPI, getErrorMessage } from "../api/apiClient";
+import { getTranslation } from '../utils/translations';
 
 export default function PlayerLogin() {
   const [email, setEmail] = useState("");
@@ -17,6 +18,8 @@ export default function PlayerLogin() {
   
   const navigation = useNavigation();
   const setUser = useAppStore(s => s.setUser);
+  const language = useAppStore(s => s.language);
+  const t = (key: string) => getTranslation(key as any, language);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -29,6 +32,7 @@ export default function PlayerLogin() {
     try {
       const data = await authAPI.login(email, password);
       if (data.user.role !== 'player') {
+        await authAPI.logout();
         Alert.alert("Error", "This login is for players only.");
         return;
       }

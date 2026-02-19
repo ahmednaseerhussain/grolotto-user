@@ -6,7 +6,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
 import { getTranslation } from "../utils/translations";
 import PaymentModal from "./PaymentModal";
-import { vendorAPI, walletAPI, adminAPI, getErrorMessage } from "../api/apiClient";
+import { vendorAPI, walletAPI, advertisementAPI, getErrorMessage } from "../api/apiClient";
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -180,7 +180,7 @@ export default function PlayerDashboard() {
         console.warn('PlayerDashboard fetch error:', getErrorMessage(e));
       }
       try {
-        const adsData = await adminAPI.getAdvertisements();
+        const adsData = await advertisementAPI.getActiveAds();
         if (Array.isArray(adsData)) {
           useAppStore.getState().resetAdvertisements();
           adsData.forEach((ad: any) => useAppStore.getState().addAdvertisement(ad));

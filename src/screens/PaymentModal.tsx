@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, Modal, StyleSheet, Keyboard, TouchableWithoutFeedback, Linking, Alert } from "react-native";
+import { View, Text, ScrollView, Pressable, TextInput, Modal, StyleSheet, Keyboard, TouchableWithoutFeedback, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppStore, PaymentMethodType } from "../state/appStore";
@@ -8,25 +8,11 @@ import { paymentAPI, getErrorMessage } from "../api/apiClient";
 
 const PAYMENT_METHODS = [
   {
-    type: "debit_card" as PaymentMethodType,
-    name: "Debit Card",
-    icon: "card" as const,
-    color: "#3b82f6",
-    description: "Visa, Mastercard, Discover",
-  },
-  {
     type: "moncash" as PaymentMethodType,
     name: "MonCash",
     icon: "wallet" as const,
     color: "#ef4444",
-    description: "Haiti mobile money",
-  },
-  {
-    type: "natcash" as PaymentMethodType,
-    name: "NatCash",
-    icon: "cash" as const,
-    color: "#10b981",
-    description: "National payment system",
+    description: "Digicel mobile money",
   },
 ];
 
@@ -47,9 +33,6 @@ export default function PaymentModal({ visible, onClose, onPaymentSuccess, amoun
 
   const [amount, setAmount] = useState("");
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType | null>(null);
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCVV, setCardCVV] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [processing, setProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -63,20 +46,6 @@ export default function PaymentModal({ visible, onClose, onPaymentSuccess, amoun
 
   const getCurrencySymbol = () => currency === "USD" ? "$" : "G";
 
-  const formatCardNumber = (text: string) => {
-    const cleaned = text.replace(/\s/g, "");
-    const chunks = cleaned.match(/.{1,4}/g);
-    return chunks ? chunks.join(" ") : cleaned;
-  };
-
-  const formatExpiry = (text: string) => {
-    const cleaned = text.replace(/\D/g, "");
-    if (cleaned.length >= 2) {
-      return cleaned.slice(0, 2) + "/" + cleaned.slice(2, 4);
-    }
-    return cleaned;
-  };
-
   const handleQuickAmount = (value: number) => {
     setAmount(value.toString());
   };
@@ -84,9 +53,6 @@ export default function PaymentModal({ visible, onClose, onPaymentSuccess, amoun
   const resetForm = () => {
     setAmount("");
     setSelectedMethod(null);
-    setCardNumber("");
-    setCardExpiry("");
-    setCardCVV("");
     setPhoneNumber("");
     setProcessing(false);
     setShowSuccess(false);
@@ -97,16 +63,10 @@ export default function PaymentModal({ visible, onClose, onPaymentSuccess, amoun
     onClose();
   };
 
-  const needsCardDetails = selectedMethod === "debit_card";
-  const needsPhoneNumber = selectedMethod === "moncash" || selectedMethod === "natcash";
-  
-  const isValidCardNumber = cardNumber.replace(/\s/g, "").length >= 16;
-  const isValidExpiry = cardExpiry.replace(/\D/g, "").length === 4;
-  const isValidCVV = cardCVV.length >= 3;
+  const needsPhoneNumber = selectedMethod === "moncash";
   const isValidPhone = phoneNumber.length >= 8;
   
   const canProceed = amount && parseFloat(amount) > 0 && selectedMethod && 
-    (!needsCardDetails || (isValidCardNumber && isValidExpiry && isValidCVV)) &&
     (!needsPhoneNumber || isValidPhone);
 
   const handlePayment = async () => {
@@ -117,35 +77,23 @@ export default function PaymentModal({ visible, onClose, onPaymentSuccess, amoun
 
     try {
       const parsedAmount = parseFloat(amount);
-      
-      if (selectedMethod === 'debit_card') {
-        // Use MoonPay for card payments
-        const paymentData = await paymentAPI.createPaymentIntent(parsedAmount, currency);
-        if (paymentData.paymentUrl) {
-          // Open MoonPay widget in browser
-          Linking.openURL(paymentData.paymentUrl);
-          setProcessing(false);
-          handleClose();
-          return;
-        }
-      }
 
-      // For MonCash / NatCash, create a payment intent and show the transaction reference
+      // For MonCash, create a payment intent
       const paymentData = await paymentAPI.createPaymentIntent(parsedAmount, currency);
       
-      // Record the transaction locally as well
+      // Record the transaction locally
       const transaction = {
-        id: paymentData.externalTransactionId || Date.now().toString(),
+        id: paymentData.orderId || Date.now().toString(),
         userId: user.id,
         type: propAmount ? ("bet_payment" as const) : ("deposit" as const),
         amount: parsedAmount,
         currency,
-        paymentMethod: selectedMethod,
+        paymentMethod: "moncash" as const,
         status: "completed" as const,
         timestamp: Date.now(),
         description: propAmount 
-          ? `Bet payment via ${PAYMENT_METHODS.find(m => m.type === selectedMethod)?.name}`
-          : `Deposit via ${PAYMENT_METHODS.find(m => m.type === selectedMethod)?.name}`,
+          ? `Bet payment via MonCash`
+          : `MonCash deposit`,
       };
       processPayment(transaction);
       
@@ -288,67 +236,11 @@ export default function PaymentModal({ visible, onClose, onPaymentSuccess, amoun
                 ))}
               </View>
 
-              {/* Card Details */}
-              {needsCardDetails && (
-                <Animated.View entering={FadeInDown.duration(300)} style={styles.section}>
-                  <Text style={styles.sectionTitle}>Card Details</Text>
-                  
-                  <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>Card Number</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="1234 5678 9012 3456"
-                      placeholderTextColor="#64748b"
-                      keyboardType="numeric"
-                      maxLength={19}
-                      value={cardNumber}
-                      onChangeText={(text) => setCardNumber(formatCardNumber(text))}
-                    />
-                  </View>
-
-                  <View style={styles.inputRow}>
-                    <View style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}>
-                      <Text style={styles.inputLabel}>Expiry Date</Text>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="MM/YY"
-                        placeholderTextColor="#64748b"
-                        keyboardType="numeric"
-                        maxLength={5}
-                        value={cardExpiry}
-                        onChangeText={(text) => setCardExpiry(formatExpiry(text))}
-                      />
-                    </View>
-
-                    <View style={[styles.inputContainer, { flex: 1, marginLeft: 8 }]}>
-                      <Text style={styles.inputLabel}>CVV</Text>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="123"
-                        placeholderTextColor="#64748b"
-                        keyboardType="numeric"
-                        maxLength={4}
-                        secureTextEntry
-                        value={cardCVV}
-                        onChangeText={setCardCVV}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.secureNote}>
-                    <Ionicons name="lock-closed" size={16} color="#10b981" />
-                    <Text style={styles.secureNoteText}>
-                      Your payment info is secure and encrypted
-                    </Text>
-                  </View>
-                </Animated.View>
-              )}
-
               {/* Phone Number */}
               {needsPhoneNumber && (
                 <Animated.View entering={FadeInDown.duration(300)} style={styles.section}>
                   <Text style={styles.sectionTitle}>
-                    {selectedMethod === "moncash" ? "MonCash" : "NatCash"} Phone Number
+                    MonCash Phone Number
                   </Text>
                   <View style={styles.inputContainer}>
                     <TextInput

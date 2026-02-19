@@ -17,17 +17,16 @@ const config = {
   },
   
   jwt: {
-    secret: process.env.JWT_SECRET || 'CHANGE_ME',
-    refreshSecret: process.env.JWT_REFRESH_SECRET || 'CHANGE_ME_REFRESH',
+    secret: process.env.JWT_SECRET || '',
+    refreshSecret: process.env.JWT_REFRESH_SECRET || '',
     expiry: process.env.JWT_EXPIRY || '15m',
     refreshExpiry: process.env.JWT_REFRESH_EXPIRY || '7d',
   },
   
-  moonpay: {
-    apiKey: process.env.MOONPAY_API_KEY || '',
-    secretKey: process.env.MOONPAY_SECRET_KEY || '',
-    webhookSecret: process.env.MOONPAY_WEBHOOK_SECRET || '',
-    baseUrl: process.env.MOONPAY_BASE_URL || 'https://api.moonpay.com',
+  moncash: {
+    clientId: process.env.MONCASH_CLIENT_ID || '',
+    clientSecret: process.env.MONCASH_CLIENT_SECRET || '',
+    baseUrl: process.env.MONCASH_BASE_URL || 'https://sandbox.moncashbutton.digicelgroup.com',
   },
   
   rateLimit: {
@@ -47,17 +46,15 @@ const config = {
   },
 };
 
-// Validate critical config in production
-if (config.nodeEnv === 'production') {
-  if (config.jwt.secret === 'CHANGE_ME') {
-    throw new Error('JWT_SECRET must be set in production!');
-  }
-  if (config.jwt.refreshSecret === 'CHANGE_ME_REFRESH') {
-    throw new Error('JWT_REFRESH_SECRET must be set in production!');
-  }
-  if (!config.db.connectionString) {
-    throw new Error('DATABASE_URL must be set in production!');
-  }
+// Validate critical config
+if (!config.jwt.secret) {
+  throw new Error('JWT_SECRET environment variable must be set!');
+}
+if (!config.jwt.refreshSecret) {
+  throw new Error('JWT_REFRESH_SECRET environment variable must be set!');
+}
+if (config.nodeEnv === 'production' && !config.db.connectionString) {
+  throw new Error('DATABASE_URL must be set in production!');
 }
 
 export default config;

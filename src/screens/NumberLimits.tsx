@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
 
 const DRAWS = [
@@ -16,6 +17,7 @@ const DRAWS = [
 ];
 
 export default function NumberLimits() {
+  const navigation = useNavigation();
   const user = useAppStore(s => s.user);
   const vendors = useAppStore(s => s.vendors);
   const gamePlays = useAppStore(s => s.gamePlays);
@@ -31,7 +33,7 @@ export default function NumberLimits() {
   const [isStopping, setIsStopping] = useState(false);
   const [stopNumber, setStopNumber] = useState("");
 
-  const currentVendor = vendors.find(v => v.email === user?.email);
+  const currentVendor = vendors.find(v => (v as any).userId === user?.id);
 
   if (!currentVendor) {
     return (
@@ -175,7 +177,7 @@ export default function NumberLimits() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable style={styles.backButton}>
+        <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#1f2937" />
         </Pressable>
         <Text style={styles.headerTitle}>Limits per Number</Text>

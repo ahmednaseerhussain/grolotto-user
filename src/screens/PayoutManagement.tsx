@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import { useAppStore, PayoutMethodType } from "../state/appStore";
 
 const PAYOUT_METHODS = [
@@ -14,27 +15,10 @@ const PAYOUT_METHODS = [
     fee: "2%",
     minAmount: 10,
   },
-  { 
-    key: "natcash" as PayoutMethodType, 
-    name: "NatCash", 
-    icon: "card", 
-    color: "#10b981",
-    description: "Transfert vers compte NatCash",
-    fee: "1.5%",
-    minAmount: 20,
-  },
-  { 
-    key: "ach" as PayoutMethodType, 
-    name: "ACH Transfer", 
-    icon: "logo-paypal", 
-    color: "#3b82f6",
-    description: "Transfert international PayPal",
-    fee: "3.5%",
-    minAmount: 25,
-  },
 ];
 
 export default function PayoutManagement() {
+  const navigation = useNavigation();
   const user = useAppStore(s => s.user);
   const vendors = useAppStore(s => s.vendors);
   const payouts = useAppStore(s => s.payouts);
@@ -47,7 +31,7 @@ export default function PayoutManagement() {
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [withdrawalCurrency, setWithdrawalCurrency] = useState<"HTG" | "USD">(currency);
   
-  const currentVendor = vendors.find(v => v.email === user?.email);
+  const currentVendor = vendors.find(v => (v as any).userId === user?.id);
   const vendorPayouts = payouts.filter(p => p.vendorId === currentVendor?.id);
   
   // Currency formatting and conversion
@@ -140,7 +124,7 @@ export default function PayoutManagement() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable style={styles.backButton}>
+        <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#1f2937" />
         </Pressable>
         <Text style={styles.headerTitle}>Retraits</Text>

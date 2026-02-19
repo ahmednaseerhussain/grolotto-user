@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
 import { vendorAPI, getErrorMessage } from "../api/apiClient";
 
@@ -29,6 +30,7 @@ const STATE_OPTIONS = [
 ];
 
 export default function VendorPlayHistory() {
+  const navigation = useNavigation();
   const user = useAppStore(s => s.user);
   const vendors = useAppStore(s => s.vendors);
   const gamePlays = useAppStore(s => s.gamePlays);
@@ -180,7 +182,7 @@ export default function VendorPlayHistory() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable style={styles.backButton}>
+        <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#1f2937" />
         </Pressable>
         <Text style={styles.headerTitle}>Historique & Rapports</Text>

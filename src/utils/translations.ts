@@ -639,6 +639,594 @@ export const translations = {
     en: "Sign Out",
     fr: "Se Déconnecter",
     es: "Cerrar Sesión"
+  },
+
+  // LoginEntry screen
+  chooseRole: {
+    ht: "Chwazi kijan ou vle konekte",
+    en: "Choose how you want to connect",
+    fr: "Choisissez comment vous connecter",
+    es: "Elige cómo conectarte"
+  },
+  playLottery: {
+    ht: "Jwe Loto",
+    en: "Play Lottery",
+    fr: "Jouer à la Loterie",
+    es: "Jugar Lotería"
+  },
+  playerDesc: {
+    ht: "Jwe ak nimewo favori ou yo",
+    en: "Play with your favorite numbers",
+    fr: "Jouez avec vos numéros favoris",
+    es: "Juega con tus números favoritos"
+  },
+  manageLottery: {
+    ht: "Jere Loto",
+    en: "Manage Lottery",
+    fr: "Gérer la Loterie",
+    es: "Administrar Lotería"
+  },
+  vendorDesc: {
+    ht: "Jere tiraj ak klyan ou yo",
+    en: "Manage draws and your clients",
+    fr: "Gérez les tirages et vos clients",
+    es: "Administra sorteos y tus clientes"
+  },
+
+  // Payment translations
+  makePayment: {
+    ht: "Fè Peman",
+    en: "Make Payment",
+    fr: "Faire un Paiement",
+    es: "Hacer Pago"
+  },
+  currentBalance: {
+    ht: "Balans Aktyèl",
+    en: "Current Balance",
+    fr: "Solde Actuel",
+    es: "Saldo Actual"
+  },
+  enterAmount: {
+    ht: "Antre Montan",
+    en: "Enter Amount",
+    fr: "Entrer le Montant",
+    es: "Ingrese Monto"
+  },
+  quickAmounts: {
+    ht: "Montan Rapid",
+    en: "Quick Amounts",
+    fr: "Montants Rapides",
+    es: "Montos Rápidos"
+  },
+  selectPaymentMethod: {
+    ht: "Chwazi Metòd Peman",
+    en: "Select Payment Method",
+    fr: "Sélectionner Méthode de Paiement",
+    es: "Seleccionar Método de Pago"
+  },
+  phoneNumber: {
+    ht: "Nimewo Telefòn",
+    en: "Phone Number",
+    fr: "Numéro de Téléphone",
+    es: "Número de Teléfono"
+  },
+  moncashPhone: {
+    ht: "Nimewo MonCash",
+    en: "MonCash Phone Number",
+    fr: "Numéro MonCash",
+    es: "Número MonCash"
+  },
+  deposit: {
+    ht: "Depo",
+    en: "Deposit",
+    fr: "Dépôt",
+    es: "Depósito"
+  },
+  processing: {
+    ht: "Ap trete...",
+    en: "Processing...",
+    fr: "Traitement...",
+    es: "Procesando..."
+  },
+  paymentSuccess: {
+    ht: "Peman reyisi!",
+    en: "Payment successful!",
+    fr: "Paiement réussi!",
+    es: "¡Pago exitoso!"
+  },
+  paymentFailed: {
+    ht: "Peman echwe",
+    en: "Payment failed",
+    fr: "Paiement échoué",
+    es: "Pago fallido"
+  },
+
+  // Payout translations
+  requestPayout: {
+    ht: "Mande Retrè",
+    en: "Request Payout",
+    fr: "Demander un Retrait",
+    es: "Solicitar Pago"
+  },
+  payoutMethod: {
+    ht: "Metòd Retrè",
+    en: "Payout Method",
+    fr: "Méthode de Retrait",
+    es: "Método de Pago"
+  },
+  payoutAmount: {
+    ht: "Montan Retrè",
+    en: "Payout Amount",
+    fr: "Montant du Retrait",
+    es: "Monto del Pago"
+  },
+  payoutHistory: {
+    ht: "Istwa Retrè",
+    en: "Payout History",
+    fr: "Historique des Retraits",
+    es: "Historial de Pagos"
+  },
+  pendingPayouts: {
+    ht: "Retrè an Atant",
+    en: "Pending Payouts",
+    fr: "Retraits en Attente",
+    es: "Pagos Pendientes"
+  },
+  approvedPayouts: {
+    ht: "Retrè Apwouve",
+    en: "Approved Payouts",
+    fr: "Retraits Approuvés",
+    es: "Pagos Aprobados"
+  },
+
+  // Login & Auth
+  login: {
+    ht: "Konekte",
+    en: "Login",
+    fr: "Connexion",
+    es: "Iniciar Sesión"
+  },
+  register: {
+    ht: "Enskri",
+    en: "Register",
+    fr: "S'inscrire",
+    es: "Registrar"
+  },
+  email: {
+    ht: "Imèl",
+    en: "Email",
+    fr: "Email",
+    es: "Correo"
+  },
+  password: {
+    ht: "Modpas",
+    en: "Password",
+    fr: "Mot de passe",
+    es: "Contraseña"
+  },
+  confirmPassword: {
+    ht: "Konfime Modpas",
+    en: "Confirm Password",
+    fr: "Confirmer le mot de passe",
+    es: "Confirmar Contraseña"
+  },
+  fullName: {
+    ht: "Non Konplè",
+    en: "Full Name",
+    fr: "Nom Complet",
+    es: "Nombre Completo"
+  },
+  forgotPassword: {
+    ht: "Bliye Modpas?",
+    en: "Forgot Password?",
+    fr: "Mot de passe oublié?",
+    es: "¿Olvidó su Contraseña?"
+  },
+  loginAsPlayer: {
+    ht: "Konekte kòm Jwè",
+    en: "Login as Player",
+    fr: "Connexion Joueur",
+    es: "Iniciar como Jugador"
+  },
+  loginAsVendor: {
+    ht: "Konekte kòm Machann",
+    en: "Login as Vendor",
+    fr: "Connexion Vendeur",
+    es: "Iniciar como Vendedor"
+  },
+  loginAsAdmin: {
+    ht: "Konekte kòm Admin",
+    en: "Login as Admin",
+    fr: "Connexion Admin",
+    es: "Iniciar como Admin"
+  },
+  dontHaveAccount: {
+    ht: "Ou pa gen kont?",
+    en: "Don't have an account?",
+    fr: "Vous n'avez pas de compte?",
+    es: "¿No tiene cuenta?"
+  },
+  alreadyHaveAccount: {
+    ht: "Ou gen kont deja?",
+    en: "Already have an account?",
+    fr: "Vous avez déjà un compte?",
+    es: "¿Ya tiene cuenta?"
+  },
+  createAccount: {
+    ht: "Kreye Kont",
+    en: "Create Account",
+    fr: "Créer un Compte",
+    es: "Crear Cuenta"
+  },
+  registerAsVendor: {
+    ht: "Enskri kòm Machann",
+    en: "Register as Vendor",
+    fr: "S'inscrire comme Vendeur",
+    es: "Registrar como Vendedor"
+  },
+
+  // Vendor Registration
+  vendorRegistration: {
+    ht: "Enskripsyon Machann",
+    en: "Vendor Registration",
+    fr: "Inscription Vendeur",
+    es: "Registro de Vendedor"
+  },
+  firstName: {
+    ht: "Premye Non",
+    en: "First Name",
+    fr: "Prénom",
+    es: "Nombre"
+  },
+  lastName: {
+    ht: "Siyati",
+    en: "Last Name",
+    fr: "Nom de famille",
+    es: "Apellido"
+  },
+  businessName: {
+    ht: "Non Biznis",
+    en: "Business Name",
+    fr: "Nom de l'Entreprise",
+    es: "Nombre del Negocio"
+  },
+  dateOfBirth: {
+    ht: "Dat Nesans",
+    en: "Date of Birth",
+    fr: "Date de Naissance",
+    es: "Fecha de Nacimiento"
+  },
+  submitApplication: {
+    ht: "Soumèt Aplikasyon",
+    en: "Submit Application",
+    fr: "Soumettre la Candidature",
+    es: "Enviar Solicitud"
+  },
+  applicationPending: {
+    ht: "Aplikasyon ou an atant apwobasyon",
+    en: "Your application is pending approval",
+    fr: "Votre candidature est en attente d'approbation",
+    es: "Su solicitud está pendiente de aprobación"
+  },
+
+  // Player Dashboard
+  playNow: {
+    ht: "Jwe Kounye a",
+    en: "Play Now",
+    fr: "Jouer Maintenant",
+    es: "Jugar Ahora"
+  },
+  todayDraws: {
+    ht: "Tiraj Jòdi a",
+    en: "Today's Draws",
+    fr: "Tirages du Jour",
+    es: "Sorteos de Hoy"
+  },
+  myBalance: {
+    ht: "Balans Mwen",
+    en: "My Balance",
+    fr: "Mon Solde",
+    es: "Mi Saldo"
+  },
+  addFunds: {
+    ht: "Ajoute Lajan",
+    en: "Add Funds",
+    fr: "Ajouter des Fonds",
+    es: "Agregar Fondos"
+  },
+  recentWinners: {
+    ht: "Dènye Gayan yo",
+    en: "Recent Winners",
+    fr: "Gagnants Récents",
+    es: "Ganadores Recientes"
+  },
+  noWinnersYet: {
+    ht: "Pa gen gayan ankò",
+    en: "No winners yet",
+    fr: "Pas encore de gagnants",
+    es: "Sin ganadores aún"
+  },
+
+  // Admin
+  adminDashboard: {
+    ht: "Tablo Admin",
+    en: "Admin Dashboard",
+    fr: "Tableau Admin",
+    es: "Panel Admin"
+  },
+  userManagement: {
+    ht: "Jesyon Itilizatè",
+    en: "User Management",
+    fr: "Gestion des Utilisateurs",
+    es: "Gestión de Usuarios"
+  },
+  vendorManagement: {
+    ht: "Jesyon Machann",
+    en: "Vendor Management",
+    fr: "Gestion des Vendeurs",
+    es: "Gestión de Vendedores"
+  },
+  payoutManagement: {
+    ht: "Jesyon Retrè",
+    en: "Payout Management",
+    fr: "Gestion des Retraits",
+    es: "Gestión de Pagos"
+  },
+  resultPublishing: {
+    ht: "Pibliye Rezilta",
+    en: "Publish Results",
+    fr: "Publier les Résultats",
+    es: "Publicar Resultados"
+  },
+  advertisements: {
+    ht: "Piblisite yo",
+    en: "Advertisements",
+    fr: "Publicités",
+    es: "Anuncios"
+  },
+  analytics: {
+    ht: "Analiz",
+    en: "Analytics",
+    fr: "Analytiques",
+    es: "Analíticas"
+  },
+  systemSettings: {
+    ht: "Paramèt Sistèm",
+    en: "System Settings",
+    fr: "Paramètres Système",
+    es: "Configuración del Sistema"
+  },
+  approve: {
+    ht: "Apwouve",
+    en: "Approve",
+    fr: "Approuver",
+    es: "Aprobar"
+  },
+  reject: {
+    ht: "Rejte",
+    en: "Reject",
+    fr: "Rejeter",
+    es: "Rechazar"
+  },
+  suspend: {
+    ht: "Sispann",
+    en: "Suspend",
+    fr: "Suspendre",
+    es: "Suspender"
+  },
+  activate: {
+    ht: "Aktive",
+    en: "Activate",
+    fr: "Activer",
+    es: "Activar"
+  },
+
+  // Profile
+  profile: {
+    ht: "Pwofil",
+    en: "Profile",
+    fr: "Profil",
+    es: "Perfil"
+  },
+  editProfile: {
+    ht: "Modifye Pwofil",
+    en: "Edit Profile",
+    fr: "Modifier le Profil",
+    es: "Editar Perfil"
+  },
+  saveChanges: {
+    ht: "Kenbe Chanjman yo",
+    en: "Save Changes",
+    fr: "Sauvegarder les Modifications",
+    es: "Guardar Cambios"
+  },
+
+  // Common UI
+  loading: {
+    ht: "Ap chaje...",
+    en: "Loading...",
+    fr: "Chargement...",
+    es: "Cargando..."
+  },
+  retry: {
+    ht: "Eseye ankò",
+    en: "Retry",
+    fr: "Réessayer",
+    es: "Reintentar"
+  },
+  confirm: {
+    ht: "Konfime",
+    en: "Confirm",
+    fr: "Confirmer",
+    es: "Confirmer"
+  },
+  delete: {
+    ht: "Efase",
+    en: "Delete",
+    fr: "Supprimer",
+    es: "Eliminar"
+  },
+  edit: {
+    ht: "Modifye",
+    en: "Edit",
+    fr: "Modifier",
+    es: "Editar"
+  },
+  search: {
+    ht: "Chèche",
+    en: "Search",
+    fr: "Rechercher",
+    es: "Buscar"
+  },
+  noResults: {
+    ht: "Pa gen rezilta",
+    en: "No results",
+    fr: "Aucun résultat",
+    es: "Sin resultados"
+  },
+  ok: {
+    ht: "OK",
+    en: "OK",
+    fr: "OK",
+    es: "OK"
+  },
+  yes: {
+    ht: "Wi",
+    en: "Yes",
+    fr: "Oui",
+    es: "Sí"
+  },
+  no: {
+    ht: "Non",
+    en: "No",
+    fr: "Non",
+    es: "No"
+  },
+
+  // LanguageCurrencySelector screen
+  chooseLanguage: {
+    ht: "Chwazi Lang Ou",
+    en: "Choose Your Language",
+    fr: "Choisissez Votre Langue",
+    es: "Elija Su Idioma"
+  },
+  chooseCurrency: {
+    ht: "Chwazi Lajan Ou",
+    en: "Choose Your Currency",
+    fr: "Choisissez Votre Devise",
+    es: "Elija Su Moneda"
+  },
+  haitianCreole: {
+    ht: "Kreyòl Ayisyen",
+    en: "Haitian Creole",
+    fr: "Créole Haïtien",
+    es: "Criollo Haitiano"
+  },
+  english: {
+    ht: "Angle",
+    en: "English",
+    fr: "Anglais",
+    es: "Inglés"
+  },
+  french: {
+    ht: "Fransè",
+    en: "French",
+    fr: "Français",
+    es: "Francés"
+  },
+  spanish: {
+    ht: "Panyòl",
+    en: "Spanish",
+    fr: "Espagnol",
+    es: "Español"
+  },
+
+  // Notifications
+  notifications: {
+    ht: "Notifikasyon yo",
+    en: "Notifications",
+    fr: "Notifications",
+    es: "Notificaciones"
+  },
+  comingSoon: {
+    ht: "Ap vini byento",
+    en: "Coming soon",
+    fr: "Bientôt disponible",
+    es: "Próximamente"
+  },
+
+  // Help
+  helpCenter: {
+    ht: "Sant Èd",
+    en: "Help Center",
+    fr: "Centre d'Aide",
+    es: "Centro de Ayuda"
+  },
+  howCanWeHelp: {
+    ht: "Kijan nou ka ede ou?",
+    en: "How can we help you?",
+    fr: "Comment pouvons-nous vous aider?",
+    es: "¿Cómo podemos ayudarte?"
+  },
+  contactUs: {
+    ht: "Kontakte Nou",
+    en: "Contact Us",
+    fr: "Contactez-nous",
+    es: "Contáctenos"
+  },
+  faq: {
+    ht: "Kesyon Souvan",
+    en: "FAQ",
+    fr: "FAQ",
+    es: "FAQ"
+  },
+
+  // Transaction related
+  transactionHistory: {
+    ht: "Istwa Tranzaksyon",
+    en: "Transaction History",
+    fr: "Historique des Transactions",
+    es: "Historial de Transacciones"
+  },
+  noTransactions: {
+    ht: "Pa gen tranzaksyon ankò",
+    en: "No transactions yet",
+    fr: "Pas encore de transactions",
+    es: "Sin transacciones aún"
+  },
+
+  // Rewards
+  rewards: {
+    ht: "Rekonpans",
+    en: "Rewards",
+    fr: "Récompenses",
+    es: "Recompensas"
+  },
+
+  // Number Limits
+  numberLimits: {
+    ht: "Limit Nimewo",
+    en: "Number Limits",
+    fr: "Limites de Numéros",
+    es: "Límites de Números"
+  },
+  addLimit: {
+    ht: "Ajoute Limit",
+    en: "Add Limit",
+    fr: "Ajouter Limite",
+    es: "Agregar Límite"
+  },
+  stopSales: {
+    ht: "Kanpe Vant",
+    en: "Stop Sales",
+    fr: "Arrêter Ventes",
+    es: "Parar Ventas"
+  },
+  resumeSales: {
+    ht: "Rekòmanse Vant",
+    en: "Resume Sales",
+    fr: "Reprendre Ventes",
+    es: "Reanudar Ventas"
   }
 };
 

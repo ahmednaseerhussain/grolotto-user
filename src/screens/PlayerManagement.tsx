@@ -17,8 +17,6 @@ interface Player {
   totalWinnings: number;
 }
 
-const mockPlayers: Player[] = [];
-
 export default function PlayerManagement() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();

@@ -20,7 +20,7 @@ const app = express();
 // ─── Security ────────────────────────────────────────────
 app.use(helmet());
 app.use(cors({
-  origin: config.frontendUrl,
+  origin: true,
   credentials: true,
 }));
 
@@ -37,7 +37,7 @@ app.use(limiter);
 // Auth routes get stricter rate limiting
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // 20 attempts per window
+  max: 10, // 10 attempts per window
   message: { error: 'Too many authentication attempts, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -62,6 +62,27 @@ app.use('/api/vendors', vendorRoutes);
 app.use('/api/lottery', lotteryRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/payments', paymentRoutes);
+
+// Public advertisements (no auth required)
+app.get('/api/advertisements/active', async (req, res, next) => {
+  try {
+    const { query: dbQuery } = require('./database/pool');
+    const result = await dbQuery(
+      `SELECT id, title, subtitle, content, background_color, text_color, image_url, 
+              link_url, link_text, ad_type, target_audience, priority, display_order
+       FROM advertisements 
+       WHERE status = 'active' AND start_date <= NOW() AND end_date >= NOW()
+       ORDER BY display_order ASC`
+    );
+    res.json(result.rows.map((r: any) => ({
+      id: r.id, title: r.title, subtitle: r.subtitle, content: r.content,
+      backgroundColor: r.background_color, textColor: r.text_color, imageUrl: r.image_url,
+      linkUrl: r.link_url, linkText: r.link_text, type: r.ad_type,
+      targetAudience: r.target_audience, priority: r.priority, order: r.display_order,
+    })));
+  } catch (error) { next(error); }
+});
+
 app.use('/api/admin', adminRoutes);
 app.use('/api/tchala', tchalaRoutes);
 

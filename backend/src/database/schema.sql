@@ -16,8 +16,8 @@ CREATE TYPE vendor_status AS ENUM ('pending', 'approved', 'rejected', 'suspended
 CREATE TYPE payout_status AS ENUM ('pending', 'approved', 'rejected', 'paid');
 CREATE TYPE payment_status AS ENUM ('pending', 'completed', 'failed', 'refunded');
 CREATE TYPE transaction_type AS ENUM ('bet_payment', 'winning_payout', 'deposit', 'withdrawal', 'commission');
-CREATE TYPE payment_method_type AS ENUM ('debit_card', 'gift_card', 'cashapp', 'moncash', 'natcash', 'moonpay');
-CREATE TYPE payout_method_type AS ENUM ('moncash', 'natcash', 'ach', 'cashapp', 'bank_transfer');
+CREATE TYPE payment_method_type AS ENUM ('moncash');
+CREATE TYPE payout_method_type AS ENUM ('moncash');
 CREATE TYPE game_type AS ENUM ('senp', 'maryaj', 'loto3', 'loto4', 'loto5');
 CREATE TYPE draw_state AS ENUM ('NY', 'FL', 'GA', 'TX', 'PA', 'CT', 'TN', 'NJ');
 CREATE TYPE ticket_status AS ENUM ('pending', 'won', 'lost');
@@ -47,12 +47,29 @@ CREATE TABLE users (
     is_verified BOOLEAN DEFAULT FALSE,
     is_active BOOLEAN DEFAULT TRUE,
     refresh_token TEXT,
+    failed_login_attempts INTEGER DEFAULT 0,
+    last_failed_login TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_role ON users(role);
+
+-- ============================================
+-- EMAIL VERIFICATIONS
+-- ============================================
+
+CREATE TABLE email_verifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    otp_code VARCHAR(6) NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    used BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_email_verifications_user ON email_verifications(user_id);
 
 -- ============================================
 -- WALLETS TABLE
@@ -262,7 +279,7 @@ CREATE TABLE transactions (
     -- References
     ticket_id UUID REFERENCES lottery_tickets(id),
     vendor_id UUID REFERENCES vendors(id),
-    moonpay_transaction_id VARCHAR(255),
+    moncash_transaction_id VARCHAR(255),
     
     -- Idempotency key to prevent duplicate transactions
     idempotency_key VARCHAR(255) UNIQUE,
@@ -276,7 +293,7 @@ CREATE TABLE transactions (
 CREATE INDEX idx_transactions_user ON transactions(user_id);
 CREATE INDEX idx_transactions_type ON transactions(type);
 CREATE INDEX idx_transactions_status ON transactions(status);
-CREATE INDEX idx_transactions_moonpay ON transactions(moonpay_transaction_id);
+CREATE INDEX idx_transactions_moncash ON transactions(moncash_transaction_id);
 CREATE INDEX idx_transactions_idempotency ON transactions(idempotency_key);
 
 -- ============================================

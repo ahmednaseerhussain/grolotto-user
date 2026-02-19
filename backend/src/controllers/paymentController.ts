@@ -1,12 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
-import * as moonpayService from '../services/moonpayService';
+import * as moncashService from '../services/moncashService';
 
+/**
+ * Create a MonCash payment.
+ * Returns a redirect URL for the user to complete payment on MonCash.
+ */
 export async function createPaymentIntent(req: Request, res: Response, next: NextFunction) {
   try {
-    const result = await moonpayService.createPaymentIntent({
+    const result = await moncashService.createPayment({
       userId: req.user!.id,
       amount: req.body.amount,
-      currency: req.body.currency || 'USD',
+      currency: req.body.currency || 'HTG',
     });
     res.json(result);
   } catch (error) {
@@ -15,31 +19,33 @@ export async function createPaymentIntent(req: Request, res: Response, next: Nex
 }
 
 /**
- * MoonPay webhook handler.
- * This endpoint is called by MoonPay servers — NOT by our frontend.
- * The raw body is needed for signature verification.
+ * Verify a MonCash payment after user returns from gateway.
+ * Frontend calls this with the orderId and transactionId.
  */
-export async function handleWebhook(req: Request, res: Response, next: NextFunction) {
+export async function verifyPayment(req: Request, res: Response, next: NextFunction) {
   try {
-    const signature = req.headers['moonpay-signature'] as string;
-    if (!signature) {
-      res.status(400).json({ error: 'Missing signature header' });
+    const { orderId, transactionId } = req.body;
+    if (!orderId && !transactionId) {
+      res.status(400).json({ error: 'orderId or transactionId required' });
       return;
     }
-
-    // Express raw body middleware stores it on req.body when content-type is correct
-    const rawBody = (req as any).rawBody || JSON.stringify(req.body);
-
-    const result = await moonpayService.handleWebhook(req.body, signature, rawBody);
+    const result = await moncashService.verifyAndCreditPayment(
+      req.user!.id,
+      orderId || '',
+      transactionId || ''
+    );
     res.json(result);
   } catch (error) {
     next(error);
   }
 }
 
+/**
+ * Get payment status by transaction ID.
+ */
 export async function getTransactionStatus(req: Request, res: Response, next: NextFunction) {
   try {
-    const result = await moonpayService.getTransactionStatus(req.params.transactionId);
+    const result = await moncashService.getPaymentByTransactionId(req.params.transactionId);
     res.json(result);
   } catch (error) {
     next(error);

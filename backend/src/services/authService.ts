@@ -121,6 +121,7 @@ export async function login(input: LoginInput): Promise<{ user: UserProfile; tok
   const result = await query(
     `SELECT u.id, u.email, u.name, u.role, u.password_hash, u.phone, u.date_of_birth,
             u.address, u.city, u.country, u.is_verified, u.is_active, u.created_at,
+            u.failed_login_attempts, u.last_failed_login,
             w.balance_usd
      FROM users u
      LEFT JOIN wallets w ON w.user_id = u.id
@@ -138,10 +139,29 @@ export async function login(input: LoginInput): Promise<{ user: UserProfile; tok
     throw new AppError('Account is suspended', 403, 'ACCOUNT_SUSPENDED');
   }
 
+  // Check brute force protection
+  if (user.failed_login_attempts >= 5 && user.last_failed_login) {
+    const lockoutEnd = new Date(user.last_failed_login);
+    lockoutEnd.setMinutes(lockoutEnd.getMinutes() + 15);
+    if (new Date() < lockoutEnd) {
+      throw new AppError('Account temporarily locked. Try again in 15 minutes.', 429, 'ACCOUNT_LOCKED');
+    }
+  }
+
   const passwordMatch = await bcrypt.compare(password, user.password_hash);
   if (!passwordMatch) {
+    await query(
+      'UPDATE users SET failed_login_attempts = COALESCE(failed_login_attempts, 0) + 1, last_failed_login = NOW() WHERE id = $1',
+      [user.id]
+    );
     throw new AppError('Invalid email or password', 401, 'INVALID_CREDENTIALS');
   }
+
+  // Reset failed attempts on successful login
+  await query(
+    'UPDATE users SET failed_login_attempts = 0, last_failed_login = NULL WHERE id = $1',
+    [user.id]
+  );
 
   const tokens = generateTokens({ id: user.id, email: user.email, role: user.role });
 

@@ -26,6 +26,7 @@ export default function VendorLogin() {
     try {
       const data = await authAPI.login(email, password);
       if (data.user.role !== 'vendor') {
+        await authAPI.logout();
         Alert.alert("Error", "This login is for vendors only.");
         return;
       }

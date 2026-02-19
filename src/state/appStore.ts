@@ -35,8 +35,8 @@ export type Currency = "USD" | "HTG";
 export type UserRole = "player" | "vendor" | "admin";
 
 // Payment system types
-export type PaymentMethodType = "debit_card" | "gift_card" | "cashapp" | "moncash" | "natcash";
-export type PayoutMethodType = "moncash" | "natcash" | "ach" | "cashapp" | "bank_transfer";
+export type PaymentMethodType = "moncash";
+export type PayoutMethodType = "moncash";
 export type PaymentStatus = "pending" | "completed" | "failed" | "refunded";
 export type TransactionType = "bet_payment" | "winning_payout" | "deposit" | "withdrawal";
 
@@ -403,7 +403,7 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       // Initial state
-      language: "en",
+      language: "ht",
       currency: "USD",
       hasCompletedOnboarding: false,
       user: null,
@@ -718,7 +718,7 @@ export const useAppStore = create<AppState>()(
           remaining,
           message: allowed
             ? undefined
-            : `Limite atteinte pour le numÃ©ro ${number}. Restant: $${remaining.toFixed(2)}`
+            : `Limite atteinte pour le numéro ${number}. Restant: $${remaining.toFixed(2)}`
         };
       },
 

@@ -18,4 +18,10 @@ router.get('/:id/reviews', ctrl.getReviews);
 router.post('/register', authenticate, validate(vendorRegistrationSchema), ctrl.registerVendor);
 router.put('/draws/:drawState', authenticate, authorize('vendor'), validate(drawSettingsSchema), ctrl.updateDrawSettings);
 
+// Number limits management
+router.get('/me/number-limits', authenticate, authorize('vendor'), ctrl.getNumberLimits);
+router.post('/me/number-limits', authenticate, authorize('vendor'), ctrl.createNumberLimit);
+router.put('/me/number-limits/:limitId', authenticate, authorize('vendor'), ctrl.updateNumberLimit);
+router.delete('/me/number-limits/:limitId', authenticate, authorize('vendor'), ctrl.deleteNumberLimit);
+
 export default router;

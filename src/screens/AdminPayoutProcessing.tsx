@@ -39,29 +39,13 @@ export default function AdminPayoutProcessing() {
           description: "Instant transfer to MonCash wallet",
           processingTime: "Instant",
         };
-      case "natcash":
-        return {
-          name: "NatCash", 
-          icon: "card",
-          color: "#10b981",
-          description: "Transfer to NatCash account",
-          processingTime: "1-2 hours",
-        };
-      case "ach":
-        return {
-          name: "ACH Transfer",
-          icon: "logo-paypal", 
-          color: "#3b82f6",
-          description: "International bank transfer",
-          processingTime: "1-3 business days",
-        };
       default:
         return {
-          name: "Unknown",
-          icon: "help-circle",
-          color: "#6b7280",
-          description: "Unknown payment method",
-          processingTime: "Unknown",
+          name: "MonCash",
+          icon: "wallet",
+          color: "#ef4444",
+          description: "Instant transfer to MonCash wallet",
+          processingTime: "Instant",
         };
     }
   };
@@ -78,7 +62,11 @@ export default function AdminPayoutProcessing() {
     
     try {
       // Process payout via backend API
-      await adminAPI.processVendorPayout(payout.id);
+      await adminAPI.processVendorPayout(payout.id, {
+        action: 'approved',
+        notes: notes.trim() || undefined,
+        transferReference: transferReference.trim(),
+      });
       
       // Generate confirmation code if not provided
       const finalConfirmationCode = confirmationCode.trim() || 

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
 import { DrawSettings } from "../state/appStore";
 
@@ -34,6 +35,7 @@ interface PricingData {
 }
 
 export default function PricingLimits() {
+  const navigation = useNavigation();
   const user = useAppStore(s => s.user);
   const vendors = useAppStore(s => s.vendors);
   const updateVendorDrawSettings = useAppStore(s => s.updateVendorDrawSettings);
@@ -42,7 +44,7 @@ export default function PricingLimits() {
   const [isEditing, setIsEditing] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   
-  const currentVendor = vendors.find(v => v.email === user?.email);
+  const currentVendor = vendors.find(v => (v as any).userId === user?.id);
   
   if (!currentVendor) {
     return (
@@ -200,7 +202,7 @@ export default function PricingLimits() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable style={styles.backButton}>
+        <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#1f2937" />
         </Pressable>
         <Text style={styles.headerTitle}>Prix & Limites</Text>

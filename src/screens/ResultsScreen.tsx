@@ -230,10 +230,12 @@ export default function ResultsScreen() {
             Available Balance
           </Text>
           <Text style={{ fontSize: 32, fontWeight: 'bold', color: '#1f2937' }}>
-            $0.00
+            {getCurrencySymbol()}{user?.balance?.toFixed(2) || '0.00'}
           </Text>
         </View>
-        <Pressable style={{ 
+        <Pressable 
+          onPress={() => navigation.navigate("PaymentScreen" as never)}
+          style={{ 
           backgroundColor: '#3b82f6', 
           flexDirection: 'row', 
           alignItems: 'center', 
@@ -311,7 +313,7 @@ export default function ResultsScreen() {
           </Pressable>
           
           <Pressable 
-            onPress={() => navigation.navigate("ResultsScreen" as never)}
+            onPress={() => {}} // Already on Results screen
             style={[{
             width: (width - 60) / 2,
             backgroundColor: '#10b981',

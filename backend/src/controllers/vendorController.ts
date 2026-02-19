@@ -78,3 +78,43 @@ export async function getReviews(req: Request, res: Response, next: NextFunction
     next(error);
   }
 }
+
+export async function getNumberLimits(req: Request, res: Response, next: NextFunction) {
+  try {
+    const vendor = await vendorService.getVendorByUserId(req.user!.id);
+    const limits = await vendorService.getNumberLimits(vendor.id);
+    res.json(limits);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function createNumberLimit(req: Request, res: Response, next: NextFunction) {
+  try {
+    const vendor = await vendorService.getVendorByUserId(req.user!.id);
+    const result = await vendorService.createNumberLimit(vendor.id, req.body);
+    res.status(201).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateNumberLimit(req: Request, res: Response, next: NextFunction) {
+  try {
+    const vendor = await vendorService.getVendorByUserId(req.user!.id);
+    await vendorService.updateNumberLimit(vendor.id, req.params.limitId, req.body);
+    res.json({ message: 'Number limit updated' });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteNumberLimit(req: Request, res: Response, next: NextFunction) {
+  try {
+    const vendor = await vendorService.getVendorByUserId(req.user!.id);
+    await vendorService.deleteNumberLimit(vendor.id, req.params.limitId);
+    res.json({ message: 'Number limit deleted' });
+  } catch (error) {
+    next(error);
+  }
+}

@@ -52,12 +52,8 @@ export default function AdminPayoutManagement() {
     switch (method) {
       case "moncash":
         return { name: "MonCash", icon: "wallet", color: "#ef4444" };
-      case "natcash":
-        return { name: "NatCash", icon: "card", color: "#10b981" };
-      case "ach":
-        return { name: "ACH Transfer", icon: "logo-paypal", color: "#3b82f6" };
       default:
-        return { name: "Unknown", icon: "help-circle", color: "#6b7280" };
+        return { name: "MonCash", icon: "wallet", color: "#ef4444" };
     }
   };
   

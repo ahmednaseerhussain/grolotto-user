@@ -13,27 +13,11 @@ interface PaymentMethodSelectorProps {
 
 const PAYMENT_METHODS = [
   {
-    type: "debit_card" as PaymentMethodType,
-    name: "Debit Card",
-    icon: "card" as const,
-    color: "#3b82f6",
-    description: "Visa, Mastercard, Discover",
-    processingTime: "Instant",
-  },
-  {
     type: "moncash" as PaymentMethodType,
     name: "MonCash",
     icon: "wallet" as const,
     color: "#ef4444",
-    description: "Haiti mobile money",
-    processingTime: "Instant",
-  },
-  {
-    type: "natcash" as PaymentMethodType,
-    name: "NatCash",
-    icon: "cash" as const,
-    color: "#10b981",
-    description: "National payment system",
+    description: "Digicel mobile money",
     processingTime: "Instant",
   },
 ];
@@ -48,7 +32,6 @@ export default function PaymentMethodSelector({
   const user = useAppStore(s => s.user);
   const processPayment = useAppStore(s => s.processPayment);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType | null>(null);
-  const [cardNumber, setCardNumber] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [processing, setProcessing] = useState(false);
 
@@ -85,9 +68,8 @@ export default function PaymentMethodSelector({
     }
   };
 
-  const needsCardDetails = selectedMethod === "debit_card";
-  const needsPhoneNumber = selectedMethod === "moncash" || selectedMethod === "natcash";
-  const canProceed = selectedMethod && (!needsCardDetails || cardNumber.length >= 16) && (!needsPhoneNumber || phoneNumber.length >= 8);
+  const needsPhoneNumber = selectedMethod === "moncash";
+  const canProceed = selectedMethod && (!needsPhoneNumber || phoneNumber.length >= 8);
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
@@ -144,27 +126,10 @@ export default function PaymentMethodSelector({
             ))}
 
             {/* Payment Details Input */}
-            {needsCardDetails && (
-              <View style={styles.inputSection}>
-                <Text style={styles.inputLabel}>Card Number</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="1234 5678 9012 3456"
-                  keyboardType="numeric"
-                  maxLength={19}
-                  value={cardNumber}
-                  onChangeText={setCardNumber}
-                />
-                <Text style={styles.secureNote}>
-                  🔒 Your payment info is secure and encrypted
-                </Text>
-              </View>
-            )}
-
             {needsPhoneNumber && (
               <View style={styles.inputSection}>
                 <Text style={styles.inputLabel}>
-                  {selectedMethod === "moncash" ? "MonCash" : "NatCash"} Phone Number
+                  MonCash Phone Number
                 </Text>
                 <TextInput
                   style={styles.input}

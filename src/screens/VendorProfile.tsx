@@ -226,7 +226,7 @@ export default function VendorProfile() {
   const [activeTab, setActiveTab] = useState("profile");
   const [editMode, setEditMode] = useState(false);
 
-  const currentVendor = vendors.find(v => v.email === user?.email);
+  const currentVendor = vendors.find(v => (v as any).userId === user?.id);
   const currentReviews = vendorReviews.filter(r => r.vendorId === currentVendor?.id && r.isVisible);
 
   const [profileForm, setProfileForm] = useState({

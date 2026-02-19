@@ -6,7 +6,7 @@ import { useAppStore } from "../state/appStore";
 import { authAPI, getErrorMessage } from "../api/apiClient";
 
 export default function AdminLogin() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -14,16 +14,17 @@ export default function AdminLogin() {
   const setUser = useAppStore(s => s.setUser);
 
   const handleLogin = async () => {
-    if (!username || !password) {
-      Alert.alert("Error", "Please enter both username and password");
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter both email and password");
       return;
     }
 
     setLoading(true);
     
     try {
-      const data = await authAPI.login(username, password);
+      const data = await authAPI.login(email, password);
       if (data.user.role !== 'admin') {
+        await authAPI.logout();
         Alert.alert("Error", "This login is for administrators only.");
         return;
       }
@@ -54,10 +55,10 @@ export default function AdminLogin() {
           <Ionicons name="person" size={20} color="#6b7280" style={styles.inputIcon} />
           <TextInput
             style={styles.input}
-            placeholder="Username or Email"
+            placeholder="Admin Email"
             placeholderTextColor="#9ca3af"
-            value={username}
-            onChangeText={setUsername}
+            value={email}
+            onChangeText={setEmail}
             autoCapitalize="none"
             autoCorrect={false}
           />

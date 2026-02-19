@@ -330,3 +330,61 @@ export async function getVendorReviews(vendorId: string) {
     createdAt: r.created_at,
   }));
 }
+
+/**
+ * Number limits CRUD
+ */
+export async function getNumberLimits(vendorId: string) {
+  const result = await query(
+    `SELECT id, draw_state, number, bet_limit, current_total, is_stopped, created_at
+     FROM number_limits WHERE vendor_id = $1 ORDER BY draw_state, number`,
+    [vendorId]
+  );
+  return result.rows.map(r => ({
+    id: r.id,
+    drawState: r.draw_state,
+    number: r.number,
+    betLimit: parseFloat(r.bet_limit),
+    currentTotal: parseFloat(r.current_total),
+    isStopped: r.is_stopped,
+    createdAt: r.created_at,
+  }));
+}
+
+export async function createNumberLimit(vendorId: string, data: {
+  drawState: string; number: string; betLimit: number;
+}) {
+  const result = await query(
+    `INSERT INTO number_limits (vendor_id, draw_state, number, bet_limit)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT (vendor_id, draw_state, number) DO UPDATE SET bet_limit = $4
+     RETURNING id`,
+    [vendorId, data.drawState, data.number, data.betLimit]
+  );
+  return result.rows[0];
+}
+
+export async function updateNumberLimit(vendorId: string, limitId: string, data: {
+  betLimit?: number; isStopped?: boolean;
+}) {
+  const setClauses: string[] = [];
+  const values: any[] = [];
+  let idx = 1;
+  if (data.betLimit !== undefined) { setClauses.push(`bet_limit = $${idx++}`); values.push(data.betLimit); }
+  if (data.isStopped !== undefined) { setClauses.push(`is_stopped = $${idx++}`); values.push(data.isStopped); }
+  if (setClauses.length === 0) throw new AppError('No fields to update', 400);
+  values.push(limitId, vendorId);
+  const result = await query(
+    `UPDATE number_limits SET ${setClauses.join(', ')} WHERE id = $${idx++} AND vendor_id = $${idx}`,
+    values
+  );
+  if (result.rowCount === 0) throw new AppError('Number limit not found', 404);
+}
+
+export async function deleteNumberLimit(vendorId: string, limitId: string) {
+  const result = await query(
+    'DELETE FROM number_limits WHERE id = $1 AND vendor_id = $2',
+    [limitId, vendorId]
+  );
+  if (result.rowCount === 0) throw new AppError('Number limit not found', 404);
+}

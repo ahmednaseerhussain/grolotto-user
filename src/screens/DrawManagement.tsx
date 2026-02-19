@@ -40,7 +40,7 @@ export default function DrawManagement() {
   const [editingLimits, setEditingLimits] = useState<{drawCode: string, gameKey: string} | null>(null);
   const [tempLimits, setTempLimits] = useState<{min: string, max: string}>({min: "", max: ""});
   
-  const currentVendor = vendors.find(v => v.email === user?.email);
+  const currentVendor = vendors.find(v => (v as any).userId === user?.id);
   
   if (!currentVendor) {
     return (

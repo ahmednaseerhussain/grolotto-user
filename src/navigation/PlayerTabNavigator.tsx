@@ -6,30 +6,39 @@ import { Ionicons } from "@expo/vector-icons";
 import PlayerDashboard from "../screens/PlayerDashboard";
 import HistoryScreen from "../screens/HistoryScreen";
 import SettingsScreen from "../screens/SettingsScreen";
+import { useAppStore } from "../state/appStore";
+import { getTranslation } from "../utils/translations";
 
 const Tab = createBottomTabNavigator();
 
 // Placeholder screens for Notifications and Help
-const NotificationsScreen = () => (
-  <SafeAreaView className="flex-1 bg-gray-50">
-    <View className="flex-1 items-center justify-center">
-      <Ionicons name="notifications-outline" size={64} color="#9ca3af" />
-      <Text className="text-gray-600 text-lg mt-4">Notifications</Text>
-      <Text className="text-gray-400 text-sm mt-2">Coming soon</Text>
-    </View>
-  </SafeAreaView>
-);
+const NotificationsScreen = () => {
+  const language = useAppStore(s => s.language);
+  const t = (key: string) => getTranslation(key as any, language);
+  return (
+    <SafeAreaView className="flex-1 bg-gray-50">
+      <View className="flex-1 items-center justify-center">
+        <Ionicons name="notifications-outline" size={64} color="#9ca3af" />
+        <Text className="text-gray-600 text-lg mt-4">{t("notifications")}</Text>
+        <Text className="text-gray-400 text-sm mt-2">{t("comingSoon")}</Text>
+      </View>
+    </SafeAreaView>
+  );
+};
 
-const HelpScreen = () => (
+const HelpScreen = () => {
+  const language = useAppStore(s => s.language);
+  const t = (key: string) => getTranslation(key as any, language);
+  return (
   <SafeAreaView className="flex-1 bg-gray-50">
     <View className="bg-white px-6 py-4 border-b border-gray-200">
-      <Text className="text-2xl font-bold text-gray-800">Help Center</Text>
-      <Text className="text-gray-600">How can we help you?</Text>
+      <Text className="text-2xl font-bold text-gray-800">{t("helpCenter")}</Text>
+      <Text className="text-gray-600">{t("howCanWeHelp")}</Text>
     </View>
     
     <View className="p-6">
       {/* Contact Us Section */}
-      <Text className="text-xl font-bold text-gray-800 mb-4">Contact Us</Text>
+      <Text className="text-xl font-bold text-gray-800 mb-4">{t("contactUs")}</Text>
       
       <View className="flex-row justify-between mb-6">
         <View className="bg-white rounded-2xl p-4 flex-1 mr-2 border border-gray-200 items-center">
@@ -58,7 +67,7 @@ const HelpScreen = () => (
       </View>
       
       {/* FAQ Section */}
-      <Text className="text-xl font-bold text-gray-800 mb-4">Frequently Asked Questions</Text>
+      <Text className="text-xl font-bold text-gray-800 mb-4">{t("faq")}</Text>
       
       <View className="bg-white rounded-2xl border border-gray-200 mb-3 p-4">
         <View className="flex-row justify-between items-center">
@@ -96,10 +105,13 @@ const HelpScreen = () => (
       </View>
     </View>
   </SafeAreaView>
-);
+  );
+};
 
 export default function PlayerTabNavigator() {
   const insets = useSafeAreaInsets();
+  const language = useAppStore(s => s.language);
+  const t = (key: string) => getTranslation(key as any, language);
   
   return (
     <Tab.Navigator
@@ -151,35 +163,35 @@ export default function PlayerTabNavigator() {
         name="HomeTab"
         component={PlayerDashboard}
         options={{
-          tabBarLabel: "Home",
+          tabBarLabel: t("dashboard"),
         }}
       />
       <Tab.Screen
         name="NotificationsTab"
         component={NotificationsScreen}
         options={{
-          tabBarLabel: "Notifications",
+          tabBarLabel: t("notifications"),
         }}
       />
       <Tab.Screen
         name="MyBetTab"
         component={HistoryScreen}
         options={{
-          tabBarLabel: "MyBet",
+          tabBarLabel: t("history"),
         }}
       />
       <Tab.Screen
         name="HelpTab"
         component={HelpScreen}
         options={{
-          tabBarLabel: "Help",
+          tabBarLabel: t("helpCenter"),
         }}
       />
       <Tab.Screen
         name="SettingsTab"
         component={SettingsScreen}
         options={{
-          tabBarLabel: "Settings",
+          tabBarLabel: t("settings"),
         }}
       />
     </Tab.Navigator>

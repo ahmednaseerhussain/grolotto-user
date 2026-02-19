@@ -75,7 +75,7 @@ export default function VendorDashboard() {
     { id: "draws", title: t("pricesAndStates"), icon: "pricetag", color: "#3b82f6", screen: "DrawManagement", subtitle: t("configurePriceLimits") },
     { id: "limits", title: "Number Limits", icon: "ban", color: "#ef4444", screen: "NumberLimits", subtitle: "Control bets" },
     { id: "history", title: t("history"), icon: "analytics", color: "#f59e0b", screen: "VendorPlayHistory", subtitle: t("reportsAndSales") },
-    { id: "payout", title: t("withdrawal"), icon: "wallet", color: "#10b981", screen: "PayoutManagement", subtitle: "MonCash, PayPal" },
+    { id: "payout", title: t("withdrawal"), icon: "wallet", color: "#10b981", screen: "PayoutManagement", subtitle: "MonCash" },
     { id: "profile", title: t("myProfile"), icon: "person", color: "#8b5cf6", screen: "VendorProfile", subtitle: t("infoAndReviews") },
     { id: "winners", title: "Today's Players", icon: "trophy", color: "#f59e0b", screen: "TodayPlayersWinners", subtitle: "& Winners Report" },
   ];
