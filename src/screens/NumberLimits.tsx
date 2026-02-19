@@ -33,7 +33,7 @@ export default function NumberLimits() {
   const [isStopping, setIsStopping] = useState(false);
   const [stopNumber, setStopNumber] = useState("");
 
-  const currentVendor = vendors.find(v => (v as any).userId === user?.id);
+  const currentVendor = vendors.find(v => v.userId === user?.id);
 
   if (!currentVendor) {
     return (

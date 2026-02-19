@@ -7,8 +7,8 @@ import { Platform } from 'react-native';
 const getBaseUrl = () => {
   if (__DEV__) {
     return Platform.OS === 'android'
-      ? 'http://10.0.2.2:3000/api'
-      : 'http://localhost:3000/api';
+      ? 'https://grolotto-user.onrender.com/api'
+      : 'https://grolotto-user.onrender.com/api';
   }
   return 'https://grolotto-user.onrender.com/api';
 };
@@ -250,6 +250,11 @@ export const vendorAPI = {
 
   async deleteNumberLimit(limitId: string) {
     const res = await api.delete(`/vendors/me/number-limits/${limitId}`);
+    return res.data;
+  },
+
+  async requestPayout(data: { amount: number; method: string; currency: string }) {
+    const res = await api.post('/vendors/me/payouts', data);
     return res.data;
   },
 };

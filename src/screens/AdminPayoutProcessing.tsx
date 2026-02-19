@@ -84,11 +84,12 @@ export default function AdminPayoutProcessing() {
       
       updatePayout(updatedPayout);
       
-      // Update vendor balance
-      const updatedVendor = {
-        ...vendor!,
-        availableBalance: vendor!.availableBalance - payout.amount,
-      };
+      // Persist vendor balance update in the store
+      if (vendor) {
+        useAppStore.getState().updateVendor(vendor.id, {
+          availableBalance: vendor.availableBalance - payout.amount,
+        });
+      }
       
       // Add success notification
       Alert.alert(
@@ -119,7 +120,14 @@ export default function AdminPayoutProcessing() {
         {
           text: "Reject",
           style: "destructive",
-          onPress: () => {
+          onPress: async () => {
+            try {
+              await adminAPI.processVendorPayout(payout.id, {
+                action: 'rejected',
+                notes: notes.trim() || 'Payout rejected by administrator',
+              });
+            } catch { /* still update local state */ }
+
             const updatedPayout: Payout = {
               ...payout,
               status: "rejected",

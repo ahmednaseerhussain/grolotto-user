@@ -30,9 +30,9 @@ services:
       DATABASE_URL: postgresql://grolotto:${DB_PASSWORD:-changeme_in_production}@db:5432/grolotto
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      MOONPAY_API_KEY: ${MOONPAY_API_KEY}
-      MOONPAY_SECRET_KEY: ${MOONPAY_SECRET_KEY}
-      MOONPAY_WEBHOOK_SECRET: ${MOONPAY_WEBHOOK_SECRET}
+      MONCASH_CLIENT_ID: ${MONCASH_CLIENT_ID}
+      MONCASH_CLIENT_SECRET: ${MONCASH_CLIENT_SECRET}
+      MONCASH_BASE_URL: ${MONCASH_BASE_URL:-https://sandbox.moncashbutton.digicelgroup.com}
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
     ports:
       - "3000:3000"

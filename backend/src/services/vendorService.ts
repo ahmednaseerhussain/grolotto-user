@@ -34,7 +34,7 @@ export async function getActiveVendors(): Promise<VendorPublic[]> {
             v.status, v.bio, v.location, v.business_hours, v.specialties,
             v.rating, v.total_tickets_sold, v.is_active
      FROM vendors v
-     WHERE v.status = 'approved' AND v.is_active = TRUE
+     WHERE v.status IN ('approved', 'active') AND v.is_active = TRUE
      ORDER BY v.rating DESC`
   );
 
@@ -387,4 +387,40 @@ export async function deleteNumberLimit(vendorId: string, limitId: string) {
     [limitId, vendorId]
   );
   if (result.rowCount === 0) throw new AppError('Number limit not found', 404);
+}
+
+/**
+ * Submit a payout request for a vendor.
+ */
+export async function requestPayout(
+  vendorId: string,
+  amount: number,
+  method: string,
+  currency: string = 'HTG'
+) {
+  // Check vendor balance
+  const vendorResult = await query(
+    'SELECT available_balance FROM vendors WHERE id = $1',
+    [vendorId]
+  );
+  if (vendorResult.rows.length === 0) throw new AppError('Vendor not found', 404);
+
+  const balance = parseFloat(vendorResult.rows[0].available_balance);
+  if (amount > balance) throw new AppError('Insufficient balance', 400, 'INSUFFICIENT_BALANCE');
+  if (amount <= 0) throw new AppError('Amount must be positive', 400);
+
+  // Deduct from available balance and create payout request
+  await query(
+    'UPDATE vendors SET available_balance = available_balance - $1 WHERE id = $2',
+    [amount, vendorId]
+  );
+
+  const result = await query(
+    `INSERT INTO vendor_payouts (vendor_id, amount, currency, payout_method, status, request_date)
+     VALUES ($1, $2, $3, $4, 'pending', NOW())
+     RETURNING *`,
+    [vendorId, amount, currency, method]
+  );
+
+  return result.rows[0];
 }

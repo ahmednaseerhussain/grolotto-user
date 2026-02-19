@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, Modal, StyleSheet, Keyboard, TouchableWithoutFeedback, Alert } from "react-native";
+import { View, Text, ScrollView, Pressable, TextInput, Modal, StyleSheet, Keyboard, TouchableWithoutFeedback, Alert, Linking, AppState } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppStore, PaymentMethodType } from "../state/appStore";
 import Animated, { FadeIn, FadeInDown, SlideInDown } from "react-native-reanimated";
-import { paymentAPI, getErrorMessage } from "../api/apiClient";
+import { paymentAPI, walletAPI, getErrorMessage } from "../api/apiClient";
 
 const PAYMENT_METHODS = [
   {
@@ -78,34 +78,54 @@ export default function PaymentModal({ visible, onClose, onPaymentSuccess, amoun
     try {
       const parsedAmount = parseFloat(amount);
 
-      // For MonCash, create a payment intent
+      // Create a payment intent via backend (gets MonCash redirect URL)
       const paymentData = await paymentAPI.createPaymentIntent(parsedAmount, currency);
       
-      // Record the transaction locally
-      const transaction = {
-        id: paymentData.orderId || Date.now().toString(),
-        userId: user.id,
-        type: propAmount ? ("bet_payment" as const) : ("deposit" as const),
-        amount: parsedAmount,
-        currency,
-        paymentMethod: "moncash" as const,
-        status: "completed" as const,
-        timestamp: Date.now(),
-        description: propAmount 
-          ? `Bet payment via MonCash`
-          : `MonCash deposit`,
-      };
-      processPayment(transaction);
-      
-      setProcessing(false);
-      setShowSuccess(true);
+      // Open MonCash gateway for user to authorize payment
+      if (paymentData.paymentUrl) {
+        await Linking.openURL(paymentData.paymentUrl);
+      }
 
-      setTimeout(() => {
-        if (onPaymentSuccess) {
-          onPaymentSuccess();
-        }
-        handleClose();
-      }, 2000);
+      // Wait for user to return from MonCash
+      const waitForReturn = () => new Promise<void>((resolve) => {
+        const sub = AppState.addEventListener('change', (state) => {
+          if (state === 'active') { sub.remove(); resolve(); }
+        });
+        setTimeout(() => { sub.remove(); resolve(); }, 5000);
+      });
+      await waitForReturn();
+
+      // Poll for verification
+      let verification: any = null;
+      for (let attempt = 0; attempt < 6; attempt++) {
+        try {
+          verification = await paymentAPI.verifyPayment(paymentData.orderId, '');
+          if (verification?.status === 'credited' || verification?.status === 'already_processed') break;
+        } catch { /* keep polling */ }
+        await new Promise(r => setTimeout(r, 3000));
+      }
+
+      if (verification && (verification.status === 'credited' || verification.status === 'already_processed')) {
+        // Refresh wallet from server instead of local credit
+        try {
+          const wallet = await walletAPI.getWallet();
+          const bal = currency === 'HTG' ? wallet.balanceHtg : wallet.balanceUsd;
+          if (user) useAppStore.getState().updateUser({ ...user, balance: bal || 0 });
+        } catch { /* leave balance as-is */ }
+        
+        setProcessing(false);
+        setShowSuccess(true);
+
+        setTimeout(() => {
+          if (onPaymentSuccess) {
+            onPaymentSuccess();
+          }
+          handleClose();
+        }, 2000);
+      } else {
+        setProcessing(false);
+        Alert.alert("Payment Pending", "Your payment is being processed. Pull down to refresh your balance.");
+      }
     } catch (error) {
       setProcessing(false);
       Alert.alert("Payment Failed", getErrorMessage(error));

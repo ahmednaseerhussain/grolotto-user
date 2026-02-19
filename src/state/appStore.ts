@@ -132,8 +132,10 @@ export interface Payout {
   id: string;
   vendorId: string;
   amount: number;
+  currency?: string;
   method: PayoutMethodType;
   requestDate: number;
+  requestedDate?: number;
   status: PayoutStatus;
   processedDate?: number;
   notes?: string;
@@ -189,6 +191,7 @@ export interface VendorProfile {
 
 export interface Vendor {
   id: string;
+  userId?: string;
   firstName: string;
   lastName: string;
   email: string;

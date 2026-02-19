@@ -24,4 +24,7 @@ router.post('/me/number-limits', authenticate, authorize('vendor'), ctrl.createN
 router.put('/me/number-limits/:limitId', authenticate, authorize('vendor'), ctrl.updateNumberLimit);
 router.delete('/me/number-limits/:limitId', authenticate, authorize('vendor'), ctrl.deleteNumberLimit);
 
+// Payout requests
+router.post('/me/payouts', authenticate, authorize('vendor'), ctrl.requestPayout);
+
 export default router;

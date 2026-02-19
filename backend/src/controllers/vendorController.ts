@@ -118,3 +118,14 @@ export async function deleteNumberLimit(req: Request, res: Response, next: NextF
     next(error);
   }
 }
+
+export async function requestPayout(req: Request, res: Response, next: NextFunction) {
+  try {
+    const vendor = await vendorService.getVendorByUserId(req.user!.id);
+    const { amount, method, currency } = req.body;
+    const payout = await vendorService.requestPayout(vendor.id, amount, method || 'moncash', currency || 'HTG');
+    res.status(201).json(payout);
+  } catch (error) {
+    next(error);
+  }
+}

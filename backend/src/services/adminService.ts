@@ -15,7 +15,7 @@ export async function getSystemStats() {
   );
 
   const vendorResult = await query(
-    `SELECT COUNT(*) as active_vendors FROM vendors WHERE status = 'approved' AND is_active = TRUE`
+    `SELECT COUNT(*) as active_vendors FROM vendors WHERE status IN ('approved', 'active') AND is_active = TRUE`
   );
 
   const pendingResult = await query(
@@ -144,8 +144,13 @@ export async function getAppSettings() {
   );
   const settings: Record<string, any> = {};
   for (const row of result.rows) {
+    // pg driver auto-parses JSONB — don't double-parse
+    let val = row.value;
+    if (typeof val === 'string') {
+      try { val = JSON.parse(val); } catch { /* use as-is */ }
+    }
     settings[row.key] = {
-      value: JSON.parse(row.value),
+      value: val,
       description: row.description,
     };
   }

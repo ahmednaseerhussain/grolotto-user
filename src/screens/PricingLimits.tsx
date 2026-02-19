@@ -44,7 +44,7 @@ export default function PricingLimits() {
   const [isEditing, setIsEditing] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   
-  const currentVendor = vendors.find(v => (v as any).userId === user?.id);
+  const currentVendor = vendors.find(v => v.userId === user?.id);
   
   if (!currentVendor) {
     return (

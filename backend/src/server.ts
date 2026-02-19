@@ -83,6 +83,22 @@ app.get('/api/advertisements/active', async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+// Public ad analytics (players can record clicks/impressions)
+app.post('/api/advertisements/:adId/click', async (req, res, next) => {
+  try {
+    const { query: dbQuery } = require('./database/pool');
+    await dbQuery('UPDATE advertisements SET clicks = clicks + 1 WHERE id = $1', [req.params.adId]);
+    res.json({ success: true });
+  } catch (error) { next(error); }
+});
+app.post('/api/advertisements/:adId/impression', async (req, res, next) => {
+  try {
+    const { query: dbQuery } = require('./database/pool');
+    await dbQuery('UPDATE advertisements SET impressions = impressions + 1 WHERE id = $1', [req.params.adId]);
+    res.json({ success: true });
+  } catch (error) { next(error); }
+});
+
 app.use('/api/admin', adminRoutes);
 app.use('/api/tchala', tchalaRoutes);
 

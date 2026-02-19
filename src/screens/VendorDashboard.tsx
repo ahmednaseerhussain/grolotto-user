@@ -51,7 +51,7 @@ export default function VendorDashboard() {
   }, []);
   
   // Find current vendor data — match by userId, not email
-  const currentVendor = vendors.find(v => (v as any).userId === user?.id);
+  const currentVendor = vendors.find(v => v.userId === user?.id);
   
   // Calculate vendor stats
   const vendorGamePlays = gamePlays.filter(game => game.vendorId === currentVendor?.id);

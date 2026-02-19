@@ -1,11 +1,11 @@
-import React, { useState } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, KeyboardAvoidingView, Platform } from "react-native";
+import React, { useState, useRef } from "react";
+import { View, Text, ScrollView, Pressable, TextInput, KeyboardAvoidingView, Platform, Linking, Alert, AppState } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore, PaymentMethodType } from "../state/appStore";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
-import { paymentAPI, getErrorMessage } from "../api/apiClient";
+import { paymentAPI, walletAPI, getErrorMessage } from "../api/apiClient";
 
 const PAYMENT_METHODS = [
   {
@@ -51,33 +51,56 @@ export default function PaymentScreen() {
         parseFloat(amount),
         currency
       );
-      // For MonCash: we get a paymentUrl to redirect  
-      // In a real app, open the MonCash URL in a WebView or browser
-      // For now, simulate success and credit via verify endpoint
-      const transaction = {
-        id: paymentResult.orderId || Date.now().toString(),
-        userId: user.id,
-        type: "deposit" as const,
-        amount: parseFloat(amount),
-        currency,
-        paymentMethod: "moncash" as const,
-        status: "completed" as const,
-        timestamp: Date.now(),
-        description: `MonCash deposit`,
-      };
-      processPayment(transaction);
-      setProcessing(false);
-      setShowSuccess(true);
-      setTimeout(() => {
-        setShowSuccess(false);
-        setAmount("");
-        setSelectedMethod(null);
-        setPhoneNumber("");
-        navigation.goBack();
-      }, 2000);
+
+      // Open MonCash gateway for user to authorize payment
+      if (paymentResult.paymentUrl) {
+        await Linking.openURL(paymentResult.paymentUrl);
+      }
+
+      // Wait for user to return from MonCash, then poll for verification
+      // Listen for app returning to foreground
+      const waitForReturn = () => new Promise<void>((resolve) => {
+        const sub = AppState.addEventListener('change', (state) => {
+          if (state === 'active') { sub.remove(); resolve(); }
+        });
+        // Also resolve after 5s if AppState doesn't fire (e.g. in-app browser)
+        setTimeout(() => { sub.remove(); resolve(); }, 5000);
+      });
+      await waitForReturn();
+
+      // Poll the verify endpoint (user may take a moment to complete)
+      let verification: any = null;
+      for (let attempt = 0; attempt < 6; attempt++) {
+        try {
+          verification = await paymentAPI.verifyPayment(paymentResult.orderId, '');
+          if (verification?.status === 'credited' || verification?.status === 'already_processed') break;
+        } catch { /* keep polling */ }
+        await new Promise(r => setTimeout(r, 3000));
+      }
+
+      if (verification && (verification.status === 'credited' || verification.status === 'already_processed')) {
+        // Refresh wallet from server to get accurate balance
+        try {
+          const wallet = await walletAPI.getWallet();
+          const bal = currency === 'HTG' ? wallet.balanceHtg : wallet.balanceUsd;
+          useAppStore.getState().updateUser({ ...user, balance: bal || 0 });
+        } catch { /* fallback: leave balance as-is */ }
+
+        setProcessing(false);
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+          setAmount("");
+          setSelectedMethod(null);
+          setPhoneNumber("");
+          navigation.goBack();
+        }, 2000);
+      } else {
+        setProcessing(false);
+        Alert.alert("Payment Pending", "Your payment is being processed. Pull down to refresh your balance.");
+      }
     } catch (error) {
       setProcessing(false);
-      const { Alert } = require("react-native");
       Alert.alert("Payment Failed", getErrorMessage(error));
     }
   };

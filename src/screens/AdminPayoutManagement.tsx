@@ -24,7 +24,28 @@ export default function AdminPayoutManagement() {
     const fetchPayouts = async () => {
       setLoading(true);
       try {
-        await adminAPI.getPendingPayouts();
+        const data = await adminAPI.getPendingPayouts();
+        // Load backend payouts into the store
+        if (Array.isArray(data)) {
+          data.forEach((p: any) => {
+            const requestTime = new Date(p.requestedDate || p.requestDate || p.created_at).getTime();
+            const storePayout: Payout = {
+              id: p.id,
+              vendorId: p.vendorId || p.vendor_id,
+              amount: parseFloat(p.amount),
+              currency: p.currency || 'HTG',
+              method: p.method || p.payout_method || 'moncash',
+              status: p.status,
+              requestDate: requestTime,
+              requestedDate: requestTime,
+              processedDate: p.processedDate ? new Date(p.processedDate).getTime() : undefined,
+              notes: p.notes,
+              transferReference: p.transferReference || p.transfer_reference,
+              confirmationCode: p.confirmationCode || p.confirmation_code,
+            };
+            useAppStore.getState().updatePayout(storePayout);
+          });
+        }
       } catch (e) {
         console.warn('Failed to fetch payouts:', getErrorMessage(e));
       } finally {
@@ -84,9 +105,14 @@ export default function AdminPayoutManagement() {
         {
           text: "Reject",
           style: "destructive",
-          onPress: () => {
-            // In real app, would update the payout status
-            Alert.alert("Success", "Payout has been rejected.");
+          onPress: async () => {
+            try {
+              await adminAPI.processVendorPayout(payout.id, { action: 'rejected', notes: 'Rejected by administrator' });
+              useAppStore.getState().updatePayout({ ...payout, status: 'rejected', processedDate: Date.now() });
+              Alert.alert("Success", "Payout has been rejected.");
+            } catch (e) {
+              Alert.alert("Error", getErrorMessage(e));
+            }
           }
         }
       ]

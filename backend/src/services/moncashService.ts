@@ -15,7 +15,12 @@ import * as walletService from './walletService';
  * 3. MonCash redirects back with transactionId → we verify and credit wallet
  * 
  * MonCash API docs: https://sandbox.moncashbutton.digicelgroup.com/Moncash-business/
+ * 
+ * NOTE: MonCash processes ALL payments in HTG. If USD is passed, we convert at the current rate.
  */
+
+// Approximate USD→HTG exchange rate. In production, fetch from a live API.
+const USD_TO_HTG_RATE = 132.50;
 
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
@@ -74,6 +79,7 @@ export async function createPayment(input: {
   paymentUrl: string;
   orderId: string;
   amount: number;
+  amountHtg: number;
   currency: string;
 }> {
   const { userId, amount, currency } = input;
@@ -85,6 +91,9 @@ export async function createPayment(input: {
     throw new AppError('Amount exceeds maximum allowed ($10,000)', 400, 'AMOUNT_TOO_HIGH');
   }
 
+  // MonCash only processes in HTG — convert if needed
+  const amountHtg = currency === 'USD' ? Math.round(amount * USD_TO_HTG_RATE * 100) / 100 : amount;
+
   // Generate unique order ID for idempotency
   const orderId = `GRO_${userId.substring(0, 8)}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
 
@@ -94,7 +103,7 @@ export async function createPayment(input: {
 
     const response = await axios.post(
       `${baseUrl}/Api/v1/CreatePayment`,
-      { amount, orderId },
+      { amount: amountHtg, orderId },
       {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -116,6 +125,7 @@ export async function createPayment(input: {
       paymentUrl,
       orderId,
       amount,
+      amountHtg,
       currency,
     };
   } catch (error: any) {
@@ -257,7 +267,7 @@ export async function verifyAndCreditPayment(
       newBalance: result.newBalance,
     };
   } catch (error: any) {
-    if (error.code === 'DUPLICATE_TRANSACTION') {
+    if (error.code === 'DUPLICATE_TRANSACTION' || error.code === '23505') {
       return { status: 'already_processed', amount: payment.amount, newBalance: 0 };
     }
     throw error;

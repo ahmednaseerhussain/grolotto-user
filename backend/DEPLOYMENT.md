@@ -10,7 +10,7 @@
                                │
                                ▼
                         ┌──────────────────┐
-                        │   MoonPay API     │
+                        │   MonCash API     │
                         │  (Payments)       │
                         └──────────────────┘
 ```
@@ -83,10 +83,9 @@ npm start
 | `DATABASE_URL` | **Yes** | — | PostgreSQL connection string |
 | `JWT_SECRET` | **Yes** | — | JWT signing secret (min 64 chars, use `openssl rand -hex 64`) |
 | `JWT_REFRESH_SECRET` | **Yes** | — | Refresh token secret (separate from JWT_SECRET) |
-| `MOONPAY_API_KEY` | **Yes** | — | MoonPay publishable API key |
-| `MOONPAY_SECRET_KEY` | **Yes** | — | MoonPay secret key for webhook HMAC signing |
-| `MOONPAY_WEBHOOK_SECRET` | **Yes** | — | MoonPay webhook signing secret |
-| `MOONPAY_BASE_URL` | No | `https://api.moonpay.com` | MoonPay API base URL |
+| `MONCASH_CLIENT_ID` | **Yes** | — | MonCash API client ID |
+| `MONCASH_CLIENT_SECRET` | **Yes** | — | MonCash API client secret |
+| `MONCASH_BASE_URL` | No | `https://sandbox.moncashbutton.digicelgroup.com` | MonCash API base URL |
 | `CORS_ORIGIN` | No | `*` | CORS allowed origin(s) |
 | `RATE_LIMIT_WINDOW_MS` | No | `900000` (15 min) | Rate limit window |
 | `RATE_LIMIT_MAX` | No | `100` | Max requests per window |
@@ -197,7 +196,7 @@ psql $DATABASE_URL < backup_20240101_120000.sql
 - [ ] **SQL Injection**: Parameterized queries used everywhere (already implemented)
 - [ ] **Password Hashing**: bcrypt with 12 rounds (already implemented)
 - [ ] **Token Rotation**: Refresh tokens are single-use with rotation (already implemented)
-- [ ] **MoonPay Webhooks**: HMAC-SHA256 signature verification (already implemented)
+- [ ] **MonCash Payments**: OAuth2 token-based integration with MonCash (already implemented)
 - [ ] **Error Messages**: Production errors don't leak stack traces (already implemented)
 - [ ] **Database SSL**: `?sslmode=require` in production DATABASE_URL
 - [ ] **Logging**: Morgan logs configured, pipe to external service (Datadog, CloudWatch)
@@ -256,8 +255,9 @@ psql $DATABASE_URL < backup_20240101_120000.sql
 ### Payment (`/api/payments`)
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/intent` | Yes | Create payment intent |
-| POST | `/webhook/moonpay` | No* | MoonPay webhook (*HMAC verified) |
+| POST | `/intent` | Yes | Create MonCash payment intent |
+| POST | `/verify` | Yes | Verify MonCash payment and credit wallet |
+| GET | `/status/:transactionId` | Yes | Check payment status |
 
 ### Admin (`/api/admin`)
 | Method | Path | Auth | Description |
@@ -300,7 +300,7 @@ node dist/server.js 2>&1 | tee -a /var/log/grolotto/app.log
 |-------|----------|
 | `ECONNREFUSED` on DB | Check PostgreSQL is running, verify DATABASE_URL |
 | JWT validation fails | Ensure JWT_SECRET is identical across restarts |
-| MoonPay webhooks fail | Verify MOONPAY_WEBHOOK_SECRET matches dashboard |
+| MonCash payments fail | Verify MONCASH_CLIENT_ID and MONCASH_CLIENT_SECRET in env vars |
 | CORS errors | Set CORS_ORIGIN to your mobile app's origin |
 | Rate limit hit | Adjust RATE_LIMIT_MAX or use Redis for distributed limits |
 | Migrations fail | Check schema.sql syntax, verify DB user has CREATE privileges |

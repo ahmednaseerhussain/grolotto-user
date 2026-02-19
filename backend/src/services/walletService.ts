@@ -37,7 +37,7 @@ export async function creditWallet(
   idempotencyKey: string,
   description: string,
   paymentMethod: string,
-  moonpayTransactionId?: string
+  moncashTransactionId?: string
 ) {
   return withTransaction(async (client) => {
     // Check idempotency - prevent double credit
@@ -65,9 +65,9 @@ export async function creditWallet(
 
     // Create transaction record
     await client.query(
-      `INSERT INTO transactions (user_id, type, amount, currency, payment_method, status, description, moonpay_transaction_id, idempotency_key)
+      `INSERT INTO transactions (user_id, type, amount, currency, payment_method, status, description, moncash_transaction_id, idempotency_key)
        VALUES ($1, 'deposit', $2, $3, $4, 'completed', $5, $6, $7)`,
-      [userId, amount, currency, paymentMethod, description, moonpayTransactionId || null, idempotencyKey]
+      [userId, amount, currency, paymentMethod, description, moncashTransactionId || null, idempotencyKey]
     );
 
     return {
@@ -148,7 +148,7 @@ export async function getTransactions(
 
   const result = await query(
     `SELECT id, type, amount, currency, payment_method, status, description,
-            ticket_id, vendor_id, moonpay_transaction_id, created_at
+            ticket_id, vendor_id, moncash_transaction_id, created_at
      FROM transactions
      WHERE ${conditions.join(' AND ')}
      ORDER BY created_at DESC

@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore, PayoutMethodType } from "../state/appStore";
+import { vendorAPI, getErrorMessage } from "../api/apiClient";
 
 const PAYOUT_METHODS = [
   { 
@@ -31,7 +32,7 @@ export default function PayoutManagement() {
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [withdrawalCurrency, setWithdrawalCurrency] = useState<"HTG" | "USD">(currency);
   
-  const currentVendor = vendors.find(v => (v as any).userId === user?.id);
+  const currentVendor = vendors.find(v => v.userId === user?.id);
   const vendorPayouts = payouts.filter(p => p.vendorId === currentVendor?.id);
   
   // Currency formatting and conversion
@@ -88,6 +89,15 @@ export default function PayoutManagement() {
 
     requestPayout(currentVendor.id, requestAmountUSD, selectedMethod);
     
+    // Submit payout request to backend
+    vendorAPI.requestPayout({
+      amount: requestAmountUSD,
+      method: selectedMethod,
+      currency: withdrawalCurrency,
+    }).catch(err => {
+      Alert.alert("Erreur", getErrorMessage(err));
+    });
+
     const amountDisplay = formatCurrency(requestAmount, withdrawalCurrency);
     Alert.alert(
       "Demande soumise", 

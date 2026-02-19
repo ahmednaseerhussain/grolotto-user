@@ -173,7 +173,9 @@ export default function PlayerDashboard() {
         ]);
         if (vendorData) useAppStore.getState().setVendors(vendorData);
         if (walletData && user) {
-          useAppStore.getState().updateUser({ ...user, balance: walletData.balance });
+          // Use balanceHtg or balanceUsd from the wallet API based on selected currency
+          const balance = currency === 'HTG' ? walletData.balanceHtg : walletData.balanceUsd;
+          useAppStore.getState().updateUser({ ...user, balance: balance || 0 });
         }
       } catch (e) {
         // silently fail; user can pull-to-refresh

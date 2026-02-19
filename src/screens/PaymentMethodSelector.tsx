@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, Modal, Pressable, StyleSheet, ScrollView, TextInput, Alert } from "react-native";
+import { View, Text, Modal, Pressable, StyleSheet, ScrollView, TextInput, Alert, Linking, AppState } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppStore, PaymentMethodType } from "../state/appStore";
-import { paymentAPI, getErrorMessage } from "../api/apiClient";
+import { paymentAPI, walletAPI, getErrorMessage } from "../api/apiClient";
 
 interface PaymentMethodSelectorProps {
   visible: boolean;
@@ -44,23 +44,44 @@ export default function PaymentMethodSelector({
 
     try {
       // Create payment intent via backend
-      await paymentAPI.createPaymentIntent(amount, currency);
+      const paymentData = await paymentAPI.createPaymentIntent(amount, currency);
 
-      // Create transaction record
-      const transaction = {
-        id: Date.now().toString(),
-        userId: user.id,
-        type: "bet_payment" as const,
-        amount,
-        currency,
-        paymentMethod: selectedMethod,
-        status: "completed" as const,
-        timestamp: Date.now(),
-        description: `Bet payment via ${PAYMENT_METHODS.find(m => m.type === selectedMethod)?.name}`,
-      };
+      // Open MonCash gateway for user to authorize
+      if (paymentData.paymentUrl) {
+        await Linking.openURL(paymentData.paymentUrl);
+      }
 
-      processPayment(transaction);
-      onPaymentComplete(selectedMethod);
+      // Wait for user to return from MonCash
+      const waitForReturn = () => new Promise<void>((resolve) => {
+        const sub = AppState.addEventListener('change', (state) => {
+          if (state === 'active') { sub.remove(); resolve(); }
+        });
+        setTimeout(() => { sub.remove(); resolve(); }, 5000);
+      });
+      await waitForReturn();
+
+      // Poll for verification
+      let verification: any = null;
+      for (let attempt = 0; attempt < 6; attempt++) {
+        try {
+          verification = await paymentAPI.verifyPayment(paymentData.orderId, '');
+          if (verification?.status === 'credited' || verification?.status === 'already_processed') break;
+        } catch { /* keep polling */ }
+        await new Promise(r => setTimeout(r, 3000));
+      }
+
+      if (verification && (verification.status === 'credited' || verification.status === 'already_processed')) {
+        // Refresh wallet from server
+        try {
+          const wallet = await walletAPI.getWallet();
+          const bal = currency === 'HTG' ? wallet.balanceHtg : wallet.balanceUsd;
+          useAppStore.getState().updateUser({ ...user, balance: bal || 0 });
+        } catch { /* leave balance as-is */ }
+
+        onPaymentComplete(selectedMethod);
+      } else {
+        Alert.alert("Payment Pending", "Your payment is being processed. Check back shortly.");
+      }
     } catch (err) {
       Alert.alert("Payment Failed", getErrorMessage(err));
     } finally {
