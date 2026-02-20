@@ -93,6 +93,7 @@ export default function EditProfileScreen() {
         address: formData.address.trim(),
         city: formData.city.trim(),
         country: formData.country.trim(),
+        dateOfBirth: formData.dateOfBirth.trim() || undefined,
       });
       
       // Update user in store with server-confirmed data
@@ -277,6 +278,16 @@ export default function EditProfileScreen() {
               "phone-pad",
               false,
               "phone"
+            )}
+            
+            {renderInputField(
+              "Date of Birth",
+              formData.dateOfBirth,
+              (text) => setFormData({...formData, dateOfBirth: text}),
+              "YYYY-MM-DD",
+              "numeric",
+              false,
+              "dateOfBirth"
             )}
           </View>
 

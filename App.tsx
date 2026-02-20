@@ -13,6 +13,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const hasCompletedOnboarding = useAppStore(s => s.hasCompletedOnboarding);
+  const fetchAppSettings = useAppStore(s => s.fetchAppSettings);
+
+  // Fetch app settings on startup
+  useEffect(() => {
+    fetchAppSettings();
+  }, []);
 
   const handleSplashComplete = () => {
     setShowSplash(false);

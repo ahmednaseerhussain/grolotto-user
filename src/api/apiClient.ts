@@ -140,6 +140,7 @@ export const authAPI = {
     name: string;
     role?: 'player' | 'vendor';
     phone?: string;
+    dateOfBirth: string;
   }) {
     const res = await api.post('/auth/register', data);
     const { user, tokens } = res.data;
@@ -173,6 +174,7 @@ export const authAPI = {
   async updateProfile(data: {
     name?: string;
     phone?: string;
+    dateOfBirth?: string;
     address?: string;
     city?: string;
     country?: string;
@@ -445,6 +447,56 @@ export const tchalaAPI = {
 
   async getAllDreams(language = 'en') {
     const res = await api.get('/tchala/all', { params: { language } });
+    return res.data;
+  },
+};
+
+// ═════════════════════════════════════════════════════════
+//  REWARDS API
+// ═════════════════════════════════════════════════════════
+export const rewardsAPI = {
+  async getRewards() {
+    const res = await api.get('/rewards');
+    return res.data;
+  },
+
+  async claimReward(rewardId: string) {
+    const res = await api.post(`/rewards/${rewardId}/claim`);
+    return res.data;
+  },
+};
+
+// ═════════════════════════════════════════════════════════
+//  NOTIFICATIONS API
+// ═════════════════════════════════════════════════════════
+export const notificationsAPI = {
+  async getNotifications(limit = 50, offset = 0) {
+    const res = await api.get('/notifications', { params: { limit, offset } });
+    return res.data;
+  },
+
+  async getUnreadCount() {
+    const res = await api.get('/notifications/unread-count');
+    return res.data;
+  },
+
+  async markAsRead(notificationId: string) {
+    const res = await api.put(`/notifications/${notificationId}/read`);
+    return res.data;
+  },
+
+  async markAllAsRead() {
+    const res = await api.put('/notifications/read-all');
+    return res.data;
+  },
+};
+
+// ═════════════════════════════════════════════════════════
+//  SETTINGS API (Public)
+// ═════════════════════════════════════════════════════════
+export const settingsAPI = {
+  async getPublicSettings() {
+    const res = await api.get('/settings/public');
     return res.data;
   },
 };

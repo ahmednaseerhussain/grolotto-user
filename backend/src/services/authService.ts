@@ -3,6 +3,7 @@ import jwt, { type SignOptions } from 'jsonwebtoken';
 import { query, withTransaction } from '../database/pool';
 import config from '../config';
 import { AppError } from '../middleware/errorHandler';
+import * as rewardService from './rewardService';
 
 const SALT_ROUNDS = 12;
 
@@ -86,6 +87,9 @@ export async function register(input: RegisterInput): Promise<{ user: UserProfil
       'INSERT INTO wallets (user_id) VALUES ($1)',
       [user.id]
     );
+
+    // Create welcome bonus reward (non-blocking)
+    rewardService.createWelcomeBonus(user.id);
 
     const tokens = generateTokens({ id: user.id, email: user.email, role: user.role });
 
@@ -268,15 +272,25 @@ export async function getProfile(userId: string): Promise<UserProfile> {
 
 export async function updateProfile(
   userId: string,
-  updates: { name?: string; phone?: string; address?: string; city?: string; country?: string }
+  updates: { name?: string; phone?: string; dateOfBirth?: string; address?: string; city?: string; country?: string }
 ): Promise<UserProfile> {
   const setClauses: string[] = [];
   const values: any[] = [];
   let paramIndex = 1;
 
+  // Map camelCase keys to snake_case DB columns
+  const fieldMap: Record<string, string> = {
+    name: 'name',
+    phone: 'phone',
+    dateOfBirth: 'date_of_birth',
+    address: 'address',
+    city: 'city',
+    country: 'country',
+  };
+
   for (const [key, val] of Object.entries(updates)) {
-    if (val !== undefined) {
-      setClauses.push(`${key} = $${paramIndex}`);
+    if (val !== undefined && fieldMap[key]) {
+      setClauses.push(`${fieldMap[key]} = $${paramIndex}`);
       values.push(val);
       paramIndex++;
     }

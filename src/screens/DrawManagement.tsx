@@ -6,6 +6,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
 import { DrawSettings } from "../state/appStore";
 import { getTranslation } from "../utils/translations";
+import { vendorAPI } from "../api/apiClient";
 
 const DRAWS = [
   { code: "NY", name: "New York", flag: "🗽" },
@@ -50,6 +51,13 @@ export default function DrawManagement() {
     );
   }
 
+  // Sync draw settings to backend API (fire-and-forget with error logging)
+  const syncDrawToAPI = (drawCode: string, updatedDraw: DrawSettings) => {
+    vendorAPI.updateDrawSettings(drawCode, updatedDraw).catch((err: any) => {
+      console.error(`Failed to sync draw ${drawCode} to API:`, err);
+    });
+  };
+
   const toggleDrawEnabled = (drawCode: string) => {
     const currentDraw = currentVendor.draws[drawCode as keyof typeof currentVendor.draws];
     
@@ -72,6 +80,7 @@ export default function DrawManagement() {
                 }
               };
               updateVendorDrawSettings(currentVendor.id, drawCode, updatedDrawWithSenp);
+              syncDrawToAPI(drawCode, updatedDrawWithSenp);
             }
           }
         ]
@@ -84,6 +93,7 @@ export default function DrawManagement() {
       enabled: !currentDraw.enabled,
     };
     updateVendorDrawSettings(currentVendor.id, drawCode, updatedDraw);
+    syncDrawToAPI(drawCode, updatedDraw);
   };
 
   const toggleGameEnabled = (drawCode: string, gameKey: string) => {
@@ -113,6 +123,7 @@ export default function DrawManagement() {
       },
     };
     updateVendorDrawSettings(currentVendor.id, drawCode, updatedDraw);
+    syncDrawToAPI(drawCode, updatedDraw);
   };
 
   const startEditingLimits = (drawCode: string, gameKey: string) => {
@@ -167,6 +178,7 @@ export default function DrawManagement() {
     };
     
     updateVendorDrawSettings(currentVendor.id, drawCode, updatedDraw);
+    syncDrawToAPI(drawCode, updatedDraw);
     setEditingLimits(null);
   };
 

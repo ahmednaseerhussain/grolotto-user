@@ -1,5 +1,7 @@
 import { query, withTransaction } from '../database/pool';
 import { AppError } from '../middleware/errorHandler';
+import * as notificationService from './notificationService';
+import * as rewardService from './rewardService';
 
 /**
  * Get wallet balance for a user.
@@ -69,6 +71,16 @@ export async function creditWallet(
        VALUES ($1, 'deposit', $2, $3, $4, 'completed', $5, $6, $7)`,
       [userId, amount, currency, paymentMethod, description, moncashTransactionId || null, idempotencyKey]
     );
+
+    // Send deposit notification and check first-deposit bonus (non-blocking)
+    notificationService.createPlayerNotification(
+      userId,
+      'deposit',
+      'Deposit Received',
+      `Your deposit of ${amount.toFixed(2)} ${currency} has been credited to your wallet.`,
+      { amount, currency }
+    );
+    rewardService.createFirstDepositBonus(userId, amount);
 
     return {
       newBalance: parseFloat(walletResult.rows[0].new_balance),

@@ -27,6 +27,7 @@ export default function ResultsScreen() {
   const currency = useAppStore(s => s.currency);
   const language = useAppStore(s => s.language);
   const user = useAppStore(s => s.user);
+  const vendors = useAppStore(s => s.vendors);
   
   const [currentResultIndex, setCurrentResultIndex] = useState(0);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
@@ -191,7 +192,7 @@ export default function ResultsScreen() {
               GROLOTTO
             </Text>
             <Text style={{ fontSize: 18, fontWeight: '600', color: '#1f2937', marginBottom: 2 }}>
-              Welcome, {user?.name || 'themepam89'}
+              Welcome, {user?.name || t('player')}
             </Text>
             <Text style={{ fontSize: 14, color: '#6b7280' }}>
               Ready to play today?
@@ -513,32 +514,45 @@ export default function ResultsScreen() {
           </Text>
         </View>
 
-        {/* Available Machines */}
-        <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#1f2937', marginBottom: 16 }}>
-          Available Vendors (2)
-        </Text>
-        
-        <Pressable style={{
-          backgroundColor: '#ffffff',
-          borderRadius: 16,
-          padding: 16,
-          marginBottom: 12,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 4
-        }}>
-          <View>
-            <Text style={{ fontSize: 16, fontWeight: '600', color: '#1f2937' }}>
-              Lucky Numbers GA
+        {/* Available Vendors */}
+        {vendors.length > 0 && (
+          <>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#1f2937', marginBottom: 16 }}>
+              {t('availableVendors') || 'Available Vendors'} ({vendors.filter((v: any) => v.status === 'active' || v.isActive).length})
             </Text>
+            
+            {vendors.filter((v: any) => v.status === 'active' || v.isActive).slice(0, 5).map((vendor: any) => (
+              <View key={vendor.id} style={{
+                backgroundColor: '#ffffff',
+                borderRadius: 16,
+                padding: 16,
+                marginBottom: 12,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 8,
+                elevation: 4
+              }}>
+                <View>
+                  <Text style={{ fontSize: 16, fontWeight: '600', color: '#1f2937' }}>
+                    {vendor.businessName || vendor.name || `Vendor ${vendor.id}`}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+              </View>
+            ))}
+          </>
+        )}
+
+        {vendors.length === 0 && (
+          <View style={{ alignItems: 'center', paddingVertical: 20 }}>
+            <Ionicons name="storefront-outline" size={40} color="#d1d5db" />
+            <Text style={{ color: '#9ca3af', marginTop: 8 }}>{t('noVendorsAvailable') || 'No vendors available yet'}</Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
-        </Pressable>
+        )}
 
         <View style={{ height: 50 }} />
       </ScrollView>

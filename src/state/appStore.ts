@@ -226,6 +226,7 @@ export interface Vendor {
   totalRevenue: number;
   availableBalance: number;
   totalPlayers: number;
+  commissionRate?: number;
   
   // Performance metrics
   rating: number;
@@ -393,6 +394,7 @@ interface AppState {
   sendVendorInvite: (email: string) => void;
   setAllUsers: (users: User[]) => void;
   updateAppSettings: (settings: Partial<AppSettings>) => void;
+  fetchAppSettings: () => Promise<void>;
   getSystemStats: () => {
     totalUsers: number;
     activeVendors: number;
@@ -829,6 +831,26 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           appSettings: { ...state.appSettings, ...settings }
         })),
+      fetchAppSettings: async () => {
+        try {
+          const { settingsAPI } = await import('../api/apiClient');
+          const data = await settingsAPI.getPublicSettings();
+          if (data) {
+            set((state) => ({
+              appSettings: {
+                ...state.appSettings,
+                allowedStates: data.allowed_states || state.appSettings.allowedStates,
+                maintenanceMode: data.maintenance_mode || false,
+                minBetAmount: data.min_bet_amount || state.appSettings.minBetAmount,
+                maxBetAmount: data.max_bet_amount || state.appSettings.maxBetAmount,
+                gameAvailability: data.game_availability || state.appSettings.gameAvailability,
+              }
+            }));
+          }
+        } catch (error) {
+          console.error('Failed to fetch app settings:', error);
+        }
+      },
       getSystemStats: () => {
         const state = get();
         const totalRevenue = state.gamePlays.reduce((sum, play) => sum + play.betAmount, 0);

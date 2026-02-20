@@ -14,6 +14,8 @@ import walletRoutes from './routes/walletRoutes';
 import paymentRoutes from './routes/paymentRoutes';
 import adminRoutes from './routes/adminRoutes';
 import tchalaRoutes from './routes/tchalaRoutes';
+import rewardRoutes from './routes/rewardRoutes';
+import notificationRoutes from './routes/notificationRoutes';
 
 const app = express();
 
@@ -62,6 +64,25 @@ app.use('/api/vendors', vendorRoutes);
 app.use('/api/lottery', lotteryRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/rewards', rewardRoutes);
+app.use('/api/notifications', notificationRoutes);
+
+// Public app settings (non-sensitive only)
+app.get('/api/settings/public', async (_req, res, next) => {
+  try {
+    const { query: dbQuery } = require('./database/pool');
+    const result = await dbQuery(
+      `SELECT key, value FROM app_settings
+       WHERE key IN ('allowed_states', 'game_availability', 'win_multipliers', 'min_bet_amount', 'max_bet_amount', 'htg_exchange_rate', 'maintenance_mode')`
+    );
+    const settings: Record<string, any> = {};
+    for (const row of result.rows) {
+      const val = row.value;
+      settings[row.key] = typeof val === 'string' ? val : val;
+    }
+    res.json(settings);
+  } catch (error) { next(error); }
+});
 
 // Public advertisements (no auth required)
 app.get('/api/advertisements/active', async (req, res, next) => {

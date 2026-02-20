@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { View, Text, Platform, StyleSheet } from "react-native";
+import { View, Text, Platform, StyleSheet, FlatList, Pressable, ActivityIndicator, RefreshControl } from "react-native";
 import { SafeAreaView, useSafeAreaInsets, EdgeInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import PlayerDashboard from "../screens/PlayerDashboard";
@@ -8,20 +8,155 @@ import HistoryScreen from "../screens/HistoryScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import { useAppStore } from "../state/appStore";
 import { getTranslation } from "../utils/translations";
+import { notificationsAPI } from "../api/apiClient";
 
 const Tab = createBottomTabNavigator();
 
-// Placeholder screens for Notifications and Help
+interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  metadata?: any;
+  createdAt: string;
+}
+
+const notifIconMap: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string }> = {
+  bet_placed: { icon: "ticket", color: "#3b82f6" },
+  win: { icon: "trophy", color: "#f59e0b" },
+  deposit: { icon: "wallet", color: "#10b981" },
+  withdrawal: { icon: "cash", color: "#8b5cf6" },
+  reward: { icon: "gift", color: "#ef4444" },
+  system: { icon: "megaphone", color: "#6b7280" },
+};
+
 const NotificationsScreen = () => {
   const language = useAppStore(s => s.language);
   const t = (key: string) => getTranslation(key as any, language);
+
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const [notifData, countData] = await Promise.all([
+        notificationsAPI.getNotifications(50, 0),
+        notificationsAPI.getUnreadCount(),
+      ]);
+      setNotifications(notifData.notifications || []);
+      setUnreadCount(countData.unreadCount || 0);
+    } catch (error) {
+      console.error("Failed to fetch notifications:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  const handleMarkRead = async (id: string) => {
+    try {
+      await notificationsAPI.markAsRead(id);
+      setNotifications(prev =>
+        prev.map(n => n.id === id ? { ...n, isRead: true } : n)
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error("Failed to mark as read:", error);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await notificationsAPI.markAllAsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+    } catch (error) {
+      console.error("Failed to mark all as read:", error);
+    }
+  };
+
+  const getTimeSince = (dateStr: string) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "Just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
+
+  const renderNotification = ({ item }: { item: Notification }) => {
+    const visual = notifIconMap[item.type] || notifIconMap.system;
+    return (
+      <Pressable
+        onPress={() => !item.isRead && handleMarkRead(item.id)}
+        style={[
+          styles.notifCard,
+          !item.isRead && styles.notifCardUnread,
+        ]}
+      >
+        <View style={[styles.notifIcon, { backgroundColor: visual.color + "20" }]}>
+          <Ionicons name={visual.icon} size={22} color={visual.color} />
+        </View>
+        <View style={styles.notifContent}>
+          <View style={styles.notifHeader}>
+            <Text style={[styles.notifTitle, !item.isRead && styles.notifTitleUnread]}>{item.title}</Text>
+            {!item.isRead && <View style={styles.unreadDot} />}
+          </View>
+          <Text style={styles.notifMessage} numberOfLines={2}>{item.message}</Text>
+          <Text style={styles.notifTime}>{getTimeSince(item.createdAt)}</Text>
+        </View>
+      </Pressable>
+    );
+  };
+
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="flex-1 items-center justify-center">
-        <Ionicons name="notifications-outline" size={64} color="#9ca3af" />
-        <Text className="text-gray-600 text-lg mt-4">{t("notifications")}</Text>
-        <Text className="text-gray-400 text-sm mt-2">{t("comingSoon")}</Text>
+    <SafeAreaView style={styles.notifContainer}>
+      <View style={styles.notifHeaderBar}>
+        <Text style={styles.notifScreenTitle}>{t("notifications")}</Text>
+        {unreadCount > 0 && (
+          <Pressable onPress={handleMarkAllRead} style={styles.markAllButton}>
+            <Text style={styles.markAllText}>Mark all read</Text>
+          </Pressable>
+        )}
       </View>
+
+      {loading ? (
+        <View style={styles.notifLoading}>
+          <ActivityIndicator size="large" color="#f59e0b" />
+        </View>
+      ) : (
+        <FlatList
+          data={notifications}
+          renderItem={renderNotification}
+          keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => { setRefreshing(true); fetchNotifications(); }}
+              colors={["#f59e0b"]}
+            />
+          }
+          contentContainerStyle={notifications.length === 0 ? styles.notifEmpty : { paddingBottom: 20 }}
+          ListEmptyComponent={
+            <View style={styles.notifEmptyContent}>
+              <Ionicons name="notifications-off-outline" size={64} color="#d1d5db" />
+              <Text style={styles.notifEmptyTitle}>No Notifications</Text>
+              <Text style={styles.notifEmptySubtitle}>
+                You're all caught up! Notifications will appear here.
+              </Text>
+            </View>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -62,7 +197,7 @@ const HelpScreen = () => {
             <Ionicons name="call" size={28} color="#10b981" />
           </View>
           <Text className="text-gray-800 font-semibold">Phone</Text>
-          <Text className="text-gray-400 text-xs">+1 (555) 123-4567</Text>
+          <Text className="text-gray-400 text-xs">+509 XXXX-XXXX</Text>
         </View>
       </View>
       
@@ -197,3 +332,119 @@ export default function PlayerTabNavigator() {
     </Tab.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  notifContainer: {
+    flex: 1,
+    backgroundColor: "#f9fafb",
+  },
+  notifHeaderBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: "#ffffff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+  },
+  notifScreenTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#1f2937",
+  },
+  markAllButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: "#f3f4f6",
+    borderRadius: 8,
+  },
+  markAllText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#3b82f6",
+  },
+  notifLoading: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  notifCard: {
+    flexDirection: "row",
+    backgroundColor: "#ffffff",
+    marginHorizontal: 16,
+    marginTop: 10,
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  notifCardUnread: {
+    backgroundColor: "#fffbeb",
+    borderColor: "#fde68a",
+  },
+  notifIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  notifContent: {
+    flex: 1,
+  },
+  notifHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  notifTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#1f2937",
+    flex: 1,
+  },
+  notifTitleUnread: {
+    fontWeight: "700",
+  },
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#f59e0b",
+    marginLeft: 8,
+  },
+  notifMessage: {
+    fontSize: 13,
+    color: "#6b7280",
+    marginTop: 4,
+    lineHeight: 18,
+  },
+  notifTime: {
+    fontSize: 11,
+    color: "#9ca3af",
+    marginTop: 6,
+  },
+  notifEmpty: {
+    flex: 1,
+  },
+  notifEmptyContent: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 100,
+  },
+  notifEmptyTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1f2937",
+    marginTop: 16,
+  },
+  notifEmptySubtitle: {
+    fontSize: 14,
+    color: "#6b7280",
+    textAlign: "center",
+    marginTop: 8,
+    paddingHorizontal: 40,
+  },
+});

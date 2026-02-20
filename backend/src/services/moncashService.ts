@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import config from '../config';
 import { AppError } from '../middleware/errorHandler';
 import * as walletService from './walletService';
+import { query } from '../database/pool';
 
 /**
  * MonCash Payment Integration Service
@@ -19,8 +20,35 @@ import * as walletService from './walletService';
  * NOTE: MonCash processes ALL payments in HTG. If USD is passed, we convert at the current rate.
  */
 
-// Approximate USD→HTG exchange rate. In production, fetch from a live API.
-const USD_TO_HTG_RATE = 132.50;
+// Default USD→HTG exchange rate. Overridden by app_settings.htg_exchange_rate from DB.
+const DEFAULT_USD_TO_HTG_RATE = 150;
+
+// Cache exchange rate (refresh every hour)
+let cachedExchangeRate: { rate: number; expiresAt: number } | null = null;
+
+/**
+ * Get USD→HTG exchange rate from app_settings DB with 1-hour cache.
+ */
+async function getExchangeRate(): Promise<number> {
+  if (cachedExchangeRate && cachedExchangeRate.expiresAt > Date.now()) {
+    return cachedExchangeRate.rate;
+  }
+  try {
+    const result = await query(
+      `SELECT value FROM app_settings WHERE key = 'htg_exchange_rate'`
+    );
+    if (result.rows.length > 0) {
+      const val = result.rows[0].value;
+      const rate = parseFloat(typeof val === 'string' ? val : JSON.stringify(val));
+      if (!isNaN(rate) && rate > 0) {
+        cachedExchangeRate = { rate, expiresAt: Date.now() + 3600_000 };
+        return rate;
+      }
+    }
+  } catch { /* use default */ }
+  cachedExchangeRate = { rate: DEFAULT_USD_TO_HTG_RATE, expiresAt: Date.now() + 3600_000 };
+  return DEFAULT_USD_TO_HTG_RATE;
+}
 
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
@@ -92,7 +120,8 @@ export async function createPayment(input: {
   }
 
   // MonCash only processes in HTG — convert if needed
-  const amountHtg = currency === 'USD' ? Math.round(amount * USD_TO_HTG_RATE * 100) / 100 : amount;
+  const exchangeRate = await getExchangeRate();
+  const amountHtg = currency === 'USD' ? Math.round(amount * exchangeRate * 100) / 100 : amount;
 
   // Generate unique order ID for idempotency
   const orderId = `GRO_${userId.substring(0, 8)}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;

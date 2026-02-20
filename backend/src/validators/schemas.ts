@@ -1,12 +1,36 @@
 import { z } from 'zod';
 
+/**
+ * Validate a date string (YYYY-MM-DD) and ensure the person is at least 18 years old.
+ */
+function isValidAdultDOB(dateStr: string): boolean {
+  const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return false;
+  const [, yearStr, monthStr, dayStr] = match;
+  const year = parseInt(yearStr, 10);
+  const month = parseInt(monthStr, 10);
+  const day = parseInt(dayStr, 10);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return false;
+  const dob = new Date(year, month - 1, day);
+  if (dob.getFullYear() !== year || dob.getMonth() !== month - 1 || dob.getDate() !== day) return false;
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+  return age >= 18;
+}
+
 export const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   name: z.string().min(2, 'Name must be at least 2 characters'),
   role: z.enum(['player', 'vendor']).optional().default('player'),
   phone: z.string().optional(),
-  dateOfBirth: z.string().optional(),
+  dateOfBirth: z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date of birth must be in YYYY-MM-DD format')
+    .refine(isValidAdultDOB, 'You must be at least 18 years old to register'),
   country: z.string().optional(),
 });
 
@@ -18,6 +42,10 @@ export const loginSchema = z.object({
 export const updateProfileSchema = z.object({
   name: z.string().min(2).optional(),
   phone: z.string().optional(),
+  dateOfBirth: z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date of birth must be in YYYY-MM-DD format')
+    .refine(isValidAdultDOB, 'You must be at least 18 years old')
+    .optional(),
   address: z.string().optional(),
   city: z.string().optional(),
   country: z.string().optional(),

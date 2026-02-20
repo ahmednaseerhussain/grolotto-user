@@ -12,6 +12,7 @@ export default function PlayerLogin() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -45,12 +46,29 @@ export default function PlayerLogin() {
   };
 
   const handleSignUp = async () => {
-    if (!name || !email || !password) {
-      Alert.alert("Error", "Please fill in name, email and password");
+    if (!name || !email || !password || !dateOfBirth) {
+      Alert.alert("Error", "Please fill in name, date of birth, email and password");
       return;
     }
     if (password.length < 6) {
       Alert.alert("Error", "Password must be at least 6 characters");
+      return;
+    }
+    // Validate DOB format YYYY-MM-DD
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
+      Alert.alert("Error", "Date of birth must be in YYYY-MM-DD format (e.g. 1990-01-15)");
+      return;
+    }
+    // Validate age >= 18
+    const dob = new Date(dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    if (age < 18) {
+      Alert.alert("Error", "You must be at least 18 years old to create an account");
       return;
     }
 
@@ -63,6 +81,7 @@ export default function PlayerLogin() {
         name,
         role: 'player',
         phone: phone || undefined,
+        dateOfBirth,
       });
       setUser(data.user);
     } catch (error) {
@@ -121,6 +140,19 @@ export default function PlayerLogin() {
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
                 autoCorrect={false}
+              />
+            </View>
+            <View style={styles.inputContainer}>
+              <Ionicons name="calendar-outline" size={20} color="#6b7280" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Date of Birth (YYYY-MM-DD)"
+                placeholderTextColor="#9ca3af"
+                value={dateOfBirth}
+                onChangeText={setDateOfBirth}
+                keyboardType="numeric"
+                autoCorrect={false}
+                maxLength={10}
               />
             </View>
           </>
@@ -187,7 +219,7 @@ export default function PlayerLogin() {
           <Text style={styles.signupText}>
             {isSignUp ? "Already have an account? " : "Don't have an account? "}
           </Text>
-          <Pressable onPress={() => { setIsSignUp(!isSignUp); setName(""); setPhone(""); }}>
+          <Pressable onPress={() => { setIsSignUp(!isSignUp); setName(""); setPhone(""); setDateOfBirth(""); }}>
             <Text style={styles.signupLink}>{isSignUp ? "Sign In" : "Sign Up"}</Text>
           </Pressable>
         </View>

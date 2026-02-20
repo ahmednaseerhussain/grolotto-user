@@ -60,10 +60,12 @@ export default function VendorDashboard() {
     new Date(game.timestamp).toDateString() === today
   );
   
+  const commissionRate = currentVendor?.commissionRate || 0.10; // Use vendor's actual commission rate from DB
+  
   const stats = {
     activePlayers: currentVendor?.totalPlayers || 0,
-    earningsToday: todayGamePlays.reduce((sum, game) => sum + game.betAmount, 0) * 0.1, // 10% commission
-    earningsWeek: vendorGamePlays.reduce((sum, game) => sum + game.betAmount, 0) * 0.1,
+    earningsToday: todayGamePlays.reduce((sum, game) => sum + game.betAmount, 0) * commissionRate,
+    earningsWeek: vendorGamePlays.reduce((sum, game) => sum + game.betAmount, 0) * commissionRate,
     earningsTotal: currentVendor?.totalRevenue || 0,
     ticketsToday: todayGamePlays.length,
     totalTickets: currentVendor?.totalTicketsSold || 0,

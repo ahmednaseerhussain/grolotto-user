@@ -298,7 +298,7 @@ export default function PlayerDashboard() {
       <View style={styles.header}>
         <View>
           <Text style={styles.brandText}>GROLOTTO</Text>
-          <Text style={styles.welcomeText}>{t("welcome")}, {user?.name || "themepam89"}</Text>
+          <Text style={styles.welcomeText}>{t("welcome")}, {user?.name || t("player")}</Text>
           <Text style={styles.subText}>{t("readyToPlay")}</Text>
         </View>
         <View style={styles.headerActions}>
@@ -367,7 +367,7 @@ export default function PlayerDashboard() {
         <View style={styles.quickActions}>
           <Pressable 
             style={[styles.actionCard, { backgroundColor: "#3b82f6" }]}
-            onPress={() => (navigation as any).navigate("RewardsScreen")}
+            onPress={() => (navigation as any).navigate("PaymentScreen")}
           >
             <Ionicons name="wallet" size={32} color="#ffffff" />
             <Text style={styles.actionTitle}>Wallet</Text>
@@ -436,7 +436,7 @@ export default function PlayerDashboard() {
             );
           }
           
-          // Fallback: Default welcome banner if no Firebase banner ads
+          // Fallback: Rewards banner if no Firebase banner ads
           return (
             <View style={styles.bannerCard}>
               <View style={styles.bannerContent}>
@@ -444,15 +444,15 @@ export default function PlayerDashboard() {
                   <Ionicons name="gift" size={32} color="#f59e0b" />
                 </View>
                 <View style={styles.bannerTextContainer}>
-                  <Text style={styles.bannerTitle}>🎉 Welcome Bonus!</Text>
-                  <Text style={styles.bannerSubtitle}>Get 20% extra on your first deposit today</Text>
+                  <Text style={styles.bannerTitle}>🎁 {t("rewards")}</Text>
+                  <Text style={styles.bannerSubtitle}>{t("checkRewards") || "Check your available rewards and bonuses"}</Text>
                 </View>
               </View>
               <Pressable 
                 style={styles.bannerButton}
                 onPress={() => (navigation as any).navigate("RewardsScreen")}
               >
-                <Text style={styles.bannerButtonText}>Claim Now</Text>
+                <Text style={styles.bannerButtonText}>{t("viewRewards") || "View Rewards"}</Text>
               </Pressable>
             </View>
           );

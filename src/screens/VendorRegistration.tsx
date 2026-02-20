@@ -64,6 +64,7 @@ export default function VendorRegistration() {
         name: `${formData.firstName} ${formData.lastName}`,
         role: 'vendor',
         phone: formData.phone,
+        dateOfBirth: formData.dateOfBirth,
       });
 
       // Then submit vendor registration details

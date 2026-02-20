@@ -551,10 +551,10 @@ export default function HistoryScreen() {
           <View style={{ flexDirection: 'row', gap: 12 }}>
             {[
               { key: "all", label: "Tous les jeux", color: "#3b82f6", gameType: "ALL" },
-              { key: "FL", label: `SENP (${stateCounts['FL'] || 0})`, color: "#ef4444", gameType: "SENP" },
-              { key: "NY", label: `MARYAJ (${stateCounts['NY'] || 0})`, color: "#10b981", gameType: "MARYAJ" },
-              { key: "GA", label: `LOTO5 (${stateCounts['GA'] || 0})`, color: "#f59e0b", gameType: "LOTO5" },
-              { key: "TX", label: `LOTO3 (${stateCounts['TX'] || 0})`, color: "#2563eb", gameType: "LOTO3" }
+              { key: "FL", label: `Florida (${stateCounts['FL'] || 0})`, color: "#ef4444", gameType: "FL" },
+              { key: "NY", label: `New York (${stateCounts['NY'] || 0})`, color: "#10b981", gameType: "NY" },
+              { key: "GA", label: `Georgia (${stateCounts['GA'] || 0})`, color: "#f59e0b", gameType: "GA" },
+              { key: "TX", label: `Texas (${stateCounts['TX'] || 0})`, color: "#2563eb", gameType: "TX" }
             ].map((stateOption) => (
               <Pressable
                 key={stateOption.key}
