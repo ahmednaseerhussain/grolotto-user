@@ -143,19 +143,19 @@ export default function VendorDashboard() {
         />
         <StatCard
           title={t("thisWeek") || "This Week"}
-          value={formatCurrency(stats.weeklyEarnings || 0, currency)}
+          value={formatCurrency(Number(stats.weeklyEarnings || 0), currency)}
           icon={<TrendingUp className="h-5 w-5 text-purple-600" />}
           onClick={() => setActiveModal("weekly")}
         />
         <StatCard
           title={t("totalEarnings") || "Total Earnings"}
-          value={formatCurrency(stats.totalEarnings || 0, currency)}
+          value={formatCurrency(Number(stats.totalEarnings || 0), currency)}
           icon={<DollarSign className="h-5 w-5 text-amber-600" />}
           onClick={() => setActiveModal("earnings")}
         />
         <StatCard
           title={t("ticketsToday") || "Today Bets"}
-          value={formatCurrency(stats.todayBets || stats.todayEarnings || 0, currency)}
+          value={formatCurrency(Number(stats.todayBets || stats.todayEarnings || 0), currency)}
           icon={<BarChart3 className="h-5 w-5 text-red-600" />}
           onClick={() => setActiveModal("todayEarnings")}
         />

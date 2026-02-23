@@ -398,7 +398,7 @@ export default function DrawManagement() {
                               style={[styles.configButton, (!drawSettings.enabled || !isGameEnabled) ? styles.configButtonDisabled : styles.configButtonEnabled]}
                               onPress={() => {
                                 if (!drawSettings.enabled || !isGameEnabled) {
-                                  Alert.alert(t(\"configUnavailable\"), t(\"enableDrawAndGameFirst\"));
+                                  Alert.alert(t("configUnavailable"), t("enableDrawAndGameFirst"));
                                   return;
                                 }
                                 startEditingLimits(draw.code, game.key);
