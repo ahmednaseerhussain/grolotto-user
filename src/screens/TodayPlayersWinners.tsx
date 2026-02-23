@@ -9,12 +9,12 @@ import { vendorAPI, getErrorMessage } from "../api/apiClient";
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
-const STATE_OPTIONS = [
-  { key: "all", label: "Tous les États", code: "ALL" },
-  { key: "FL", label: "Floride", code: "FL" },
-  { key: "NY", label: "New York", code: "NY" },
-  { key: "GA", label: "Géorgie", code: "GA" },
-  { key: "TX", label: "Texas", code: "TX" },
+const getStateOptions = (t: (key: string) => string) => [
+  { key: "all", label: t("allStates"), code: "ALL" },
+  { key: "FL", label: t("florida"), code: "FL" },
+  { key: "NY", label: t("newYork"), code: "NY" },
+  { key: "GA", label: t("georgia"), code: "GA" },
+  { key: "TX", label: t("texas"), code: "TX" },
 ];
 
 export default function TodayPlayersWinners() {
@@ -31,6 +31,7 @@ export default function TodayPlayersWinners() {
   const [loading, setLoading] = useState(true);
   
   const t = (key: string) => getTranslation(key as any, language);
+  const STATE_OPTIONS = getStateOptions(t);
 
   // Fetch today's play data from API
   useEffect(() => {
@@ -242,7 +243,7 @@ export default function TodayPlayersWinners() {
       
     } catch (error) {
       console.error('PDF Export Error:', error);
-      Alert.alert("Error", "PDF export failed");
+      Alert.alert(t("error"), t("pdfExportFailed"));
     } finally {
       setIsExporting(false);
     }
@@ -274,7 +275,7 @@ export default function TodayPlayersWinners() {
       
     } catch (error) {
       console.error('CSV Export Error:', error);
-      Alert.alert("Error", "CSV export failed");
+      Alert.alert(t("error"), t("csvExportFailed"));
     } finally {
       setIsExporting(false);
     }
@@ -290,7 +291,7 @@ export default function TodayPlayersWinners() {
         >
           <Ionicons name="arrow-back" size={24} color="#1f2937" />
         </Pressable>
-        <Text style={styles.headerTitle}>Today's Players and Winners</Text>
+        <Text style={styles.headerTitle}>{t("todaysPlayersAndWinners")}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -300,31 +301,31 @@ export default function TodayPlayersWinners() {
           <View style={styles.statCard}>
             <Ionicons name="people" size={20} color="#3b82f6" />
             <Text style={styles.statValue}>{overallStats.totalPlayers}</Text>
-            <Text style={styles.statLabel}>Joueurs</Text>
+            <Text style={styles.statLabel}>{t("players")}</Text>
           </View>
           
           <View style={styles.statCard}>
             <Ionicons name="game-controller" size={20} color="#8b5cf6" />
             <Text style={styles.statValue}>{overallStats.totalGames}</Text>
-            <Text style={styles.statLabel}>Jeux</Text>
+            <Text style={styles.statLabel}>{t("games")}</Text>
           </View>
           
           <View style={styles.statCard}>
             <Ionicons name="cash" size={20} color="#10b981" />
             <Text style={styles.statValue}>{formatCurrency(overallStats.totalPlayed)}</Text>
-            <Text style={styles.statLabel}>Total Misé</Text>
+            <Text style={styles.statLabel}>{t("totalBetAmount")}</Text>
           </View>
           
           <View style={styles.statCard}>
             <Ionicons name="trophy" size={20} color="#f59e0b" />
             <Text style={styles.statValue}>{overallStats.totalWinners}</Text>
-            <Text style={styles.statLabel}>Winners</Text>
+            <Text style={styles.statLabel}>{t("winners")}</Text>
           </View>
           
           <View style={styles.statCard}>
             <Ionicons name="trending-up" size={20} color="#ef4444" />
             <Text style={styles.statValue}>{formatCurrency(overallStats.totalWon)}</Text>
-            <Text style={styles.statLabel}>Total Won</Text>
+            <Text style={styles.statLabel}>{t("totalWon")}</Text>
           </View>
         </ScrollView>
       </View>
@@ -358,7 +359,7 @@ export default function TodayPlayersWinners() {
         >
           <Ionicons name="document" size={16} color="#ffffff" />
           <Text style={styles.exportButtonText}>
-            {isExporting ? "Export..." : "Exporter PDF"}
+            {isExporting ? `${t("exporting")}...` : t("exportPDF")}
           </Text>
         </Pressable>
         
@@ -369,7 +370,7 @@ export default function TodayPlayersWinners() {
         >
           <Ionicons name="grid" size={16} color="#ffffff" />
           <Text style={styles.exportButtonText}>
-            {isExporting ? "Export..." : "Exporter CSV"}
+            {isExporting ? `${t("exporting")}...` : t("exportCSV")}
           </Text>
         </Pressable>
       </View>
@@ -379,9 +380,9 @@ export default function TodayPlayersWinners() {
         {todayGames.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="calendar-outline" size={64} color="#d1d5db" />
-            <Text style={styles.emptyStateText}>No activity today</Text>
+            <Text style={styles.emptyStateText}>{t("noActivityToday")}</Text>
             <Text style={styles.emptyStateSubtext}>
-              Les jeux d'aujourd'hui apparaîtront ici
+              {t("todaysGamesAppearHere")}
             </Text>
           </View>
         ) : selectedState === "all" ? (
@@ -392,37 +393,42 @@ export default function TodayPlayersWinners() {
               
               <View style={styles.stateSummary}>
                 <Text style={styles.summaryText}>
-                  {data.totalPlayers} players • {formatCurrency(data.totalPlayed)} bet • {data.totalWinners} winners • {formatCurrency(data.totalWon)} won
+                  {data.totalPlayers} {t("players")} • {formatCurrency(data.totalPlayed)} {t("bet")} • {data.totalWinners} {t("winners")} • {formatCurrency(data.totalWon)} {t("won")}
                 </Text>
               </View>
 
               {/* Players Section */}
               <View style={styles.playersSection}>
-                <Text style={styles.sectionTitle}>Players ({data.totalPlayers})</Text>
+                <Text style={styles.sectionTitle}>{t("players")} ({data.totalPlayers})</Text>
                 {data.players.slice(0, 5).map((player: any) => (
                   <View key={player.playerId} style={styles.playerItem}>
-                    <Text style={styles.playerName}>Player #{player.playerId.slice(-4)}</Text>
+                    <Text style={styles.playerName}>{t("player")} #{player.playerId.slice(-4)}</Text>
                     <Text style={styles.playerStats}>
                       {player.games} games • {formatCurrency(player.totalBet)}
                     </Text>
+                    {player.games_detail?.map((g: any, idx: number) => (
+                      <Text key={idx} style={styles.gameDetailText}>
+                        {g.gameType?.toUpperCase()} [{g.numbers?.join(', ')}] — {formatCurrency(g.betAmount)} ({g.status || 'pending'})
+                      </Text>
+                    ))}
                   </View>
                 ))}
                 {data.players.length > 5 && (
-                  <Text style={styles.moreText}>+{data.players.length - 5} more players</Text>
+                  <Text style={styles.moreText}>+{data.players.length - 5} {t("morePlayers")}</Text>
                 )}
               </View>
 
               {/* Winners Section */}
               <View style={styles.winnersSection}>
-                <Text style={styles.sectionTitle}>Winners ({data.totalWinners})</Text>
+                <Text style={styles.sectionTitle}>{t("winners")} ({data.totalWinners})</Text>
                 {data.winners.map((winner: any, index: number) => (
                   <View key={index} style={styles.winnerItem}>
                     <View style={styles.winnerHeader}>
-                      <Text style={styles.winnerName}>Player #{winner.playerId.slice(-4)}</Text>
+                      <Text style={styles.winnerName}>{t("player")} #{winner.playerId.slice(-4)}</Text>
                       <Text style={styles.winAmount}>{formatCurrency(winner.winAmount)}</Text>
                     </View>
                     <Text style={styles.winnerDetails}>
-                      {winner.gameType} • {winner.numbers.join(', ')} • Bet: {formatCurrency(winner.betAmount)}
+                      {winner.gameType} • {winner.numbers.join(', ')} • {t("bet")}: {formatCurrency(winner.betAmount)}
                     </Text>
                   </View>
                 ))}
@@ -437,34 +443,39 @@ export default function TodayPlayersWinners() {
               
               <View style={styles.stateSummary}>
                 <Text style={styles.summaryText}>
-                  {gamesByState[selectedState].totalPlayers} players • {formatCurrency(gamesByState[selectedState].totalPlayed)} bet • {gamesByState[selectedState].totalWinners} winners • {formatCurrency(gamesByState[selectedState].totalWon)} won
+                  {gamesByState[selectedState].totalPlayers} {t("players")} • {formatCurrency(gamesByState[selectedState].totalPlayed)} {t("bet")} • {gamesByState[selectedState].totalWinners} {t("winners")} • {formatCurrency(gamesByState[selectedState].totalWon)} {t("won")}
                 </Text>
               </View>
 
               {/* Detailed Players */}
               <View style={styles.playersSection}>
-                <Text style={styles.sectionTitle}>All Players ({gamesByState[selectedState].totalPlayers})</Text>
+                <Text style={styles.sectionTitle}>{t("allPlayers")} ({gamesByState[selectedState].totalPlayers})</Text>
                 {gamesByState[selectedState].players.map((player: any) => (
                   <View key={player.playerId} style={styles.playerItem}>
-                    <Text style={styles.playerName}>Player #{player.playerId.slice(-4)}</Text>
+                    <Text style={styles.playerName}>{t("player")} #{player.playerId.slice(-4)}</Text>
                     <Text style={styles.playerStats}>
                       {player.games} games • {formatCurrency(player.totalBet)}
                     </Text>
+                    {player.games_detail?.map((g: any, idx: number) => (
+                      <Text key={idx} style={styles.gameDetailText}>
+                        {g.gameType?.toUpperCase()} [{g.numbers?.join(', ')}] — {formatCurrency(g.betAmount)} ({g.status || 'pending'})
+                      </Text>
+                    ))}
                   </View>
                 ))}
               </View>
 
               {/* Detailed Winners */}
               <View style={styles.winnersSection}>
-                <Text style={styles.sectionTitle}>All Winners ({gamesByState[selectedState].totalWinners})</Text>
+                <Text style={styles.sectionTitle}>{t("allWinners")} ({gamesByState[selectedState].totalWinners})</Text>
                 {gamesByState[selectedState].winners.map((winner: any, index: number) => (
                   <View key={index} style={styles.winnerItem}>
                     <View style={styles.winnerHeader}>
-                      <Text style={styles.winnerName}>Player #{winner.playerId.slice(-4)}</Text>
+                      <Text style={styles.winnerName}>{t("player")} #{winner.playerId.slice(-4)}</Text>
                       <Text style={styles.winAmount}>{formatCurrency(winner.winAmount)}</Text>
                     </View>
                     <Text style={styles.winnerDetails}>
-                      {winner.gameType} • {winner.numbers.join(', ')} • Bet: {formatCurrency(winner.betAmount)}
+                      {winner.gameType} • {winner.numbers.join(', ')} • {t("bet")}: {formatCurrency(winner.betAmount)}
                     </Text>
                   </View>
                 ))}
@@ -633,10 +644,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   playerItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
+    flexDirection: "column",
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#f3f4f6",
   },
@@ -648,6 +657,12 @@ const styles = StyleSheet.create({
   playerStats: {
     fontSize: 12,
     color: "#6b7280",
+  },
+  gameDetailText: {
+    fontSize: 11,
+    color: "#3b82f6",
+    marginTop: 3,
+    paddingLeft: 8,
   },
   moreText: {
     fontSize: 12,

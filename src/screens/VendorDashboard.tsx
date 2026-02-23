@@ -60,26 +60,27 @@ export default function VendorDashboard() {
     new Date(game.timestamp).toDateString() === today
   );
   
-  const commissionRate = currentVendor?.commissionRate || 0.10; // Use vendor's actual commission rate from DB
-  
+  // Prefer real API stats when available, fall back to store/local data
+  // Vendor gets 100% of bets in the new model
   const stats = {
-    activePlayers: currentVendor?.totalPlayers || 0,
-    earningsToday: todayGamePlays.reduce((sum, game) => sum + game.betAmount, 0) * commissionRate,
-    earningsWeek: vendorGamePlays.reduce((sum, game) => sum + game.betAmount, 0) * commissionRate,
-    earningsTotal: currentVendor?.totalRevenue || 0,
-    ticketsToday: todayGamePlays.length,
-    totalTickets: currentVendor?.totalTicketsSold || 0,
-    availableBalance: currentVendor?.availableBalance || 0,
+    activePlayers: vendorStats?.totalPlayers ?? currentVendor?.totalPlayers ?? 0,
+    earningsToday: vendorStats?.earningsToday ?? todayGamePlays.reduce((sum, game) => sum + game.betAmount, 0),
+    earningsWeek: vendorGamePlays.reduce((sum, game) => sum + game.betAmount, 0),
+    earningsTotal: vendorStats?.totalRevenue ?? currentVendor?.totalRevenue ?? 0,
+    ticketsToday: vendorStats?.ticketsToday ?? todayGamePlays.length,
+    totalTickets: vendorStats?.totalTicketsSold ?? currentVendor?.totalTicketsSold ?? 0,
+    availableBalance: vendorStats?.availableBalance ?? currentVendor?.availableBalance ?? 0,
     enabledGames: currentVendor ? Object.values(currentVendor.draws).filter(draw => draw.enabled).length : 0,
   };
 
   const quickActions = [
     { id: "draws", title: t("pricesAndStates"), icon: "pricetag", color: "#3b82f6", screen: "DrawManagement", subtitle: t("configurePriceLimits") },
-    { id: "limits", title: "Number Limits", icon: "ban", color: "#ef4444", screen: "NumberLimits", subtitle: "Control bets" },
+    { id: "rounds", title: t("viewRounds"), icon: "list", color: "#ef4444", screen: "VendorResultPublishing", subtitle: t("seeRoundResults") },
+    { id: "limits", title: t("numberLimits"), icon: "ban", color: "#ef4444", screen: "NumberLimits", subtitle: t("controlBets") },
     { id: "history", title: t("history"), icon: "analytics", color: "#f59e0b", screen: "VendorPlayHistory", subtitle: t("reportsAndSales") },
     { id: "payout", title: t("withdrawal"), icon: "wallet", color: "#10b981", screen: "PayoutManagement", subtitle: "MonCash" },
     { id: "profile", title: t("myProfile"), icon: "person", color: "#8b5cf6", screen: "VendorProfile", subtitle: t("infoAndReviews") },
-    { id: "winners", title: "Today's Players", icon: "trophy", color: "#f59e0b", screen: "TodayPlayersWinners", subtitle: "& Winners Report" },
+    { id: "winners", title: t("todaysPlayers"), icon: "trophy", color: "#f59e0b", screen: "TodayPlayersWinners", subtitle: t("winnersReport") },
   ];
 
   const handleQuickAction = (screen: string) => {
@@ -130,9 +131,9 @@ export default function VendorDashboard() {
       const dayGames = vendorGamePlays.filter(game => 
         new Date(game.timestamp).toDateString() === date.toDateString()
       );
-      const earnings = dayGames.reduce((sum, game) => sum + game.betAmount, 0) * 0.1;
+      const earnings = dayGames.reduce((sum, game) => sum + game.betAmount, 0);
       weeklyData.push({
-        date: date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' }),
+        date: date.toLocaleDateString(language === 'en' ? 'en-US' : language === 'es' ? 'es-ES' : 'fr-FR', { weekday: 'short', day: 'numeric' }),
         earnings,
         tickets: dayGames.length
       });
@@ -145,10 +146,10 @@ export default function VendorDashboard() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.welcomeText}>Bonjour, {currentVendor?.firstName || "Vendeur"}</Text>
+          <Text style={styles.welcomeText}>{t("hello")}, {currentVendor?.firstName || t("vendor")}</Text>
           <Text style={styles.statusText}>
-            Statut: <Text style={[styles.statusBadge, currentVendor?.status === "approved" ? styles.approved : styles.pending]}>
-              {currentVendor?.status === "approved" ? "Approuvé" : "En attente"}
+            {t("statusLabel")}: <Text style={[styles.statusBadge, currentVendor?.status === "approved" ? styles.approved : styles.pending]}>
+              {currentVendor?.status === "approved" ? t("approved") : t("pendingStatus")}
             </Text>
           </Text>
         </View>
@@ -317,34 +318,34 @@ export default function VendorDashboard() {
 
         {/* Latest Announcements */}
         <View style={styles.announcementsContainer}>
-          <Text style={styles.sectionTitle}>Dernières Annonces</Text>
+          <Text style={styles.sectionTitle}>{t("latestAnnouncements")}</Text>
           
           <View style={styles.announcementCard}>
             <View style={styles.announcementHeader}>
               <Ionicons name="megaphone" size={16} color="#3b82f6" />
-              <Text style={styles.announcementTitle}>NY Lottery Results Published</Text>
+              <Text style={styles.announcementTitle}>{t("resultsPublished")}</Text>
             </View>
             <Text style={styles.announcementText}>
-              New York lottery results for September 26 are now available.
+              {t("resultsAvailableText")}
             </Text>
-            <Text style={styles.announcementTime}>Il y a 2 heures</Text>
+            <Text style={styles.announcementTime}>2 {t("hoursAgo")}</Text>
           </View>
 
           <View style={styles.announcementCard}>
             <View style={styles.announcementHeader}>
               <Ionicons name="information-circle" size={16} color="#10b981" />
-              <Text style={styles.announcementTitle}>New Feature Available</Text>
+              <Text style={styles.announcementTitle}>{t("newFeatureAvailable")}</Text>
             </View>
             <Text style={styles.announcementText}>
-              Vous pouvez maintenant configurer des limites personnalisées pour chaque type de jeu.
+              {t("customLimitsFeatureText")}
             </Text>
-            <Text style={styles.announcementTime}>Hier</Text>
+            <Text style={styles.announcementTime}>{t("yesterday")}</Text>
           </View>
         </View>
 
         {/* Recent Activity */}
         <View style={styles.activityContainer}>
-          <Text style={styles.sectionTitle}>Activité Récente</Text>
+          <Text style={styles.sectionTitle}>{t("recentActivity")}</Text>
           
           {todayGamePlays.slice(0, 5).map((game) => (
             <View key={game.id} style={styles.activityItem}>
@@ -353,14 +354,14 @@ export default function VendorDashboard() {
               </View>
               <View style={styles.activityContent}>
                 <Text style={styles.activityTitle}>
-                  New Ticket {game.gameType.toUpperCase()} - {game.draw}
+                  {t("newTicket")} {game.gameType.toUpperCase()} - {game.draw}
                 </Text>
                 <Text style={styles.activitySubtitle}>
                   {formatCurrency(game.betAmount)} • {game.numbers.join(", ")}
                 </Text>
               </View>
               <Text style={styles.activityTime}>
-                {new Date(game.timestamp).toLocaleTimeString("fr-FR", { 
+                {new Date(game.timestamp).toLocaleTimeString(language === "en" ? "en-US" : language === "es" ? "es-ES" : "fr-FR", { 
                   hour: "2-digit", 
                   minute: "2-digit" 
                 })}
@@ -371,7 +372,7 @@ export default function VendorDashboard() {
           {todayGamePlays.length === 0 && (
             <View style={styles.emptyState}>
               <Ionicons name="time-outline" size={48} color="#d1d5db" />
-              <Text style={styles.emptyStateText}>No activity today</Text>
+              <Text style={styles.emptyStateText}>{t("noActivityToday")}</Text>
             </View>
           )}
         </View>
@@ -398,8 +399,8 @@ export default function VendorDashboard() {
                       <Text style={styles.playerInitial}>{index + 1}</Text>
                     </View>
                     <View style={styles.playerInfo}>
-                      <Text style={styles.playerName}>Joueur #{playerId.slice(-4)}</Text>
-                      <Text style={styles.playerStats}>{playerGames.length} billets • {formatCurrency(totalSpent)}</Text>
+                      <Text style={styles.playerName}>{t("player")} #{playerId.slice(-4)}</Text>
+                      <Text style={styles.playerStats}>{playerGames.length} {t("tickets")} • {formatCurrency(totalSpent)}</Text>
                     </View>
                   </View>
                 );
@@ -425,12 +426,12 @@ export default function VendorDashboard() {
                   <Text style={styles.dayLabel}>{day.date}</Text>
                   <View style={styles.dayStats}>
                     <Text style={styles.dayEarnings}>{formatCurrency(day.earnings)}</Text>
-                    <Text style={styles.dayTickets}>{day.tickets} billets</Text>
+                    <Text style={styles.dayTickets}>{day.tickets} {t("tickets")}</Text>
                   </View>
                 </View>
               ))}
               <View style={styles.totalRow}>
-                <Text style={styles.totalLabel}>Total Semaine:</Text>
+                <Text style={styles.totalLabel}>{t("weeklyTotal")}:</Text>
                 <Text style={styles.totalValue}>{formatCurrency(stats.earningsWeek)}</Text>
               </View>
             </ScrollView>
@@ -451,21 +452,17 @@ export default function VendorDashboard() {
             <ScrollView style={styles.modalScroll}>
               <View style={styles.earningsBreakdown}>
                 <View style={styles.earningsRow}>
-                  <Text style={styles.earningsLabel}>Total des mises:</Text>
-                  <Text style={styles.earningsValue}>{formatCurrency(stats.earningsToday / 0.1)}</Text>
-                </View>
-                <View style={styles.earningsRow}>
-                  <Text style={styles.earningsLabel}>Commission (10%):</Text>
+                  <Text style={styles.earningsLabel}>{t("totalBets")}:</Text>
                   <Text style={styles.earningsValue}>{formatCurrency(stats.earningsToday)}</Text>
                 </View>
                 <View style={styles.earningsRow}>
-                  <Text style={styles.earningsLabel}>Nombre de billets:</Text>
+                  <Text style={styles.earningsLabel}>{t("numberOfTickets")}:</Text>
                   <Text style={styles.earningsValue}>{stats.ticketsToday}</Text>
                 </View>
                 <View style={styles.earningsRow}>
-                  <Text style={styles.earningsLabel}>Mise moyenne:</Text>
+                  <Text style={styles.earningsLabel}>{t("averageBet")}:</Text>
                   <Text style={styles.earningsValue}>
-                    {formatCurrency(stats.ticketsToday > 0 ? ((stats.earningsToday / 0.1) / stats.ticketsToday) : 0)}
+                    {formatCurrency(stats.ticketsToday > 0 ? (stats.earningsToday / stats.ticketsToday) : 0)}
                   </Text>
                 </View>
               </View>
@@ -492,10 +489,10 @@ export default function VendorDashboard() {
                     <Text style={styles.ticketAmount}>{formatCurrency(game.betAmount)}</Text>
                   </View>
                   <Text style={styles.ticketNumbers}>
-                    Numéros: {game.numbers.join(', ')}
+                    {t("numbers")}: {game.numbers.join(', ')}
                   </Text>
                   <Text style={styles.ticketTime}>
-                    {new Date(game.timestamp).toLocaleTimeString('fr-FR', {
+                    {new Date(game.timestamp).toLocaleTimeString(language === 'en' ? 'en-US' : language === 'es' ? 'es-ES' : 'fr-FR', {
                       hour: '2-digit',
                       minute: '2-digit'
                     })}
@@ -543,7 +540,7 @@ export default function VendorDashboard() {
                   handleQuickAction('DrawManagement');
                 }}
               >
-                <Text style={styles.configureGamesButtonText}>Configurer les Jeux</Text>
+                <Text style={styles.configureGamesButtonText}>{t("configureGames")}</Text>
               </Pressable>
             </ScrollView>
           </View>
@@ -563,15 +560,15 @@ export default function VendorDashboard() {
             <ScrollView style={styles.modalScroll}>
               <View style={styles.totalEarningsBreakdown}>
                 <View style={styles.totalEarningsRow}>
-                  <Text style={styles.totalEarningsLabel}>Revenus totaux:</Text>
+                  <Text style={styles.totalEarningsLabel}>{t("totalRevenue")}:</Text>
                   <Text style={styles.totalEarningsValue}>{formatCurrency(stats.earningsTotal)}</Text>
                 </View>
                 <View style={styles.totalEarningsRow}>
-                  <Text style={styles.totalEarningsLabel}>Billets vendus:</Text>
+                  <Text style={styles.totalEarningsLabel}>{t("ticketsSold")}:</Text>
                   <Text style={styles.totalEarningsValue}>{stats.totalTickets}</Text>
                 </View>
                 <View style={styles.totalEarningsRow}>
-                  <Text style={styles.totalEarningsLabel}>Available Balance:</Text>
+                  <Text style={styles.totalEarningsLabel}>{t("availableBalance")}:</Text>
                   <Text style={styles.totalEarningsValue}>{formatCurrency(stats.availableBalance)}</Text>
                 </View>
                 <Pressable 
@@ -581,7 +578,7 @@ export default function VendorDashboard() {
                     handleQuickAction('VendorPlayHistory');
                   }}
                 >
-                  <Text style={styles.viewHistoryButtonText}>View Full History</Text>
+                  <Text style={styles.viewHistoryButtonText}>{t("viewFullHistory")}</Text>
                 </Pressable>
               </View>
             </ScrollView>

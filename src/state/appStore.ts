@@ -408,7 +408,7 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       // Initial state
-      language: "ht",
+      language: "en",
       currency: "USD",
       hasCompletedOnboarding: false,
       user: null,

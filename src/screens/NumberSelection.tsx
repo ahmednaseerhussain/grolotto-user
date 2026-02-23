@@ -353,18 +353,18 @@ export default function NumberSelection() {
 
     Alert.alert(
       "Confirm Purchase",
-      `Total: ${getCurrencySymbol()}${getTotalBet()}\nProceed to payment?`,
+      `Total: ${getCurrencySymbol()}${getTotalBet()}\nAmount will be deducted from your wallet.`,
       [
         { text: "Cancel", style: "cancel" },
         { text: "Pay Now", onPress: () => {
-          setShowPaymentModal(true);
+          completePurchase();
         }}
       ]
     );
   };
 
   const completePurchase = async () => {
-    // Place each bet through the real API
+    // Place each bet through the real API — backend deducts from wallet
     try {
       for (const selection of gameSelections) {
         const result = await lotteryAPI.placeBet({
@@ -422,8 +422,20 @@ export default function NumberSelection() {
           }
         ]
       );
-    } catch (error) {
-      Alert.alert("Bet Failed", getErrorMessage(error));
+    } catch (error: any) {
+      const errorCode = error?.response?.data?.code;
+      if (errorCode === 'INSUFFICIENT_BALANCE') {
+        Alert.alert(
+          "Insufficient Balance",
+          `Your wallet doesn't have enough funds. Would you like to add money via MonCash?`,
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Add Funds", onPress: () => setShowPaymentModal(true) }
+          ]
+        );
+      } else {
+        Alert.alert("Bet Failed", getErrorMessage(error));
+      }
     }
   };
 
@@ -703,13 +715,17 @@ export default function NumberSelection() {
         </View>
       )}
 
-      {/* Payment Modal */}
+      {/* Payment Modal — only used for adding funds when wallet balance is insufficient */}
       <PaymentModal 
         visible={showPaymentModal} 
         onClose={() => setShowPaymentModal(false)}
         onPaymentSuccess={() => {
           setShowPaymentModal(false);
-          completePurchase();
+          Alert.alert(
+            "Funds Added!",
+            "Your wallet has been topped up. Tap 'Pay Now' again to complete your purchase.",
+            [{ text: "OK" }]
+          );
         }}
         amount={getTotalBet()}
       />

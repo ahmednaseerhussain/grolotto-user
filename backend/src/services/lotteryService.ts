@@ -1,6 +1,5 @@
 import { query, withTransaction } from '../database/pool';
 import { AppError } from '../middleware/errorHandler';
-import config from '../config';
 import crypto from 'crypto';
 import * as notificationService from './notificationService';
 
@@ -142,30 +141,7 @@ export async function placeBet(input: PlaceBetInput) {
       throw new AppError('Insufficient balance', 400, 'INSUFFICIENT_BALANCE');
     }
 
-    // 7. Read commission rates from DB
-    const vendorCommResult = await client.query(
-      `SELECT commission_rate FROM vendors WHERE id = $1`,
-      [vendorId]
-    );
-    const vendorCommissionRate = vendorCommResult.rows.length > 0
-      ? parseFloat(vendorCommResult.rows[0].commission_rate)
-      : 0.10;
-
-    let systemCommissionRate = 0.10;
-    try {
-      const sysCommResult = await client.query(
-        `SELECT value FROM app_settings WHERE key = 'system_commission'`
-      );
-      if (sysCommResult.rows.length > 0) {
-        const val = sysCommResult.rows[0].value;
-        systemCommissionRate = parseFloat(typeof val === 'string' ? val : JSON.stringify(val));
-      }
-    } catch { /* use default */ }
-
-    const vendorCommission = Math.round(betAmount * vendorCommissionRate * 100) / 100;
-    const platformCommission = Math.round(betAmount * systemCommissionRate * 100) / 100;
-
-    // 8. Find or create current open round
+    // 7. Find or create current open GLOBAL round (one per state+date)
     let roundResult = await client.query(
       `SELECT id FROM lottery_rounds
        WHERE draw_state = $1 AND draw_date = CURRENT_DATE AND status = 'open'
@@ -174,7 +150,7 @@ export async function placeBet(input: PlaceBetInput) {
     );
 
     if (roundResult.rows.length === 0) {
-      // Create a new round
+      // Create a new global round
       roundResult = await client.query(
         `INSERT INTO lottery_rounds (draw_state, draw_date, draw_time, status)
          VALUES ($1, CURRENT_DATE, 'midday', 'open')
@@ -191,17 +167,17 @@ export async function placeBet(input: PlaceBetInput) {
       .update(`${playerId}-${vendorId}-${drawState}-${gameType}-${numbers.join(',')}-${Date.now()}`)
       .digest('hex');
 
-    // 10. Create lottery ticket (with commission tracking)
+    // 9. Create lottery ticket
     const ticketResult = await client.query(
-      `INSERT INTO lottery_tickets (player_id, vendor_id, round_id, draw_state, game_type, numbers, bet_amount, currency, vendor_commission_amount, platform_commission_amount)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `INSERT INTO lottery_tickets (player_id, vendor_id, round_id, draw_state, game_type, numbers, bet_amount, currency)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id, created_at`,
-      [playerId, vendorId, roundId, drawState, gameType, numbers, betAmount, currency, vendorCommission, platformCommission]
+      [playerId, vendorId, roundId, drawState, gameType, numbers, betAmount, currency]
     );
 
     const ticket = ticketResult.rows[0];
 
-    // 11. Create bet_payment transaction
+    // 10. Create bet_payment transaction
     await client.query(
       `INSERT INTO transactions (user_id, type, amount, currency, payment_method, status, description, ticket_id, vendor_id, idempotency_key)
        VALUES ($1, 'bet_payment', $2, $3, 'wallet', 'completed', $4, $5, $6, $7)`,
@@ -216,31 +192,31 @@ export async function placeBet(input: PlaceBetInput) {
       ]
     );
 
-    // 12. Credit vendor commission — update available_balance and total_revenue
+    // 11. Credit vendor with FULL bet amount (100% goes to vendor)
     await client.query(
       `UPDATE vendors SET
          total_tickets_sold = total_tickets_sold + 1,
          total_revenue = total_revenue + $1,
          available_balance = available_balance + $1
        WHERE id = $2`,
-      [vendorCommission, vendorId]
+      [betAmount, vendorId]
     );
 
-    // 13. Create commission transaction for vendor (links to vendor's user_id)
+    // 12. Create bet_received transaction for vendor
     const vendorUserResult = await client.query(
       `SELECT user_id FROM vendors WHERE id = $1`,
       [vendorId]
     );
     if (vendorUserResult.rows.length > 0) {
-      const commIdempotencyKey = `comm_${ticket.id}`;
+      const commIdempotencyKey = `bet_recv_${ticket.id}`;
       await client.query(
         `INSERT INTO transactions (user_id, type, amount, currency, payment_method, status, description, ticket_id, vendor_id, idempotency_key)
          VALUES ($1, 'commission', $2, $3, 'system', 'completed', $4, $5, $6, $7)`,
         [
           vendorUserResult.rows[0].user_id,
-          vendorCommission,
+          betAmount,
           currency,
-          `Commission on ${gameType.toUpperCase()} ticket - ${vendorCommissionRate * 100}%`,
+          `Bet received: ${gameType.toUpperCase()} ticket on ${drawState}`,
           ticket.id,
           vendorId,
           commIdempotencyKey,
@@ -248,12 +224,13 @@ export async function placeBet(input: PlaceBetInput) {
       );
     }
 
-    // 14. Update round stats (including platform commission)
+    // 13. Update round stats
     await client.query(
-      `UPDATE lottery_rounds SET total_bets = total_bets + $1, total_tickets = total_tickets + 1,
-       platform_commission_total = COALESCE(platform_commission_total, 0) + $2
-       WHERE id = $3`,
-      [betAmount, platformCommission, roundId]
+      `UPDATE lottery_rounds SET
+         total_bets = total_bets + $1,
+         total_tickets = total_tickets + 1
+       WHERE id = $2`,
+      [betAmount, roundId]
     );
 
     // 15. Update number limit totals (scoped to today)
@@ -267,7 +244,7 @@ export async function placeBet(input: PlaceBetInput) {
       );
     }
 
-    // 16. Send notifications (non-blocking)
+    // 15. Send notifications (non-blocking)
     notificationService.createPlayerNotification(
       playerId,
       'bet_placed',
@@ -279,7 +256,7 @@ export async function placeBet(input: PlaceBetInput) {
       vendorId,
       'new_ticket',
       'New Ticket Sold',
-      `A ${gameType.toUpperCase()} ticket (${betAmount} ${currency}) was purchased. Commission: ${vendorCommission.toFixed(2)} ${currency}.`
+      `A ${gameType.toUpperCase()} ticket (${betAmount} ${currency}) was purchased. Full amount credited to your balance.`
     );
 
     return {
@@ -290,8 +267,6 @@ export async function placeBet(input: PlaceBetInput) {
       numbers,
       betAmount,
       currency,
-      vendorCommission,
-      platformCommission,
       newBalance: parseFloat(walletResult.rows[0].new_balance),
       createdAt: ticket.created_at,
     };
@@ -345,44 +320,72 @@ export async function getPlayerTickets(
 }
 
 /**
- * Publish lottery results for a round.
- * Determines winners, credits their wallets.
- * Admin-only operation.
+ * Publish lottery results — VENDOR-FUNDED, ADMIN-PUBLISHED MODEL.
+ * 
+ * Business rules:
+ * - Admin publishes winning numbers globally per state per day
+ * - One set of winning numbers per (draw_state, draw_date) — same for ALL vendors
+ * - Winners get MULTIPLIER-based payouts (from app_settings.win_multipliers):
+ *     senp=50x, maryaj=100x, loto3=500x, loto4=5000x, loto5=50000x
+ * - winAmount = betAmount × multiplier
+ * - Vendor PAYS the winner payouts (deducted from vendor's available_balance)
+ * - Vendor can go into negative balance (debt)
+ * - Admin takes 10% commission from each vendor's total bets after each round
+ * - Admin distributes winnings to player wallets
+ * - Winners get notified with amounts
  */
 export async function publishResults(
-  roundId: string,
+  drawState: string,
   winningNumbers: Record<string, number[]>,
-  publishedBy: string
+  publishedBy: string,
+  drawDate?: string
 ) {
   return withTransaction(async (client) => {
-    // 1. Get round and verify it's open or closed (not already completed)
+    const targetDate = drawDate || new Date().toISOString().split('T')[0];
+
+    // 1. Find the open/closed round for this state+date
     const roundResult = await client.query(
-      `SELECT id, draw_state, status FROM lottery_rounds WHERE id = $1 AND status IN ('open', 'closed')`,
-      [roundId]
+      `SELECT id, draw_state, status, total_bets, total_tickets
+       FROM lottery_rounds
+       WHERE draw_state = $1 AND draw_date = $2 AND status IN ('open', 'closed')
+       ORDER BY draw_time LIMIT 1`,
+      [drawState, targetDate]
     );
 
     if (roundResult.rows.length === 0) {
-      throw new AppError('Round not found or already completed', 400, 'INVALID_ROUND');
+      throw new AppError('No active round found for this state and date', 400, 'ROUND_NOT_FOUND');
     }
 
     const round = roundResult.rows[0];
+    const roundId = round.id;
 
-    // 2. Read win multipliers from DB (app_settings), fallback to config
-    let winMultipliers: Record<string, number> = { ...config.winMultipliers };
+    // 2. Get win multipliers from app_settings
+    let winMultipliers: Record<string, number> = {
+      senp: 50, maryaj: 100, loto3: 500, loto4: 5000, loto5: 50000
+    };
     try {
-      const wmResult = await client.query(
+      const multResult = await client.query(
         `SELECT value FROM app_settings WHERE key = 'win_multipliers'`
       );
-      if (wmResult.rows.length > 0) {
-        const val = wmResult.rows[0].value;
-        const parsed = typeof val === 'string' ? JSON.parse(val) : val;
-        if (parsed && typeof parsed === 'object') {
-          winMultipliers = { ...winMultipliers, ...parsed };
-        }
+      if (multResult.rows.length > 0) {
+        const val = multResult.rows[0].value;
+        winMultipliers = typeof val === 'string' ? JSON.parse(val) : val;
       }
-    } catch { /* use config defaults */ }
+    } catch { /* use defaults */ }
 
-    // 3. Store winning numbers
+    // 3. Get system commission rate from app_settings
+    let systemCommissionRate = 0.10;
+    try {
+      const sysCommResult = await client.query(
+        `SELECT value FROM app_settings WHERE key = 'system_commission'`
+      );
+      if (sysCommResult.rows.length > 0) {
+        const val = sysCommResult.rows[0].value;
+        systemCommissionRate = parseFloat(typeof val === 'string' ? val : JSON.stringify(val));
+      }
+    } catch { /* use default 10% */ }
+
+    // 4. Store winning numbers and mark completed
     await client.query(
       `UPDATE lottery_rounds SET
          winning_numbers = $1,
@@ -394,7 +397,7 @@ export async function publishResults(
       [JSON.stringify(winningNumbers), publishedBy, roundId]
     );
 
-    // 4. Get all tickets for this round
+    // 5. Get all pending tickets for this round
     const tickets = await client.query(
       `SELECT id, player_id, vendor_id, game_type, numbers, bet_amount, currency
        FROM lottery_tickets
@@ -402,87 +405,334 @@ export async function publishResults(
       [roundId]
     );
 
-    let totalPayouts = 0;
+    // 6. Check each ticket for wins using multiplier-based payouts
+    const winners: Array<typeof tickets.rows[0] & { winAmount: number }> = [];
+    const losers: typeof tickets.rows = [];
 
-    // 5. Check each ticket against winning numbers
     for (const ticket of tickets.rows) {
       const gameWinningNums = winningNumbers[ticket.game_type];
       if (!gameWinningNums) {
-        // No winning numbers for this game type, mark as lost
-        await client.query(
-          `UPDATE lottery_tickets SET status = 'lost', settled_at = NOW() WHERE id = $1`,
-          [ticket.id]
-        );
+        losers.push(ticket);
         continue;
       }
-
-      const isWinner = checkWin(ticket.game_type, ticket.numbers, gameWinningNums);
-
-      if (isWinner) {
-        const multiplier = winMultipliers[ticket.game_type] || config.winMultipliers[ticket.game_type as GameType] || 50;
-        const winAmount = parseFloat(ticket.bet_amount) * multiplier;
-
-        // Mark ticket as won
-        await client.query(
-          `UPDATE lottery_tickets SET status = 'won', win_amount = $1, win_multiplier = $2, settled_at = NOW()
-           WHERE id = $3`,
-          [winAmount, multiplier, ticket.id]
-        );
-
-        // Credit player wallet
-        const balanceField = ticket.currency === 'USD' ? 'balance_usd' : 'balance_htg';
-        await client.query(
-          `UPDATE wallets SET ${balanceField} = ${balanceField} + $1, total_won = total_won + $1
-           WHERE user_id = $2`,
-          [winAmount, ticket.player_id]
-        );
-
-        // Create winning transaction
-        await client.query(
-          `INSERT INTO transactions (user_id, type, amount, currency, status, description, ticket_id, vendor_id)
-           VALUES ($1, 'winning_payout', $2, $3, 'completed', $4, $5, $6)`,
-          [
-            ticket.player_id,
-            winAmount,
-            ticket.currency,
-            `Won ${ticket.game_type.toUpperCase()} - ${round.draw_state}: ${winAmount.toFixed(2)}`,
-            ticket.id,
-            ticket.vendor_id,
-          ]
-        );
-
-        // Notify winner
-        notificationService.createPlayerNotification(
-          ticket.player_id,
-          'win',
-          'Congratulations! You Won!',
-          `Your ${ticket.game_type.toUpperCase()} bet on ${round.draw_state} won ${winAmount.toFixed(2)} ${ticket.currency}!`,
-          { ticketId: ticket.id, winAmount, multiplier, gameType: ticket.game_type }
-        );
-
-        totalPayouts += winAmount;
+      if (checkWin(ticket.game_type, ticket.numbers, gameWinningNums)) {
+        const multiplier = winMultipliers[ticket.game_type] || 1;
+        const winAmount = Math.round(parseFloat(ticket.bet_amount) * multiplier * 100) / 100;
+        winners.push({ ...ticket, winAmount });
       } else {
+        losers.push(ticket);
+      }
+    }
+
+    // 7. Mark all losers
+    for (const loser of losers) {
+      await client.query(
+        `UPDATE lottery_tickets SET status = 'lost', settled_at = NOW() WHERE id = $1`,
+        [loser.id]
+      );
+    }
+
+    // 8. Process winners — group payouts by vendor for balance deductions
+    let totalPayouts = 0;
+    const vendorPayouts: Record<string, number> = {}; // vendorId → total payout amount
+    const vendorBets: Record<string, number> = {}; // vendorId → total bet amount
+
+    // Calculate total bets per vendor (for admin commission)
+    for (const ticket of tickets.rows) {
+      const vid = ticket.vendor_id;
+      vendorBets[vid] = (vendorBets[vid] || 0) + parseFloat(ticket.bet_amount);
+    }
+
+    for (const winner of winners) {
+      const { winAmount } = winner;
+
+      // Mark ticket as won
+      await client.query(
+        `UPDATE lottery_tickets SET status = 'won', win_amount = $1, settled_at = NOW()
+         WHERE id = $2`,
+        [winAmount, winner.id]
+      );
+
+      // Credit player wallet
+      const balanceField = winner.currency === 'USD' ? 'balance_usd' : 'balance_htg';
+      await client.query(
+        `UPDATE wallets SET ${balanceField} = ${balanceField} + $1, total_won = total_won + $1
+         WHERE user_id = $2`,
+        [winAmount, winner.player_id]
+      );
+
+      // Create winning transaction for player
+      await client.query(
+        `INSERT INTO transactions (user_id, type, amount, currency, status, description, ticket_id, vendor_id)
+         VALUES ($1, 'winning_payout', $2, $3, 'completed', $4, $5, $6)`,
+        [
+          winner.player_id,
+          winAmount,
+          winner.currency,
+          `Won ${winner.game_type.toUpperCase()} - ${drawState}: ${winMultipliers[winner.game_type]}x payout = $${winAmount.toFixed(2)}`,
+          winner.id,
+          winner.vendor_id,
+        ]
+      );
+
+      // Track vendor payout totals
+      vendorPayouts[winner.vendor_id] = (vendorPayouts[winner.vendor_id] || 0) + winAmount;
+      totalPayouts += winAmount;
+
+      // Notify winner
+      notificationService.createPlayerNotification(
+        winner.player_id,
+        'win',
+        'Congratulations! You Won!',
+        `Your ${winner.game_type.toUpperCase()} bet on ${drawState} won $${winAmount.toFixed(2)} (${winMultipliers[winner.game_type]}x multiplier)!`,
+        { ticketId: winner.id, winAmount, gameType: winner.game_type, multiplier: winMultipliers[winner.game_type] }
+      );
+    }
+
+    // 9. Deduct winner payouts from each vendor's balance (vendor pays winners)
+    let totalAdminCommission = 0;
+    for (const [vid, payoutAmount] of Object.entries(vendorPayouts)) {
+      if (payoutAmount > 0) {
         await client.query(
-          `UPDATE lottery_tickets SET status = 'lost', settled_at = NOW() WHERE id = $1`,
-          [ticket.id]
+          `UPDATE vendors SET available_balance = available_balance - $1 WHERE id = $2`,
+          [payoutAmount, vid]
+        );
+
+        // Create payout deduction transaction for vendor
+        const vendorUserResult = await client.query(
+          `SELECT user_id FROM vendors WHERE id = $1`,
+          [vid]
+        );
+        if (vendorUserResult.rows.length > 0) {
+          await client.query(
+            `INSERT INTO transactions (user_id, type, amount, currency, status, description, vendor_id)
+             VALUES ($1, 'winning_payout', $2, 'USD', 'completed', $3, $4)`,
+            [
+              vendorUserResult.rows[0].user_id,
+              payoutAmount,
+              `Winner payouts for ${drawState} round (${targetDate})`,
+              vid,
+            ]
+          );
+        }
+
+        // Notify vendor about payouts
+        notificationService.createVendorNotification(
+          vid,
+          'payout_deduction',
+          'Winner Payouts Deducted',
+          `$${payoutAmount.toFixed(2)} deducted from your balance for winner payouts in ${drawState} (${targetDate}).`
         );
       }
     }
 
-    // 6. Update round payouts total
+    // 10. Deduct admin commission (10%) from each vendor's total bets
+    for (const [vid, betTotal] of Object.entries(vendorBets)) {
+      const adminCommission = Math.round(betTotal * systemCommissionRate * 100) / 100;
+      if (adminCommission > 0) {
+        // Deduct from vendor
+        await client.query(
+          `UPDATE vendors SET available_balance = available_balance - $1 WHERE id = $2`,
+          [adminCommission, vid]
+        );
+
+        // Create admin commission transaction for vendor
+        const vendorUserResult = await client.query(
+          `SELECT user_id FROM vendors WHERE id = $1`,
+          [vid]
+        );
+        if (vendorUserResult.rows.length > 0) {
+          await client.query(
+            `INSERT INTO transactions (user_id, type, amount, currency, status, description, vendor_id)
+             VALUES ($1, 'admin_commission', $2, 'USD', 'completed', $3, $4)`,
+            [
+              vendorUserResult.rows[0].user_id,
+              adminCommission,
+              `Admin commission (${systemCommissionRate * 100}%) on ${drawState} round bets ($${betTotal.toFixed(2)})`,
+              vid,
+            ]
+          );
+        }
+
+        totalAdminCommission += adminCommission;
+
+        // Notify vendor about admin commission
+        notificationService.createVendorNotification(
+          vid,
+          'admin_commission',
+          'Admin Commission Charged',
+          `$${adminCommission.toFixed(2)} admin commission (${systemCommissionRate * 100}%) charged on your ${drawState} bets ($${betTotal.toFixed(2)}).`
+        );
+      }
+    }
+
+    // 11. Update round with final payout stats
     await client.query(
-      `UPDATE lottery_rounds SET total_payouts = $1 WHERE id = $2`,
-      [totalPayouts, roundId]
+      `UPDATE lottery_rounds SET
+         total_payouts = $1,
+         winner_count = $2,
+         admin_commission_total = $3
+       WHERE id = $4`,
+      [totalPayouts, winners.length, totalAdminCommission, roundId]
     );
 
     return {
       roundId,
-      drawState: round.draw_state,
+      drawState,
+      drawDate: targetDate,
       winningNumbers,
       totalTickets: tickets.rows.length,
+      winnerCount: winners.length,
+      totalBets: parseFloat(round.total_bets || '0'),
       totalPayouts,
+      totalAdminCommission,
+      vendorPayouts,
     };
   });
+}
+
+/**
+ * Get rounds where a vendor has tickets (global rounds, filtered by vendor participation).
+ */
+export async function getVendorRounds(
+  vendorId: string,
+  filters?: { status?: string; date?: string; page?: number; limit?: number }
+) {
+  const conditions: string[] = [
+    `id IN (SELECT DISTINCT round_id FROM lottery_tickets WHERE vendor_id = $1)`
+  ];
+  const values: any[] = [vendorId];
+  let paramIndex = 2;
+
+  if (filters?.status) {
+    conditions.push(`status = $${paramIndex++}`);
+    values.push(filters.status);
+  }
+  if (filters?.date) {
+    conditions.push(`draw_date = $${paramIndex++}`);
+    values.push(filters.date);
+  }
+
+  const whereClause = `WHERE ${conditions.join(' AND ')}`;
+  const page = filters?.page || 1;
+  const limit = filters?.limit || 50;
+  const offset = (page - 1) * limit;
+
+  const result = await query(
+    `SELECT lr.id, lr.draw_state, lr.draw_date, lr.draw_time, lr.status, lr.winning_numbers,
+            lr.total_bets, lr.total_payouts, lr.total_tickets,
+            lr.admin_commission_total, lr.winner_count,
+            lr.opened_at, lr.closed_at, lr.drawn_at, lr.published_at,
+            -- Vendor-specific stats from tickets
+            COALESCE(SUM(lt.bet_amount) FILTER (WHERE lt.vendor_id = $1), 0) as vendor_bet_total,
+            COUNT(lt.id) FILTER (WHERE lt.vendor_id = $1) as vendor_ticket_count,
+            COALESCE(SUM(lt.win_amount) FILTER (WHERE lt.vendor_id = $1 AND lt.status = 'won'), 0) as vendor_payout_total
+     FROM lottery_rounds lr
+     LEFT JOIN lottery_tickets lt ON lt.round_id = lr.id
+     ${whereClause}
+     GROUP BY lr.id
+     ORDER BY lr.draw_date DESC, lr.opened_at DESC
+     LIMIT $${paramIndex++} OFFSET $${paramIndex}`,
+    [...values, limit, offset]
+  );
+
+  return result.rows.map((r) => ({
+    id: r.id,
+    drawState: r.draw_state,
+    drawDate: r.draw_date,
+    drawTime: r.draw_time,
+    status: r.status,
+    winningNumbers: r.winning_numbers,
+    totalBets: parseFloat(r.total_bets || '0'),
+    totalPayouts: parseFloat(r.total_payouts || '0'),
+    totalTickets: r.total_tickets || 0,
+    adminCommissionTotal: parseFloat(r.admin_commission_total || '0'),
+    winnerCount: r.winner_count || 0,
+    vendorBetTotal: parseFloat(r.vendor_bet_total || '0'),
+    vendorTicketCount: parseInt(r.vendor_ticket_count || '0'),
+    vendorPayoutTotal: parseFloat(r.vendor_payout_total || '0'),
+    openedAt: r.opened_at,
+    closedAt: r.closed_at,
+    drawnAt: r.drawn_at,
+    publishedAt: r.published_at,
+  }));
+}
+
+/**
+ * Get detailed info about a specific round, including vendor's tickets only.
+ * Global round with vendor-scoped ticket view.
+ */
+export async function getVendorRoundDetails(vendorId: string, roundId: string) {
+  // 1. Get round (global — no vendor_id check)
+  const roundResult = await query(
+    `SELECT id, draw_state, draw_date, draw_time, status, winning_numbers,
+            total_bets, total_payouts, total_tickets,
+            admin_commission_total, winner_count,
+            opened_at, closed_at, drawn_at, published_at
+     FROM lottery_rounds
+     WHERE id = $1`,
+    [roundId]
+  );
+
+  if (roundResult.rows.length === 0) {
+    throw new AppError('Round not found', 404, 'ROUND_NOT_FOUND');
+  }
+
+  const r = roundResult.rows[0];
+
+  // 2. Get only this vendor's tickets for this round
+  const ticketsResult = await query(
+    `SELECT lt.id, lt.player_id, lt.game_type, lt.numbers, lt.bet_amount,
+            lt.currency, lt.status, lt.win_amount, lt.created_at,
+            u.name as player_name, u.email as player_email
+     FROM lottery_tickets lt
+     JOIN users u ON u.id = lt.player_id
+     WHERE lt.round_id = $1 AND lt.vendor_id = $2
+     ORDER BY lt.created_at DESC`,
+    [roundId, vendorId]
+  );
+
+  // 3. Calculate vendor-specific stats
+  const vendorBetTotal = ticketsResult.rows.reduce((sum, t) => sum + parseFloat(t.bet_amount), 0);
+  const vendorPayoutTotal = ticketsResult.rows
+    .filter(t => t.status === 'won')
+    .reduce((sum, t) => sum + parseFloat(t.win_amount || '0'), 0);
+
+  return {
+    round: {
+      id: r.id,
+      drawState: r.draw_state,
+      drawDate: r.draw_date,
+      drawTime: r.draw_time,
+      status: r.status,
+      winningNumbers: r.winning_numbers,
+      totalBets: parseFloat(r.total_bets || '0'),
+      totalPayouts: parseFloat(r.total_payouts || '0'),
+      totalTickets: r.total_tickets || 0,
+      adminCommissionTotal: parseFloat(r.admin_commission_total || '0'),
+      winnerCount: r.winner_count || 0,
+      vendorBetTotal,
+      vendorPayoutTotal,
+      vendorTicketCount: ticketsResult.rows.length,
+      openedAt: r.opened_at,
+      closedAt: r.closed_at,
+      drawnAt: r.drawn_at,
+      publishedAt: r.published_at,
+    },
+    tickets: ticketsResult.rows.map((t) => ({
+      id: t.id,
+      playerId: t.player_id,
+      playerName: t.player_name,
+      playerEmail: t.player_email,
+      gameType: t.game_type,
+      numbers: t.numbers,
+      betAmount: parseFloat(t.bet_amount),
+      currency: t.currency,
+      status: t.status,
+      winAmount: parseFloat(t.win_amount || '0'),
+      createdAt: t.created_at,
+    })),
+  };
 }
 
 /**

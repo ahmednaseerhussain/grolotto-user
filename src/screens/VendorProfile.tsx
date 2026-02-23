@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
+import { getTranslation } from "../utils/translations";
 
 const StarRating = ({ rating, size = 16 }: { rating: number; size?: number }) => {
   return (
@@ -21,6 +22,8 @@ const StarRating = ({ rating, size = 16 }: { rating: number; size?: number }) =>
 };
 
 const ReviewItem = ({ review, onRespond, onReport, onHide }: any) => {
+  const language = useAppStore(s => s.language);
+  const t = (key: string) => getTranslation(key as any, language);
   const [showResponseModal, setShowResponseModal] = useState(false);
   const [responseText, setResponseText] = useState("");
   const [showReportModal, setShowReportModal] = useState(false);
@@ -28,24 +31,24 @@ const ReviewItem = ({ review, onRespond, onReport, onHide }: any) => {
 
   const handleRespond = () => {
     if (!responseText.trim()) {
-      Alert.alert("Error", "Please enter a response message");
+      Alert.alert(t("error"), t("enterResponseMessage"));
       return;
     }
     onRespond(review.id, responseText);
     setShowResponseModal(false);
     setResponseText("");
-    Alert.alert("Success", "Response posted successfully!");
+    Alert.alert(t("success"), t("responsePosted"));
   };
 
   const handleReport = () => {
     if (!reportReason.trim()) {
-      Alert.alert("Error", "Please provide a reason for reporting");
+      Alert.alert(t("error"), t("provideReportReason"));
       return;
     }
     onReport(review.id, reportReason);
     setShowReportModal(false);
     setReportReason("");
-    Alert.alert("Success", "Review reported. Our team will review it within 24 hours.");
+    Alert.alert(t("success"), t("reviewReported"));
   };
 
   return (
@@ -92,12 +95,12 @@ const ReviewItem = ({ review, onRespond, onReport, onHide }: any) => {
             style={styles.reviewActionButton}
             onPress={() => {
               Alert.alert(
-                "Hide Review",
-                "Are you sure you want to hide this review from public view?",
+                t("hideReview"),
+                t("hideReviewConfirm"),
                 [
-                  { text: "Cancel", style: "cancel" },
+                  { text: t("cancel"), style: "cancel" },
                   { 
-                    text: "Hide", 
+                    text: t("hide"), 
                     style: "destructive",
                     onPress: () => onHide(review.id)
                   }
@@ -113,7 +116,7 @@ const ReviewItem = ({ review, onRespond, onReport, onHide }: any) => {
       {review.gamePlay && (
         <View style={styles.gamePlayInfo}>
           <Text style={styles.gamePlayText}>
-            Played {review.gamePlay.gameType} • {review.gamePlay.draw} • ${review.gamePlay.betAmount}
+            {t("played")} {review.gamePlay.gameType} • {review.gamePlay.draw} • ${review.gamePlay.betAmount}
           </Text>
         </View>
       )}
@@ -124,7 +127,7 @@ const ReviewItem = ({ review, onRespond, onReport, onHide }: any) => {
         <View style={styles.vendorResponse}>
           <View style={styles.vendorResponseHeader}>
             <Ionicons name="storefront" size={16} color="#10b981" />
-            <Text style={styles.vendorResponseLabel}>Your Response</Text>
+            <Text style={styles.vendorResponseLabel}>{t("yourResponse")}</Text>
             <Text style={styles.vendorResponseDate}>
               {new Date(review.vendorResponse.timestamp).toLocaleDateString()}
             </Text>
@@ -136,7 +139,7 @@ const ReviewItem = ({ review, onRespond, onReport, onHide }: any) => {
       {review.isReported && (
         <View style={styles.reportedBadge}>
           <Ionicons name="flag" size={12} color="#ef4444" />
-          <Text style={styles.reportedText}>Reported for review</Text>
+          <Text style={styles.reportedText}>{t("reportedForReview")}</Text>
         </View>
       )}
 
@@ -145,14 +148,14 @@ const ReviewItem = ({ review, onRespond, onReport, onHide }: any) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Respond to Review</Text>
+              <Text style={styles.modalTitle}>{t("respondToReview")}</Text>
               <Pressable onPress={() => setShowResponseModal(false)}>
                 <Ionicons name="close" size={24} color="#9ca3af" />
               </Pressable>
             </View>
             <TextInput
               style={styles.responseInput}
-              placeholder="Write your response..."
+              placeholder={t("writeYourResponse")}
               value={responseText}
               onChangeText={setResponseText}
               multiline
@@ -164,10 +167,10 @@ const ReviewItem = ({ review, onRespond, onReport, onHide }: any) => {
                 style={styles.cancelButton}
                 onPress={() => setShowResponseModal(false)}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text style={styles.cancelButtonText}>{t("cancel")}</Text>
               </Pressable>
               <Pressable style={styles.postButton} onPress={handleRespond}>
-                <Text style={styles.postButtonText}>Post Response</Text>
+                <Text style={styles.postButtonText}>{t("postResponse")}</Text>
               </Pressable>
             </View>
           </View>
@@ -179,17 +182,17 @@ const ReviewItem = ({ review, onRespond, onReport, onHide }: any) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Report Review</Text>
+              <Text style={styles.modalTitle}>{t("reportReview")}</Text>
               <Pressable onPress={() => setShowReportModal(false)}>
                 <Ionicons name="close" size={24} color="#9ca3af" />
               </Pressable>
             </View>
             <Text style={styles.reportDescription}>
-              Why are you reporting this review? Our team will investigate.
+              {t("reportReviewDesc")}
             </Text>
             <TextInput
               style={styles.responseInput}
-              placeholder="Reason for reporting (e.g., inappropriate content, spam, false information)"
+              placeholder={t("reportReasonPlaceholder")}
               value={reportReason}
               onChangeText={setReportReason}
               multiline
@@ -200,10 +203,10 @@ const ReviewItem = ({ review, onRespond, onReport, onHide }: any) => {
                 style={styles.cancelButton}
                 onPress={() => setShowReportModal(false)}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text style={styles.cancelButtonText}>{t("cancel")}</Text>
               </Pressable>
               <Pressable style={styles.reportSubmitButton} onPress={handleReport}>
-                <Text style={styles.reportSubmitButtonText}>Submit Report</Text>
+                <Text style={styles.reportSubmitButtonText}>{t("submitReport")}</Text>
               </Pressable>
             </View>
           </View>
@@ -222,6 +225,8 @@ export default function VendorProfile() {
   const reportReview = useAppStore(s => s.reportReview);
   const hideReview = useAppStore(s => s.hideReview);
   const updateVendor = useAppStore(s => s.updateVendor);
+  const language = useAppStore(s => s.language);
+  const t = (key: string) => getTranslation(key as any, language);
 
   const [activeTab, setActiveTab] = useState("profile");
   const [editMode, setEditMode] = useState(false);
@@ -243,7 +248,7 @@ export default function VendorProfile() {
   if (!currentVendor) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text>Vendor not found</Text>
+        <Text>{ t("vendorNotFound") }</Text>
       </SafeAreaView>
     );
   }
@@ -263,7 +268,7 @@ export default function VendorProfile() {
       }
     });
     setEditMode(false);
-    Alert.alert("Success", "Profile updated successfully!");
+    Alert.alert(t("success"), t("profileUpdated"));
   };
 
   const averageRating = currentReviews.length > 0 
@@ -288,7 +293,7 @@ export default function VendorProfile() {
         >
           <Ionicons name="arrow-back" size={24} color="#1f2937" />
         </Pressable>
-        <Text style={styles.headerTitle}>Mon Profil</Text>
+        <Text style={styles.headerTitle}>{t("myProfile")}</Text>
         <Pressable 
           style={styles.editButton}
           onPress={() => setEditMode(!editMode)}
@@ -304,7 +309,7 @@ export default function VendorProfile() {
           onPress={() => setActiveTab("profile")}
         >
           <Text style={[styles.tabText, activeTab === "profile" && styles.activeTabText]}>
-            Profile
+            {t("profile")}
           </Text>
         </Pressable>
         <Pressable
@@ -312,7 +317,7 @@ export default function VendorProfile() {
           onPress={() => setActiveTab("reviews")}
         >
           <Text style={[styles.tabText, activeTab === "reviews" && styles.activeTabText]}>
-            Reviews ({currentReviews.length})
+            {t("reviews")} ({currentReviews.length})
           </Text>
         </Pressable>
       </View>
@@ -333,21 +338,21 @@ export default function VendorProfile() {
                   <View style={styles.ratingRow}>
                     <StarRating rating={averageRating} size={20} />
                     <Text style={styles.ratingText}>
-                      {averageRating.toFixed(1)} ({currentReviews.length} reviews)
+                      {averageRating.toFixed(1)} ({currentReviews.length} {t("reviews")})
                     </Text>
                   </View>
-                  <Text style={styles.statusText}>Status: Approved</Text>
+                  <Text style={styles.statusText}>{t("status")}: {t("approved")}</Text>
                 </View>
               </View>
             </View>
 
             {/* Profile Form */}
             <View style={styles.formCard}>
-              <Text style={styles.sectionTitle}>Personal Information</Text>
+              <Text style={styles.sectionTitle}>{t("personalInfo")}</Text>
               
               <View style={styles.formRow}>
                 <View style={styles.formGroup}>
-                  <Text style={styles.fieldLabel}>First Name</Text>
+                  <Text style={styles.fieldLabel}>{t("firstName")}</Text>
                   <TextInput
                     style={[styles.textInput, !editMode && styles.textInputDisabled]}
                     value={profileForm.firstName}
@@ -356,7 +361,7 @@ export default function VendorProfile() {
                   />
                 </View>
                 <View style={styles.formGroup}>
-                  <Text style={styles.fieldLabel}>Last Name</Text>
+                  <Text style={styles.fieldLabel}>{t("lastName")}</Text>
                   <TextInput
                     style={[styles.textInput, !editMode && styles.textInputDisabled]}
                     value={profileForm.lastName}
@@ -367,7 +372,7 @@ export default function VendorProfile() {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.fieldLabel}>Display Name (How players find you)</Text>
+                <Text style={styles.fieldLabel}>{t("displayName")}</Text>
                 <TextInput
                   style={[styles.textInput, !editMode && styles.textInputDisabled]}
                   value={profileForm.displayName}
@@ -378,7 +383,7 @@ export default function VendorProfile() {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.fieldLabel}>Business Name</Text>
+                <Text style={styles.fieldLabel}>{t("businessName")}</Text>
                 <TextInput
                   style={[styles.textInput, !editMode && styles.textInputDisabled]}
                   value={profileForm.businessName}
@@ -389,7 +394,7 @@ export default function VendorProfile() {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.fieldLabel}>Phone Number</Text>
+                <Text style={styles.fieldLabel}>{t("phoneNumber")}</Text>
                 <TextInput
                   style={[styles.textInput, !editMode && styles.textInputDisabled]}
                   value={profileForm.phone}
@@ -400,7 +405,7 @@ export default function VendorProfile() {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.fieldLabel}>Bio / Description</Text>
+                <Text style={styles.fieldLabel}>{t("bioDescription")}</Text>
                 <TextInput
                   style={[styles.textArea, !editMode && styles.textInputDisabled]}
                   value={profileForm.bio}
@@ -413,7 +418,7 @@ export default function VendorProfile() {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.fieldLabel}>Location</Text>
+                <Text style={styles.fieldLabel}>{t("location")}</Text>
                 <TextInput
                   style={[styles.textInput, !editMode && styles.textInputDisabled]}
                   value={profileForm.location}
@@ -424,7 +429,7 @@ export default function VendorProfile() {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.fieldLabel}>Business Hours</Text>
+                <Text style={styles.fieldLabel}>{t("businessHours")}</Text>
                 <TextInput
                   style={[styles.textInput, !editMode && styles.textInputDisabled]}
                   value={profileForm.businessHours}
@@ -437,7 +442,7 @@ export default function VendorProfile() {
               {editMode && (
                 <View style={styles.saveButtonContainer}>
                   <Pressable style={styles.saveButton} onPress={handleSaveProfile}>
-                    <Text style={styles.saveButtonText}>Save Profile</Text>
+                    <Text style={styles.saveButtonText}>{t("saveProfile")}</Text>
                   </Pressable>
                 </View>
               )}
@@ -445,9 +450,9 @@ export default function VendorProfile() {
 
             {/* Payment Methods Section */}
             <View style={styles.formCard}>
-              <Text style={styles.sectionTitle}>Payment Methods</Text>
+              <Text style={styles.sectionTitle}>{t("paymentMethods")}</Text>
               <Text style={styles.sectionDescription}>
-                Manage your payment methods for receiving payouts when you win
+                {t("managePaymentMethodsDesc")}
               </Text>
               <Pressable
                 style={styles.paymentMethodsButton}
@@ -456,9 +461,9 @@ export default function VendorProfile() {
                 <View style={styles.paymentMethodsButtonContent}>
                   <Ionicons name="wallet" size={24} color="#f97316" />
                   <View style={styles.paymentMethodsButtonText}>
-                    <Text style={styles.paymentMethodsButtonTitle}>Manage Payment Methods</Text>
+                    <Text style={styles.paymentMethodsButtonTitle}>{t("managePaymentMethods")}</Text>
                     <Text style={styles.paymentMethodsButtonSubtitle}>
-                      Add or update deposit and payout methods
+                      {t("addOrUpdatePaymentMethods")}
                     </Text>
                   </View>
                 </View>
@@ -476,7 +481,7 @@ export default function VendorProfile() {
                 <View style={styles.averageRating}>
                   <Text style={styles.averageRatingNumber}>{averageRating.toFixed(1)}</Text>
                   <StarRating rating={Math.round(averageRating)} size={24} />
-                  <Text style={styles.totalReviewsText}>{currentReviews.length} reviews</Text>
+                  <Text style={styles.totalReviewsText}>{currentReviews.length} {t("reviews")}</Text>
                 </View>
                 <View style={styles.ratingDistribution}>
                   {ratingDistribution.map((item) => (
@@ -497,13 +502,13 @@ export default function VendorProfile() {
 
             {/* Reviews List */}
             <View style={styles.reviewsList}>
-              <Text style={styles.sectionTitle}>Customer Reviews</Text>
+              <Text style={styles.sectionTitle}>{t("customerReviews")}</Text>
               {currentReviews.length === 0 ? (
                 <View style={styles.emptyReviews}>
                   <Ionicons name="chatbubbles-outline" size={48} color="#d1d5db" />
-                  <Text style={styles.emptyReviewsTitle}>No Reviews Yet</Text>
+                  <Text style={styles.emptyReviewsTitle}>{t("noReviewsYet")}</Text>
                   <Text style={styles.emptyReviewsText}>
-                    Start serving customers to receive your first reviews!
+                    {t("startServingCustomers")}
                   </Text>
                 </View>
               ) : (

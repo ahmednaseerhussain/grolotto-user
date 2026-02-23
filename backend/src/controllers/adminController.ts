@@ -173,3 +173,162 @@ export async function recordAdImpression(req: Request, res: Response, next: Next
     next(error);
   }
 }
+
+// ──────────────────────────────────────────────────────────
+// Draw Configs
+// ──────────────────────────────────────────────────────────
+
+export async function getDrawConfigs(req: Request, res: Response, next: NextFunction) {
+  try {
+    const configs = await adminService.getDrawConfigs();
+    res.json(configs);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function createDrawConfig(req: Request, res: Response, next: NextFunction) {
+  try {
+    const result = await adminService.createDrawConfig(req.body);
+    res.status(201).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateDrawConfig(req: Request, res: Response, next: NextFunction) {
+  try {
+    await adminService.updateDrawConfig(req.params.id, req.body);
+    res.json({ message: 'Draw config updated' });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteDrawConfig(req: Request, res: Response, next: NextFunction) {
+  try {
+    await adminService.deleteDrawConfig(req.params.id);
+    res.json({ message: 'Draw config deleted' });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ──────────────────────────────────────────────────────────
+// Gift Cards
+// ──────────────────────────────────────────────────────────
+
+export async function generateGiftCardBatch(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { quantity, amount, currency } = req.body;
+    const batch = await adminService.generateGiftCardBatch(quantity, amount, currency || 'USD', req.user!.id);
+    res.status(201).json(batch);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getGiftCardBatches(req: Request, res: Response, next: NextFunction) {
+  try {
+    const batches = await adminService.getGiftCardBatches();
+    res.json(batches);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getGiftCards(req: Request, res: Response, next: NextFunction) {
+  try {
+    const batchId = req.query.batchId as string | undefined;
+    const cards = await adminService.getGiftCards(batchId);
+    res.json(cards);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function redeemGiftCard(req: Request, res: Response, next: NextFunction) {
+  try {
+    const result = await adminService.redeemGiftCard(req.body.pinCode, req.body.userId || req.user!.id);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ──────────────────────────────────────────────────────────
+// Broadcast Notifications
+// ──────────────────────────────────────────────────────────
+
+export async function broadcastNotification(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { title, message, type, targetAudience } = req.body;
+    const result = await adminService.broadcastNotification(title, message, type || 'info', targetAudience || 'all');
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ──────────────────────────────────────────────────────────
+// Transactions
+// ──────────────────────────────────────────────────────────
+
+export async function getTransactions(req: Request, res: Response, next: NextFunction) {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const type = req.query.type as string | undefined;
+    const userId = req.query.userId as string | undefined;
+    const result = await adminService.getTransactions(page, limit, { type, userId });
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ──────────────────────────────────────────────────────────
+// Admin User CRUD
+// ──────────────────────────────────────────────────────────
+
+export async function createAdminUser(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { email, name, password } = req.body;
+    const user = await adminService.createAdminUser(email, name, password);
+    res.status(201).json(user);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateAdminUser(req: Request, res: Response, next: NextFunction) {
+  try {
+    await adminService.updateAdminUser(req.params.userId, req.body);
+    res.json({ message: 'Admin user updated' });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteAdminUser(req: Request, res: Response, next: NextFunction) {
+  try {
+    await adminService.deleteAdminUser(req.params.userId);
+    res.json({ message: 'Admin user deleted' });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ──────────────────────────────────────────────────────────
+// Lottery Round Creation
+// ──────────────────────────────────────────────────────────
+
+export async function createLotteryRound(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { drawState, drawDate, drawTime } = req.body;
+    const round = await adminService.createLotteryRound(drawState, drawDate, drawTime);
+    res.status(201).json(round);
+  } catch (error) {
+    next(error);
+  }
+}

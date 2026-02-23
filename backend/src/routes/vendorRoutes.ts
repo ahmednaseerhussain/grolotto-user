@@ -27,4 +27,8 @@ router.delete('/me/number-limits/:limitId', authenticate, authorize('vendor'), c
 // Payout requests
 router.post('/me/payouts', authenticate, authorize('vendor'), ctrl.requestPayout);
 
+// Vendor lottery rounds (read-only — admin publishes results globally)
+router.get('/me/rounds', authenticate, authorize('vendor'), ctrl.getMyRounds);
+router.get('/me/rounds/:roundId', authenticate, authorize('vendor'), ctrl.getMyRoundDetails);
+
 export default router;

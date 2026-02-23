@@ -25,3 +25,30 @@ export async function getAllDreams(req: Request, res: Response, next: NextFuncti
     next(error);
   }
 }
+
+export async function createDream(req: Request, res: Response, next: NextFunction) {
+  try {
+    const result = await tchalaService.createDream(req.body);
+    res.status(201).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateDream(req: Request, res: Response, next: NextFunction) {
+  try {
+    const result = await tchalaService.updateDream(req.params.id, req.body);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteDream(req: Request, res: Response, next: NextFunction) {
+  try {
+    await tchalaService.deleteDream(req.params.id);
+    res.json({ message: 'Dream entry deleted' });
+  } catch (error) {
+    next(error);
+  }
+}

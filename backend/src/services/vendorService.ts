@@ -17,6 +17,10 @@ export interface VendorPublic {
   totalTicketsSold: number;
   isActive: boolean;
   draws: Record<string, DrawConfig>;
+  // Financial fields
+  totalRevenue: number;
+  totalPlayers: number;
+  availableBalance: number;
 }
 
 interface DrawConfig {
@@ -32,7 +36,8 @@ export async function getActiveVendors(): Promise<VendorPublic[]> {
   const vendorRows = await query(
     `SELECT v.id, v.user_id, v.first_name, v.last_name, v.business_name, v.display_name,
             v.status, v.bio, v.location, v.business_hours, v.specialties,
-            v.rating, v.total_tickets_sold, v.is_active
+            v.rating, v.total_tickets_sold, v.is_active,
+            v.total_revenue, v.total_players, v.available_balance
      FROM vendors v
      WHERE v.status IN ('approved', 'active') AND v.is_active = TRUE
      ORDER BY v.rating DESC`
@@ -58,6 +63,9 @@ export async function getActiveVendors(): Promise<VendorPublic[]> {
       totalTicketsSold: row.total_tickets_sold,
       isActive: row.is_active,
       draws,
+      totalRevenue: parseFloat(row.total_revenue || '0'),
+      totalPlayers: row.total_players || 0,
+      availableBalance: parseFloat(row.available_balance || '0'),
     });
   }
 
@@ -99,6 +107,9 @@ export async function getVendorById(vendorId: string): Promise<VendorPublic> {
     totalTicketsSold: row.total_tickets_sold,
     isActive: row.is_active,
     draws,
+    totalRevenue: parseFloat(row.total_revenue || '0'),
+    totalPlayers: row.total_players || 0,
+    availableBalance: parseFloat(row.available_balance || '0'),
   };
 }
 
@@ -416,7 +427,7 @@ export async function requestPayout(
   );
 
   const result = await query(
-    `INSERT INTO vendor_payouts (vendor_id, amount, currency, payout_method, status, request_date)
+    `INSERT INTO vendor_payouts (vendor_id, amount, currency, method, status, request_date)
      VALUES ($1, $2, $3, $4, 'pending', NOW())
      RETURNING *`,
     [vendorId, amount, currency, method]

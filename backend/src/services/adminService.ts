@@ -18,8 +18,12 @@ export async function getSystemStats() {
     `SELECT COUNT(*) as active_vendors FROM vendors WHERE status IN ('approved', 'active') AND is_active = TRUE`
   );
 
-  const pendingResult = await query(
+  const pendingApprovalResult = await query(
     `SELECT COUNT(*) as pending_approvals FROM vendors WHERE status = 'pending'`
+  );
+
+  const pendingPayoutsResult = await query(
+    `SELECT COUNT(*) as pending_payouts FROM vendor_payouts WHERE status = 'pending'`
   );
 
   const revenueResult = await query(
@@ -27,12 +31,13 @@ export async function getSystemStats() {
   );
 
   const todayResult = await query(
-    `SELECT COUNT(*) as today_games FROM lottery_tickets WHERE created_at::date = CURRENT_DATE`
+    `SELECT COUNT(*) as today_plays FROM lottery_tickets WHERE created_at::date = CURRENT_DATE`
   );
 
   const u = usersResult.rows[0];
   const v = vendorResult.rows[0];
-  const p = pendingResult.rows[0];
+  const pa = pendingApprovalResult.rows[0];
+  const pp = pendingPayoutsResult.rows[0];
   const r = revenueResult.rows[0];
   const t = todayResult.rows[0];
 
@@ -41,9 +46,10 @@ export async function getSystemStats() {
     totalVendors: parseInt(u.total_vendors),
     totalAdmins: parseInt(u.total_admins),
     activeVendors: parseInt(v.active_vendors),
-    pendingApprovals: parseInt(p.pending_approvals),
+    pendingApprovals: parseInt(pa.pending_approvals),
+    pendingPayouts: parseInt(pp.pending_payouts),
     totalRevenue: parseFloat(r.total_revenue),
-    todayGames: parseInt(t.today_games),
+    todayPlays: parseInt(t.today_plays),
   };
 }
 
@@ -60,18 +66,31 @@ export async function getAllUsers(role?: string, page: number = 1, limit: number
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
   const offset = (page - 1) * limit;
 
+  // Count total for pagination
+  const countResult = await query(
+    `SELECT COUNT(*) as total FROM users u ${whereClause}`,
+    values
+  );
+  const total = parseInt(countResult.rows[0].total);
+
   const result = await query(
     `SELECT u.id, u.email, u.name, u.role, u.phone, u.is_verified, u.is_active, u.created_at,
-            w.balance_usd
+            u.last_login,
+            w.balance_usd, w.total_won, w.total_bet,
+            v.id as vendor_id, v.first_name as v_first_name, v.last_name as v_last_name,
+            v.status as vendor_status, v.total_revenue, v.available_balance as v_available_balance,
+            v.commission_rate, v.display_name as business_name,
+            v.city, v.country
      FROM users u
      LEFT JOIN wallets w ON w.user_id = u.id
+     LEFT JOIN vendors v ON v.user_id = u.id
      ${whereClause}
      ORDER BY u.created_at DESC
      LIMIT $${paramIndex++} OFFSET $${paramIndex}`,
     [...values, limit, offset]
   );
 
-  return result.rows.map((r) => ({
+  const users = result.rows.map((r) => ({
     id: r.id,
     email: r.email,
     name: r.name,
@@ -81,7 +100,23 @@ export async function getAllUsers(role?: string, page: number = 1, limit: number
     isActive: r.is_active,
     balance: parseFloat(r.balance_usd || '0'),
     createdAt: r.created_at,
+    lastLogin: r.last_login || null,
+    totalWon: parseFloat(r.total_won || '0'),
+    totalSpent: parseFloat(r.total_bet || '0'),
+    // Vendor-specific fields (null for non-vendors)
+    vendorId: r.vendor_id || null,
+    vendorFirstName: r.v_first_name || null,
+    vendorLastName: r.v_last_name || null,
+    vendorStatus: r.vendor_status || null,
+    totalRevenue: parseFloat(r.total_revenue || '0'),
+    availableBalance: parseFloat(r.v_available_balance || '0'),
+    commissionRate: parseFloat(r.commission_rate || '0'),
+    businessName: r.business_name || null,
+    city: r.city || null,
+    country: r.country || null,
   }));
+
+  return { users, total, page, limit };
 }
 
 export async function approveVendor(vendorId: string) {
@@ -317,4 +352,339 @@ export async function recordAdClick(adId: string) {
 
 export async function recordAdImpression(adId: string) {
   await query('UPDATE advertisements SET impressions = impressions + 1 WHERE id = $1', [adId]);
+}
+
+// ──────────────────────────────────────────────────────────
+// Draw Configs CRUD
+// ──────────────────────────────────────────────────────────
+
+export async function getDrawConfigs() {
+  const result = await query(
+    `SELECT * FROM draw_configs ORDER BY state, name`
+  );
+  return result.rows.map((r) => ({
+    id: r.id,
+    state: r.state,
+    name: r.name,
+    drawTime: r.draw_time,
+    cutoffTime: r.cutoff_time,
+    isActive: r.is_active,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  }));
+}
+
+export async function createDrawConfig(data: { state: string; name: string; drawTime: string; cutoffTime?: string }) {
+  const result = await query(
+    `INSERT INTO draw_configs (state, name, draw_time, cutoff_time) VALUES ($1, $2, $3, $4) RETURNING *`,
+    [data.state, data.name, data.drawTime, data.cutoffTime || null]
+  );
+  const r = result.rows[0];
+  return { id: r.id, state: r.state, name: r.name, drawTime: r.draw_time, cutoffTime: r.cutoff_time, isActive: r.is_active };
+}
+
+export async function updateDrawConfig(id: string, updates: { name?: string; drawTime?: string; cutoffTime?: string; isActive?: boolean }) {
+  const setClauses: string[] = [];
+  const values: any[] = [];
+  let idx = 1;
+
+  if (updates.name !== undefined) { setClauses.push(`name = $${idx++}`); values.push(updates.name); }
+  if (updates.drawTime !== undefined) { setClauses.push(`draw_time = $${idx++}`); values.push(updates.drawTime); }
+  if (updates.cutoffTime !== undefined) { setClauses.push(`cutoff_time = $${idx++}`); values.push(updates.cutoffTime); }
+  if (updates.isActive !== undefined) { setClauses.push(`is_active = $${idx++}`); values.push(updates.isActive); }
+
+  if (setClauses.length === 0) return;
+  setClauses.push(`updated_at = NOW()`);
+
+  values.push(id);
+  await query(`UPDATE draw_configs SET ${setClauses.join(', ')} WHERE id = $${idx}`, values);
+}
+
+export async function deleteDrawConfig(id: string) {
+  await query('DELETE FROM draw_configs WHERE id = $1', [id]);
+}
+
+// ──────────────────────────────────────────────────────────
+// Gift Cards
+// ──────────────────────────────────────────────────────────
+
+function generatePin(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let pin = '';
+  for (let i = 0; i < 12; i++) {
+    pin += chars.charAt(Math.floor(Math.random() * chars.length));
+    if (i === 3 || i === 7) pin += '-';
+  }
+  return pin;
+}
+
+export async function generateGiftCardBatch(quantity: number, amount: number, currency: string, createdBy: string) {
+  // Create batch
+  const batchResult = await query(
+    `INSERT INTO gift_card_batches (quantity, amount, currency, created_by) VALUES ($1, $2, $3, $4) RETURNING *`,
+    [quantity, amount, currency, createdBy]
+  );
+  const batch = batchResult.rows[0];
+
+  // Generate cards
+  const cards = [];
+  for (let i = 0; i < quantity; i++) {
+    const pin = generatePin();
+    const cardResult = await query(
+      `INSERT INTO gift_cards (batch_id, pin_code, amount, currency) VALUES ($1, $2, $3, $4) RETURNING *`,
+      [batch.id, pin, amount, currency]
+    );
+    cards.push(cardResult.rows[0]);
+  }
+
+  return {
+    id: batch.id,
+    quantity: batch.quantity,
+    amount: parseFloat(batch.amount),
+    currency: batch.currency,
+    createdAt: batch.created_at,
+    createdBy: batch.created_by,
+    giftCards: cards.map((c) => ({
+      id: c.id,
+      pinCode: c.pin_code,
+      amount: parseFloat(c.amount),
+      currency: c.currency,
+      isRedeemed: c.is_redeemed,
+      createdAt: c.created_at,
+    })),
+  };
+}
+
+export async function getGiftCardBatches() {
+  const result = await query(
+    `SELECT gb.*, 
+            COUNT(gc.id) as total_cards,
+            COUNT(gc.id) FILTER (WHERE gc.is_redeemed = TRUE) as redeemed_count
+     FROM gift_card_batches gb
+     LEFT JOIN gift_cards gc ON gc.batch_id = gb.id
+     GROUP BY gb.id
+     ORDER BY gb.created_at DESC`
+  );
+  return result.rows.map((r) => ({
+    id: r.id,
+    quantity: r.quantity,
+    amount: parseFloat(r.amount),
+    currency: r.currency,
+    createdBy: r.created_by,
+    createdAt: r.created_at,
+    totalCards: parseInt(r.total_cards),
+    redeemedCount: parseInt(r.redeemed_count),
+  }));
+}
+
+export async function getGiftCards(batchId?: string) {
+  const condition = batchId ? 'WHERE gc.batch_id = $1' : '';
+  const values = batchId ? [batchId] : [];
+  const result = await query(
+    `SELECT gc.*, u.name as redeemed_by_name
+     FROM gift_cards gc
+     LEFT JOIN users u ON u.id = gc.redeemed_by
+     ${condition}
+     ORDER BY gc.created_at DESC`,
+    values
+  );
+  return result.rows.map((c) => ({
+    id: c.id,
+    batchId: c.batch_id,
+    pinCode: c.pin_code,
+    amount: parseFloat(c.amount),
+    currency: c.currency,
+    isRedeemed: c.is_redeemed,
+    redeemedBy: c.redeemed_by,
+    redeemedByName: c.redeemed_by_name,
+    redeemedAt: c.redeemed_at,
+    createdAt: c.created_at,
+  }));
+}
+
+export async function redeemGiftCard(pinCode: string, userId: string) {
+  const result = await query(
+    `UPDATE gift_cards SET is_redeemed = TRUE, redeemed_by = $2, redeemed_at = NOW()
+     WHERE pin_code = $1 AND is_redeemed = FALSE RETURNING *`,
+    [pinCode, userId]
+  );
+  if (result.rows.length === 0) throw new AppError('Gift card not found or already redeemed', 404);
+
+  const card = result.rows[0];
+  // Credit user wallet
+  const currency = card.currency === 'HTG' ? 'balance_htg' : 'balance_usd';
+  await query(
+    `UPDATE wallets SET ${currency} = ${currency} + $1, total_deposited = total_deposited + $1 WHERE user_id = $2`,
+    [card.amount, userId]
+  );
+
+  return {
+    id: card.id,
+    pinCode: card.pin_code,
+    amount: parseFloat(card.amount),
+    currency: card.currency,
+  };
+}
+
+// ──────────────────────────────────────────────────────────
+// Broadcast Notifications
+// ──────────────────────────────────────────────────────────
+
+export async function broadcastNotification(
+  title: string,
+  message: string,
+  type: string,
+  targetAudience: 'players' | 'vendors' | 'all'
+) {
+  const targets: string[] = [];
+  if (targetAudience === 'players' || targetAudience === 'all') targets.push('player');
+  if (targetAudience === 'vendors' || targetAudience === 'all') targets.push('vendor');
+
+  let totalSent = 0;
+
+  for (const role of targets) {
+    const usersResult = await query(
+      `SELECT id FROM users WHERE role = $1 AND is_active = TRUE`,
+      [role]
+    );
+
+    const table = role === 'vendor' ? 'vendor_notifications' : 'player_notifications';
+    const fkColumn = role === 'vendor' ? 'vendor_id' : 'user_id';
+    const idSource = role === 'vendor'
+      ? `SELECT v.id FROM vendors v WHERE v.user_id = ANY($1::uuid[])`
+      : null;
+
+    if (role === 'vendor') {
+      const userIds = usersResult.rows.map((r: any) => r.id);
+      if (userIds.length === 0) continue;
+      const vendorResult = await query(
+        `SELECT id FROM vendors WHERE user_id = ANY($1::uuid[])`,
+        [userIds]
+      );
+      for (const v of vendorResult.rows) {
+        await query(
+          `INSERT INTO ${table} (${fkColumn}, type, title, message) VALUES ($1, $2, $3, $4)`,
+          [v.id, type, title, message]
+        );
+        totalSent++;
+      }
+    } else {
+      for (const u of usersResult.rows) {
+        await query(
+          `INSERT INTO ${table} (${fkColumn}, type, title, message) VALUES ($1, $2, $3, $4)`,
+          [u.id, type, title, message]
+        );
+        totalSent++;
+      }
+    }
+  }
+
+  return { totalSent, targetAudience };
+}
+
+// ──────────────────────────────────────────────────────────
+// Transactions (admin view)
+// ──────────────────────────────────────────────────────────
+
+export async function getTransactions(page: number = 1, limit: number = 50, filters?: { type?: string; userId?: string }) {
+  const conditions: string[] = [];
+  const values: any[] = [];
+  let idx = 1;
+
+  if (filters?.type) { conditions.push(`t.type = $${idx++}`); values.push(filters.type); }
+  if (filters?.userId) { conditions.push(`t.user_id = $${idx++}`); values.push(filters.userId); }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  const offset = (page - 1) * limit;
+
+  const countResult = await query(
+    `SELECT COUNT(*) as total FROM transactions t ${whereClause}`, values
+  );
+  const total = parseInt(countResult.rows[0].total);
+
+  const result = await query(
+    `SELECT t.*, u.name as user_name, u.email as user_email
+     FROM transactions t
+     LEFT JOIN users u ON u.id = t.user_id
+     ${whereClause}
+     ORDER BY t.created_at DESC
+     LIMIT $${idx++} OFFSET $${idx}`,
+    [...values, limit, offset]
+  );
+
+  return {
+    transactions: result.rows.map((r) => ({
+      id: r.id,
+      userId: r.user_id,
+      userName: r.user_name,
+      userEmail: r.user_email,
+      type: r.type,
+      amount: parseFloat(r.amount),
+      currency: r.currency,
+      status: r.status,
+      description: r.description,
+      createdAt: r.created_at,
+    })),
+    total,
+    page,
+    limit,
+  };
+}
+
+// ──────────────────────────────────────────────────────────
+// Admin User CRUD
+// ──────────────────────────────────────────────────────────
+
+export async function createAdminUser(email: string, name: string, password: string) {
+  // Hash password using pgcrypto
+  const result = await query(
+    `INSERT INTO users (email, name, password_hash, role, is_active, is_verified)
+     VALUES ($1, $2, crypt($3, gen_salt('bf')), 'admin', TRUE, TRUE) RETURNING id, email, name, role, is_active, created_at`,
+    [email, name, password]
+  );
+  return result.rows[0];
+}
+
+export async function updateAdminUser(userId: string, updates: { name?: string; email?: string; isActive?: boolean }) {
+  const setClauses: string[] = [];
+  const values: any[] = [];
+  let idx = 1;
+
+  if (updates.name !== undefined) { setClauses.push(`name = $${idx++}`); values.push(updates.name); }
+  if (updates.email !== undefined) { setClauses.push(`email = $${idx++}`); values.push(updates.email); }
+  if (updates.isActive !== undefined) { setClauses.push(`is_active = $${idx++}`); values.push(updates.isActive); }
+
+  if (setClauses.length === 0) return;
+
+  values.push(userId);
+  await query(
+    `UPDATE users SET ${setClauses.join(', ')} WHERE id = $${idx} AND role = 'admin'`,
+    values
+  );
+}
+
+export async function deleteAdminUser(userId: string) {
+  // Soft delete — set is_active = false
+  await query(
+    `UPDATE users SET is_active = FALSE WHERE id = $1 AND role = 'admin'`,
+    [userId]
+  );
+}
+
+// ──────────────────────────────────────────────────────────
+// Create Lottery Round
+// ──────────────────────────────────────────────────────────
+
+export async function createLotteryRound(drawState: string, drawDate: string, drawTime: string) {
+  const result = await query(
+    `INSERT INTO lottery_rounds (draw_state, draw_date, draw_time, status, opened_at)
+     VALUES ($1, $2, $3, 'open', NOW())
+     ON CONFLICT (draw_state, draw_date, draw_time) DO NOTHING
+     RETURNING *`,
+    [drawState, drawDate, drawTime]
+  );
+  if (result.rows.length === 0) {
+    throw new AppError('Round already exists for this state, date, and time', 409);
+  }
+  return result.rows[0];
 }

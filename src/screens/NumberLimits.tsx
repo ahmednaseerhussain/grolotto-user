@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
+import { getTranslation } from "../utils/translations";
 
 const DRAWS = [
   { code: "NY", name: "New York", flag: "🗽" },
@@ -25,6 +26,8 @@ export default function NumberLimits() {
   const removeNumberLimit = useAppStore(s => s.removeNumberLimit);
   const stopNumberSales = useAppStore(s => s.stopNumberSales);
   const resumeNumberSales = useAppStore(s => s.resumeNumberSales);
+  const language = useAppStore(s => s.language);
+  const t = (key: string) => getTranslation(key as any, language);
 
   const [selectedDraw, setSelectedDraw] = useState<string>("NY");
   const [newNumber, setNewNumber] = useState("");
@@ -38,7 +41,7 @@ export default function NumberLimits() {
   if (!currentVendor) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text>Vendor not found</Text>
+        <Text>{t("vendorNotFound")}</Text>
       </SafeAreaView>
     );
   }
@@ -60,7 +63,7 @@ export default function NumberLimits() {
 
   const addNumberLimit = () => {
     if (!newNumber || !newLimit) {
-      Alert.alert("Error", "Please enter a number and limit");
+      Alert.alert(t("error"), t("enterNumberAndLimit"));
       return;
     }
 
@@ -68,12 +71,12 @@ export default function NumberLimits() {
     const limitAmount = parseFloat(newLimit);
 
     if (isNaN(limitAmount) || limitAmount <= 0) {
-      Alert.alert("Error", "Please enter a valid limit");
+      Alert.alert(t("error"), t("enterValidLimit"));
       return;
     }
 
     if (parseInt(newNumber) < 0 || parseInt(newNumber) > 99) {
-      Alert.alert("Error", "Number must be between 00 and 99");
+      Alert.alert(t("error"), t("numberMustBe00to99"));
       return;
     }
 
@@ -81,17 +84,17 @@ export default function NumberLimits() {
     setNewNumber("");
     setNewLimit("");
     setIsAdding(false);
-    Alert.alert("Success", `Limit of $${limitAmount} added for number ${numberStr}`);
+    Alert.alert(t("success"), `${t("limitAdded")} $${limitAmount} → ${numberStr}`);
   };
 
   const handleRemoveLimit = (number: string) => {
     Alert.alert(
-      "Remove Limit",
-      `Are you sure you want to remove the limit for number ${number}?`,
+      t("removeLimit"),
+      `${t("removeLimitConfirm")} ${number}?`,
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("cancel"), style: "cancel" },
         {
-          text: "Remove",
+          text: t("remove"),
           style: "destructive",
           onPress: () => {
             removeNumberLimit(currentVendor.id, selectedDraw, number);
@@ -99,7 +102,7 @@ export default function NumberLimits() {
             if (stoppedNumbers.includes(number)) {
               resumeNumberSales(currentVendor.id, selectedDraw, number);
             }
-            Alert.alert("Success", "Limit removed");
+            Alert.alert(t("success"), t("limitRemoved"));
           },
         },
       ]
@@ -108,16 +111,16 @@ export default function NumberLimits() {
 
   const handleStopSales = (number: string) => {
     Alert.alert(
-      "Stop Sales",
-      `Are you sure you want to stop sales for number ${number}?\n\nNo new bets will be accepted until you resume sales.`,
+      t("stopSalesTitle"),
+      `${t("stopSalesConfirm")} ${number}?`,
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("cancel"), style: "cancel" },
         {
-          text: "Stop",
+          text: t("stop"),
           style: "destructive",
           onPress: () => {
             stopNumberSales(currentVendor.id, selectedDraw, number);
-            Alert.alert("✋ Sales Stopped", `No more bets will be accepted for number ${number}`);
+            Alert.alert(`✋ ${t("salesStopped")}`, `${t("noBetsAcceptedForNumber")} ${number}`);
           },
         },
       ]
@@ -126,39 +129,39 @@ export default function NumberLimits() {
 
   const handleStopNumberFromForm = () => {
     if (!stopNumber) {
-      Alert.alert("Error", "Please enter a number to stop");
+      Alert.alert(t("error"), t("enterNumberToStop"));
       return;
     }
 
     const numberStr = stopNumber.padStart(2, '0');
 
     if (parseInt(stopNumber) < 0 || parseInt(stopNumber) > 99) {
-      Alert.alert("Error", "Number must be between 00 and 99");
+      Alert.alert(t("error"), t("numberMustBe00to99"));
       return;
     }
 
     if (stoppedNumbers.includes(numberStr)) {
-      Alert.alert("Already Stopped", `Sales for number ${numberStr} are already stopped`);
+      Alert.alert(t("alreadyStopped"), `${t("alreadyStoppedMsg")} ${numberStr}`);
       return;
     }
 
     useAppStore.getState().stopNumberSales(currentVendor.id, selectedDraw, numberStr);
     setStopNumber("");
     setIsStopping(false);
-    Alert.alert("✋ Sales Stopped", `No more bets will be accepted for number ${numberStr}`);
+    Alert.alert(`✋ ${t("salesStopped")}`, `${t("noBetsAcceptedForNumber")} ${numberStr}`);
   };
 
   const handleResumeSales = (number: string) => {
     Alert.alert(
-      "Resume Sales",
-      `Do you want to resume sales for number ${number}?`,
+      t("resumeSalesTitle"),
+      `${t("resumeSalesConfirm")} ${number}?`,
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("cancel"), style: "cancel" },
         {
-          text: "Resume",
+          text: t("resume"),
           onPress: () => {
             resumeNumberSales(currentVendor.id, selectedDraw, number);
-            Alert.alert("✅ Sales Resumed", `Bets are now accepted for number ${number}`);
+            Alert.alert(`✅ ${t("salesResumed")}`, `${t("betsNowAccepted")} ${number}`);
           },
         },
       ]
@@ -180,7 +183,7 @@ export default function NumberLimits() {
         <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#1f2937" />
         </Pressable>
-        <Text style={styles.headerTitle}>Limits per Number</Text>
+        <Text style={styles.headerTitle}>{t("limitsPerNumber")}</Text>
         <View style={styles.headerButtons}>
           <Pressable
             style={styles.stopAllButton}
@@ -239,12 +242,10 @@ export default function NumberLimits() {
           <View style={styles.infoCard}>
             <View style={styles.infoHeader}>
               <Ionicons name="information-circle" size={20} color="#3b82f6" />
-              <Text style={styles.infoTitle}>How does it work?</Text>
+              <Text style={styles.infoTitle}>{t("howDoesItWork")}</Text>
             </View>
             <Text style={styles.infoText}>
-              Set a maximum limit for each number. If a player tries to bet on a number that has already reached its limit, the bet will be refused.
-              {"\n\n"}
-              Example: If you set a limit of $600 for number 06 and $570 has already been bet, only $30 more can be accepted.
+              {t("limitsExplanation")}
             </Text>
           </View>
 
@@ -252,17 +253,17 @@ export default function NumberLimits() {
           <View style={styles.summaryCard}>
             <View style={styles.summaryRow}>
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryLabel}>Total Limits</Text>
+                <Text style={styles.summaryLabel}>{t("totalLimits")}</Text>
                 <Text style={styles.summaryValue}>${getTotalLimits().toFixed(0)}</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryLabel}>Total Bets</Text>
+                <Text style={styles.summaryLabel}>{t("totalBets")}</Text>
                 <Text style={styles.summaryValue}>${getTotalBets().toFixed(0)}</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryLabel}>Limited Numbers</Text>
+                <Text style={styles.summaryLabel}>{t("limitedNumbers")}</Text>
                 <Text style={styles.summaryValue}>{numberLimits.length}</Text>
               </View>
             </View>
@@ -271,11 +272,11 @@ export default function NumberLimits() {
           {/* Add New Limit */}
           {isAdding && (
             <View style={styles.addCard}>
-              <Text style={styles.addCardTitle}>Add a Limit</Text>
+              <Text style={styles.addCardTitle}>{t("addALimit")}</Text>
 
               <View style={styles.inputRow}>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Number (00-99)</Text>
+                  <Text style={styles.inputLabel}>{t("numberRange")}</Text>
                   <TextInput
                     style={styles.input}
                     value={newNumber}
@@ -291,7 +292,7 @@ export default function NumberLimits() {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Limit ($)</Text>
+                  <Text style={styles.inputLabel}>{t("limitAmount")}</Text>
                   <TextInput
                     style={styles.input}
                     value={newLimit}
@@ -304,7 +305,7 @@ export default function NumberLimits() {
 
               <Pressable style={styles.addLimitButton} onPress={addNumberLimit}>
                 <Ionicons name="checkmark-circle" size={20} color="#ffffff" />
-                <Text style={styles.addLimitButtonText}>Add Limit</Text>
+                <Text style={styles.addLimitButtonText}>{t("addLimit")}</Text>
               </Pressable>
             </View>
           )}
@@ -312,10 +313,10 @@ export default function NumberLimits() {
           {/* Stop Sales Form */}
           {isStopping && (
             <View style={styles.stopCard}>
-              <Text style={styles.stopCardTitle}>Stop Sales for Number</Text>
+              <Text style={styles.stopCardTitle}>{t("stopSalesForNumber")}</Text>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Number (00-99)</Text>
+                <Text style={styles.inputLabel}>{t("numberRange")}</Text>
                 <TextInput
                   style={styles.input}
                   value={stopNumber}
@@ -332,7 +333,7 @@ export default function NumberLimits() {
 
               <Pressable style={styles.stopSalesButton} onPress={handleStopNumberFromForm}>
                 <Ionicons name="hand-right" size={20} color="#ffffff" />
-                <Text style={styles.stopSalesButtonText}>Stop Sales</Text>
+                <Text style={styles.stopSalesButtonText}>{t("stopSales")}</Text>
               </Pressable>
             </View>
           )}
@@ -358,15 +359,15 @@ export default function NumberLimits() {
               return (
                 <>
                   <Text style={styles.sectionTitle}>
-                    Managed Numbers ({displayItems.length})
+                    {t("managedNumbers")} ({displayItems.length})
                   </Text>
 
                   {displayItems.length === 0 ? (
                     <View style={styles.emptyState}>
                       <Ionicons name="ban-outline" size={48} color="#d1d5db" />
-                      <Text style={styles.emptyStateText}>No numbers managed</Text>
+                      <Text style={styles.emptyStateText}>{t("noNumbersManaged")}</Text>
                       <Text style={styles.emptyStateSubtext}>
-                        Press + to add a limit or ✋ to stop sales
+                        {t("pressToAddLimit")}
                       </Text>
                     </View>
                   ) : (
@@ -397,7 +398,7 @@ export default function NumberLimits() {
                             {isStopped && (
                               <View style={styles.stoppedBadge}>
                                 <Ionicons name="hand-right" size={14} color="#ffffff" />
-                                <Text style={styles.stoppedBadgeText}>STOPPED</Text>
+                                <Text style={styles.stoppedBadgeText}>{t("stopped")}</Text>
                               </View>
                             )}
 
@@ -411,7 +412,7 @@ export default function NumberLimits() {
                                 </View>
                                 <View>
                                   <Text style={styles.limitLabel}>
-                                    {isStopped ? "Sales stopped" : `Limit: $${item.limit.toFixed(0)}`}
+                                    {isStopped ? t("salesStopped") : `${t("limit")}: $${item.limit.toFixed(0)}`}
                                   </Text>
                             <Text style={[
                               styles.limitStatus,
@@ -420,10 +421,10 @@ export default function NumberLimits() {
                               isNearLimit && !isAtLimit && !isStopped && styles.limitStatusWarning,
                             ]}>
                               {isStopped 
-                                ? "No bets accepted" 
+                                ? t("noBetsAccepted") 
                                 : isAtLimit 
-                                ? "Limit reached" 
-                                : `Remaining: $${remaining.toFixed(0)}`
+                                ? t("limitReached") 
+                                : `${t("remaining")}: $${remaining.toFixed(0)}`
                               }
                             </Text>
                           </View>
@@ -472,7 +473,7 @@ export default function NumberLimits() {
                             />
                           </View>
                           <Text style={styles.progressText}>
-                              {percentage.toFixed(1)}% used
+                              {percentage.toFixed(1)}% {t("used")}
                             </Text>
                           </View>
                         )}
@@ -489,14 +490,10 @@ export default function NumberLimits() {
           <View style={styles.guidelinesCard}>
             <View style={styles.guidelinesHeader}>
               <Ionicons name="bulb" size={20} color="#f59e0b" />
-              <Text style={styles.guidelinesTitle}>Tips</Text>
+              <Text style={styles.guidelinesTitle}>{t("tips")}</Text>
             </View>
             <Text style={styles.guidelinesText}>
-              • Monitor popular numbers (01-31 are often played more){"\n"}
-              • Adjust limits based on your capital{"\n"}
-              • Reset totals after each draw{"\n"}
-              • Use higher limits for less popular numbers{"\n"}
-              • Regularly check the status of your limits
+              {t("limitsGuidelinesText")}
             </Text>
           </View>
         </View>

@@ -46,7 +46,7 @@ export default function DrawManagement() {
   if (!currentVendor) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text>Vendeur non trouvé</Text>
+        <Text>{t("vendorNotFound")}</Text>
       </SafeAreaView>
     );
   }
@@ -64,8 +64,8 @@ export default function DrawManagement() {
     // If enabling a draw, ensure it has at least one active game
     if (!currentDraw.enabled && getEnabledGamesCount(currentDraw) === 0) {
       Alert.alert(
-        "No Games Enabled",
-        "You must first enable at least one game type for this draw. Senp is enabled by default.",
+        t("noGamesEnabled"),
+        t("enableAtLeastOneGame"),
         [
           {
             text: "OK",
@@ -104,8 +104,8 @@ export default function DrawManagement() {
       const gameSettings = currentDraw.games[gameKey as keyof typeof currentDraw.games];
       if (gameSettings.enabled) {
         Alert.alert(
-          "Impossible de désactiver",
-          "An active draw must have at least one enabled game. Disable the draw first or enable another game.",
+          t("cannotDisable"),
+          t("cannotDisableDesc"),
           [{ text: "OK" }]
         );
         return;
@@ -192,10 +192,10 @@ export default function DrawManagement() {
   };
 
   const getDrawStatus = (draw: DrawSettings) => {
-    if (!draw.enabled) return { status: "Désactivé", color: "#9ca3af" };
+    if (!draw.enabled) return { status: t("disabled"), color: "#9ca3af" };
     const enabledGames = getEnabledGamesCount(draw);
     return { 
-      status: `${enabledGames} jeu${enabledGames > 1 ? "x" : ""} activé${enabledGames > 1 ? "s" : ""}`, 
+      status: `${enabledGames} ${t("gamesActive")}`, 
       color: "#10b981" 
     };
   };
@@ -237,7 +237,7 @@ export default function DrawManagement() {
         <View style={styles.summaryDivider} />
         <View style={styles.summaryItem}>
           <Text style={styles.summaryValue}>
-            ${currentVendor.totalRevenue.toFixed(0)}
+            ${(currentVendor.totalRevenue || 0).toFixed(0)}
           </Text>
           <Text style={styles.summaryLabel}>{t("totalRevenue")}</Text>
         </View>
@@ -249,19 +249,16 @@ export default function DrawManagement() {
           <View style={styles.instructionsCard}>
             <View style={styles.instructionsHeader}>
               <Ionicons name="information-circle" size={20} color="#3b82f6" />
-              <Text style={styles.instructionsTitle}>Configuration des Prix</Text>
+              <Text style={styles.instructionsTitle}>{t("priceConfig")}</Text>
             </View>
             <Text style={styles.instructionsText}>
-              1. Activez un état en utilisant le bouton toggle{"\n"}
-              2. Activez les jeux que vous voulez offrir{"\n"}
-              3. Cliquez sur "Edit Limits" pour définir les prix min/max{"\n"}
-              4. Les joueurs verront vos limites de prix lors des paris
+              {t("priceConfigInstructions")}
             </Text>
           </View>
 
-          <Text style={styles.sectionTitle}>Available States</Text>
+          <Text style={styles.sectionTitle}>{t("availableStates")}</Text>
           <Text style={styles.sectionDescription}>
-            Enable the draws you want to offer to your customers
+            {t("enableDrawsDesc")}
           </Text>
 
           {DRAWS.map((draw) => {
@@ -303,7 +300,7 @@ export default function DrawManagement() {
 
                 {isExpanded && (
                   <View style={styles.drawContent}>
-                    <Text style={styles.gamesTitle}>Types de jeux disponibles</Text>
+                    <Text style={styles.gamesTitle}>{t("availableGameTypes")}</Text>
                     
                     {GAMES.map((game) => {
                       const gameSettings = drawSettings.games[game.key as keyof typeof drawSettings.games];
@@ -351,7 +348,7 @@ export default function DrawManagement() {
                                     style={styles.cancelButton}
                                     onPress={cancelEditingLimits}
                                   >
-                                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                                    <Text style={styles.cancelButtonText}>{t("cancel")}</Text>
                                   </Pressable>
                                   <Pressable 
                                     style={styles.saveButton}
@@ -374,7 +371,7 @@ export default function DrawManagement() {
                                   style={[styles.editLimitsButton, (!drawSettings.enabled || !isGameEnabled) ? styles.editLimitsButtonDisabled : styles.editLimitsButtonEnabled]}
                                   onPress={() => {
                                     if (!drawSettings.enabled || !isGameEnabled) {
-                                      Alert.alert("Configuration Unavailable", "Enable the draw and game first to configure pricing limits.");
+                                      Alert.alert(t("configUnavailable"), t("enableDrawAndGameFirst"));
                                       return;
                                     }
                                     startEditingLimits(draw.code, game.key);
@@ -401,7 +398,7 @@ export default function DrawManagement() {
                               style={[styles.configButton, (!drawSettings.enabled || !isGameEnabled) ? styles.configButtonDisabled : styles.configButtonEnabled]}
                               onPress={() => {
                                 if (!drawSettings.enabled || !isGameEnabled) {
-                                  Alert.alert("Configuration Unavailable", "Enable the draw and game first to configure pricing limits.");
+                                  Alert.alert(t(\"configUnavailable\"), t(\"enableDrawAndGameFirst\"));
                                   return;
                                 }
                                 startEditingLimits(draw.code, game.key);
@@ -420,7 +417,7 @@ export default function DrawManagement() {
 
                     <Pressable style={styles.previewButton}>
                       <Ionicons name="eye-outline" size={16} color="#3b82f6" />
-                      <Text style={styles.previewButtonText}>Prévisualiser pour les joueurs</Text>
+                      <Text style={styles.previewButtonText}>{t("previewForPlayers")}</Text>
                     </Pressable>
                   </View>
                 )}
@@ -430,15 +427,15 @@ export default function DrawManagement() {
 
           {/* Quick Setup */}
           <View style={styles.quickSetupCard}>
-            <Text style={styles.quickSetupTitle}>Configuration Rapide</Text>
+            <Text style={styles.quickSetupTitle}>{t("quickSetup")}</Text>
             <Text style={styles.quickSetupDescription}>
-              Apply preset settings to all your draws
+              {t("applyPresetSettings")}
             </Text>
             
             <View style={styles.quickSetupActions}>
               <Pressable style={styles.quickSetupButton}>
                 <Ionicons name="flash" size={16} color="#f59e0b" />
-                <Text style={styles.quickSetupButtonText}>Débutant</Text>
+                <Text style={styles.quickSetupButtonText}>{t("beginner")}</Text>
               </Pressable>
               
               <Pressable style={styles.quickSetupButton}>
@@ -457,13 +454,10 @@ export default function DrawManagement() {
           <View style={styles.tipsCard}>
             <View style={styles.tipsHeader}>
               <Ionicons name="bulb" size={20} color="#f59e0b" />
-              <Text style={styles.tipsTitle}>Conseils</Text>
+              <Text style={styles.tipsTitle}>{t("tips")}</Text>
             </View>
             <Text style={styles.tipsText}>
-              • Senp est obligatoire et le plus populaire{"\n"}
-              • Activez Maryaj pour augmenter vos revenus{"\n"}
-              • Les jeux Loto offrent des gains plus élevés{"\n"}
-              • Prévisualisez toujours avant d'activer
+              {t("drawManagementTips")}
             </Text>
           </View>
         </View>

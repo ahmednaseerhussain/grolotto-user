@@ -30,6 +30,7 @@ import HistoryScreen from "../screens/HistoryScreen";
 import NumberSelection from "../screens/NumberSelection";
 import VendorProfile from "../screens/VendorProfile";
 import VendorRating from "../screens/VendorRating";
+import VendorResultPublishing from "../screens/VendorResultPublishing";
 import PaymentScreen from "../screens/PaymentScreen";
 import PaymentProfileScreen from "../screens/PaymentProfileScreen";
 import TransactionHistory from "../screens/TransactionHistory";
@@ -66,6 +67,7 @@ export type RootStackParamList = {
   PayoutManagement: undefined;
   VendorPlayHistory: undefined;
   VendorProfile: undefined;
+  VendorResultPublishing: undefined;
   TodayPlayersWinners: undefined;
   NumberSelection: { vendor: any };
   VendorRating: { vendor: any; gamePlay?: any };
@@ -177,6 +179,7 @@ export default function AppNavigator() {
               <Stack.Screen name="VendorPlayHistory" component={VendorPlayHistory} />
               <Stack.Screen name="TodayPlayersWinners" component={TodayPlayersWinners} />
               <Stack.Screen name="VendorProfile" component={VendorProfile} />
+              <Stack.Screen name="VendorResultPublishing" component={VendorResultPublishing} />
               <Stack.Screen name="VendorRating" component={VendorRating} />
               <Stack.Screen name="AdvertisementSlides" component={AdvertisementSlides} />
               <Stack.Screen name="SettingsScreen" component={SettingsScreen} />

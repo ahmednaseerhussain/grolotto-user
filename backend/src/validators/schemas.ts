@@ -66,11 +66,12 @@ export const createPaymentSchema = z.object({
 });
 
 export const publishResultsSchema = z.object({
-  roundId: z.string().uuid('Invalid round ID'),
+  drawState: z.enum(['NY', 'FL', 'GA', 'TX', 'PA', 'CT', 'TN', 'NJ']),
   winningNumbers: z.record(
     z.enum(['senp', 'maryaj', 'loto3', 'loto4', 'loto5']),
     z.array(z.number().int().min(0))
   ),
+  drawDate: z.string().optional(),
 });
 
 export const vendorRegistrationSchema = z.object({

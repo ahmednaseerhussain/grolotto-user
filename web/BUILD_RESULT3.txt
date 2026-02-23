@@ -1,0 +1,11 @@
+﻿npx.cmd : Γ¿» Unable to acquire lock at D:\grolotto-fresh\web\.next\lock, is 
+another instance of next build running?
+At line:1 char:37
++ cd d:\grolotto-fresh\web; $result = & npx next build 2>&1 | Out-Strin ...
++                                     ~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Γ¿» Unable to a... build running? 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Suggestion: If you intended to restart next build, terminate the other process, and then try again.
+

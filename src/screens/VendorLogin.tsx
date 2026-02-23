@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
+import { getTranslation } from "../utils/translations";
 import { authAPI, getErrorMessage } from "../api/apiClient";
 
 export default function VendorLogin() {
@@ -14,10 +15,12 @@ export default function VendorLogin() {
   
   const navigation = useNavigation();
   const setUser = useAppStore(s => s.setUser);
+  const language = useAppStore(s => s.language);
+  const t = (key: string) => getTranslation(key as any, language);
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please enter both email and password");
+      Alert.alert(t("error"), t("enterEmailAndPassword"));
       return;
     }
 
@@ -27,12 +30,12 @@ export default function VendorLogin() {
       const data = await authAPI.login(email, password);
       if (data.user.role !== 'vendor') {
         await authAPI.logout();
-        Alert.alert("Error", "This login is for vendors only.");
+        Alert.alert(t("error"), t("vendorsOnlyLogin"));
         return;
       }
       setUser(data.user);
     } catch (error) {
-      Alert.alert("Invalid Credentials", getErrorMessage(error));
+      Alert.alert(t("invalidCredentials"), getErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -49,7 +52,7 @@ export default function VendorLogin() {
         <Pressable onPress={handleBackToEntry} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#059669" />
         </Pressable>
-        <Text style={styles.headerTitle}>Vendor Login</Text>
+        <Text style={styles.headerTitle}>{t("vendorLogin")}</Text>
       </View>
 
       {/* Logo */}
@@ -57,8 +60,8 @@ export default function VendorLogin() {
         <View style={styles.logoIcon}>
           <Ionicons name="business" size={48} color="#059669" />
         </View>
-        <Text style={styles.title}>Vendor Portal</Text>
-        <Text style={styles.subtitle}>Access your vendor dashboard</Text>
+        <Text style={styles.title}>{t("vendorPortal")}</Text>
+        <Text style={styles.subtitle}>{t("accessYourDashboard")}</Text>
       </View>
 
       {/* Login Form */}
@@ -67,7 +70,7 @@ export default function VendorLogin() {
           <Ionicons name="mail" size={20} color="#6b7280" style={styles.inputIcon} />
           <TextInput
             style={styles.input}
-            placeholder="Vendor Email"
+            placeholder={t("vendorEmail")}
             placeholderTextColor="#9ca3af"
             value={email}
             onChangeText={setEmail}
@@ -81,7 +84,7 @@ export default function VendorLogin() {
           <Ionicons name="lock-closed" size={20} color="#6b7280" style={styles.inputIcon} />
           <TextInput
             style={[styles.input, { paddingRight: 50 }]}
-            placeholder="Password"
+            placeholder={t("password")}
             placeholderTextColor="#9ca3af"
             value={password}
             onChangeText={setPassword}
@@ -107,7 +110,7 @@ export default function VendorLogin() {
           disabled={loading}
         >
           <Text style={styles.loginButtonText}>
-            {loading ? "Signing In..." : "Access Dashboard"}
+            {loading ? t("signingIn") : t("accessDashboard")}
           </Text>
         </Pressable>
       </View>
@@ -115,13 +118,13 @@ export default function VendorLogin() {
       {/* Footer Links */}
       <View style={styles.footer}>
         <Pressable style={styles.linkButton}>
-          <Text style={styles.linkText}>Need Help?</Text>
+          <Text style={styles.linkText}>{t("needHelp")}</Text>
         </Pressable>
         
         <View style={styles.signupContainer}>
-          <Text style={styles.signupText}>Want to become a vendor? </Text>
+          <Text style={styles.signupText}>{t("wantToBecomeVendor")} </Text>
           <Pressable onPress={() => navigation.navigate("VendorRegistration" as never)}>
-            <Text style={styles.signupLink}>Apply Now</Text>
+            <Text style={styles.signupLink}>{t("applyNow")}</Text>
           </Pressable>
         </View>
       </View>

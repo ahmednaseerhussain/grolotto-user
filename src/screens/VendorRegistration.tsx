@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppStore } from "../state/appStore";
 import { Vendor, VendorDocument } from "../state/appStore";
+import { getTranslation } from "../utils/translations";
 import { authAPI, vendorAPI, getErrorMessage } from "../api/apiClient";
 
 export default function VendorRegistration() {
@@ -30,20 +31,22 @@ export default function VendorRegistration() {
   const [isLoading, setIsLoading] = useState(false);
   
   const addVendor = useAppStore(s => s.addVendor);
+  const language = useAppStore(s => s.language);
+  const t = (key: string) => getTranslation(key as any, language);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.firstName.trim()) newErrors.firstName = "Prénom requis";
-    if (!formData.lastName.trim()) newErrors.lastName = "Non requis";
-    if (!formData.email.trim()) newErrors.email = "Email requis";
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Email invalide";
-    if (!formData.phone.trim()) newErrors.phone = "Numéro téléphone requis";
-    if (!formData.dateOfBirth.trim()) newErrors.dateOfBirth = "Date de naissance requise";
-    if (!formData.password) newErrors.password = "Mot de passe requis";
-    else if (formData.password.length < 6) newErrors.password = "Minimum 6 caractères";
+    if (!formData.firstName.trim()) newErrors.firstName = t("firstNameRequired");
+    if (!formData.lastName.trim()) newErrors.lastName = t("lastNameRequired");
+    if (!formData.email.trim()) newErrors.email = t("emailRequired");
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = t("invalidEmail");
+    if (!formData.phone.trim()) newErrors.phone = t("phoneRequired");
+    if (!formData.dateOfBirth.trim()) newErrors.dateOfBirth = t("dobRequired");
+    if (!formData.password) newErrors.password = t("passwordRequired");
+    else if (formData.password.length < 6) newErrors.password = t("minimum6Chars");
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Mots de passe ne correspondent pas";
+      newErrors.confirmPassword = t("passwordsDontMatch");
     }
     // Documents are optional until upload endpoint is available
 
@@ -82,13 +85,13 @@ export default function VendorRegistration() {
       useAppStore.getState().setUser(authData.user);
 
       Alert.alert(
-        "Demande soumise",
-        "Votre demande d'inscription vendeur a été soumise. Vous recevrez un email lorsque votre compte sera approuvé.",
+        t("applicationSubmitted"),
+        t("applicationSubmittedMsg"),
         [{ text: "OK" }]
       );
 
     } catch (error) {
-      Alert.alert("Erreur", getErrorMessage(error));
+      Alert.alert(t("error"), getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
@@ -98,12 +101,12 @@ export default function VendorRegistration() {
     // Document upload requires a file picker + backend upload endpoint
     // For now, show a placeholder indicating the document was "selected"
     Alert.alert(
-      "Document Upload",
-      "Document upload will be available in a future update. For now, your registration will be reviewed manually.",
+      t("documentUpload"),
+      t("documentUploadMsg"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("cancel"), style: "cancel" },
         {
-          text: "Continue Without Document",
+          text: t("continueWithoutDocument"),
           onPress: () => {
             const placeholder: VendorDocument = {
               type: type === "idCard" ? "id_card" : "business_license",
@@ -132,45 +135,45 @@ export default function VendorRegistration() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Ionicons name="arrow-back" size={24} color="#1f2937" />
-        <Text style={styles.headerTitle}>Inscription Vendeur</Text>
+        <Text style={styles.headerTitle}>{t("vendorRegistration")}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
-          <Text style={styles.sectionTitle}>Informations personnelles</Text>
+          <Text style={styles.sectionTitle}>{t("personalInfo")}</Text>
           
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Prénom *</Text>
+            <Text style={styles.label}>{t("firstName")} *</Text>
             <TextInput
               style={[styles.input, errors.firstName ? styles.inputError : null]}
               value={formData.firstName}
               onChangeText={(value) => updateFormData("firstName", value)}
-              placeholder="Entrez votre prénom"
+              placeholder={t("enterYourFirstName")}
               placeholderTextColor="#9ca3af"
             />
             {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Non *</Text>
+            <Text style={styles.label}>{t("lastName")} *</Text>
             <TextInput
               style={[styles.input, errors.lastName ? styles.inputError : null]}
               value={formData.lastName}
               onChangeText={(value) => updateFormData("lastName", value)}
-              placeholder="Entrez votre nom de famille"
+              placeholder={t("enterYourLastName")}
               placeholderTextColor="#9ca3af"
             />
             {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email *</Text>
+            <Text style={styles.label}>{t("email")} *</Text>
             <TextInput
               style={[styles.input, errors.email ? styles.inputError : null]}
               value={formData.email}
               onChangeText={(value) => updateFormData("email", value)}
-              placeholder="votre@email.com"
+              placeholder={t("yourEmail")}
               placeholderTextColor="#9ca3af"
               keyboardType="email-address"
               autoCapitalize="none"
@@ -179,7 +182,7 @@ export default function VendorRegistration() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Numéro de téléphone *</Text>
+            <Text style={styles.label}>{t("phoneNumber")} *</Text>
             <TextInput
               style={[styles.input, errors.phone ? styles.inputError : null]}
               value={formData.phone}
@@ -192,32 +195,32 @@ export default function VendorRegistration() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Date de naissance *</Text>
+            <Text style={styles.label}>{t("dateOfBirth")} *</Text>
             <TextInput
               style={[styles.input, errors.dateOfBirth ? styles.inputError : null]}
               value={formData.dateOfBirth}
               onChangeText={(value) => updateFormData("dateOfBirth", value)}
-              placeholder="JJ/MM/AAAA"
+              placeholder={t("dateFormatPlaceholder")}
               placeholderTextColor="#9ca3af"
             />
             {errors.dateOfBirth && <Text style={styles.errorText}>{errors.dateOfBirth}</Text>}
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Nom d'entreprise (optionnel)</Text>
+            <Text style={styles.label}>{t("businessName")} ({t("optional")})</Text>
             <TextInput
               style={styles.input}
               value={formData.businessName}
               onChangeText={(value) => updateFormData("businessName", value)}
-              placeholder="Nom de votre entreprise"
+              placeholder={t("yourBusinessName")}
               placeholderTextColor="#9ca3af"
             />
           </View>
 
-          <Text style={[styles.sectionTitle, styles.sectionSpacing]}>Documents requis</Text>
+          <Text style={[styles.sectionTitle, styles.sectionSpacing]}>{t("requiredDocuments")}</Text>
           
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Carte d'identité *</Text>
+            <Text style={styles.label}>{t("idCard")}</Text>
             <Pressable 
               style={[styles.uploadButton, documents.idCard ? styles.uploadButtonSuccess : null]}
               onPress={() => handleDocumentUpload("idCard")}
@@ -228,14 +231,14 @@ export default function VendorRegistration() {
                 color={documents.idCard ? "#10b981" : "#6b7280"} 
               />
               <Text style={[styles.uploadButtonText, documents.idCard ? styles.uploadButtonSuccessText : null]}>
-                {documents.idCard ? "Carte d'identité téléchargée" : "Télécharger carte d'identité"}
+                {documents.idCard ? t("idCardUploaded") : t("uploadIdCard")}
               </Text>
             </Pressable>
             {errors.idCard && <Text style={styles.errorText}>{errors.idCard}</Text>}
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Licence d'affaires *</Text>
+            <Text style={styles.label}>{t("businessLicense")}</Text>
             <Pressable 
               style={[styles.uploadButton, documents.businessLicense ? styles.uploadButtonSuccess : null]}
               onPress={() => handleDocumentUpload("businessLicense")}
@@ -246,21 +249,21 @@ export default function VendorRegistration() {
                 color={documents.businessLicense ? "#10b981" : "#6b7280"} 
               />
               <Text style={[styles.uploadButtonText, documents.businessLicense ? styles.uploadButtonSuccessText : null]}>
-                {documents.businessLicense ? "Licence d'affaires téléchargée" : "Télécharger licence d'affaires"}
+                {documents.businessLicense ? t("businessLicenseUploaded") : t("uploadBusinessLicense")}
               </Text>
             </Pressable>
             {errors.businessLicense && <Text style={styles.errorText}>{errors.businessLicense}</Text>}
           </View>
 
-          <Text style={[styles.sectionTitle, styles.sectionSpacing]}>Sécurité</Text>
+          <Text style={[styles.sectionTitle, styles.sectionSpacing]}>{t("security")}</Text>
           
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Mot de passe *</Text>
+            <Text style={styles.label}>{t("password")} *</Text>
             <TextInput
               style={[styles.input, errors.password ? styles.inputError : null]}
               value={formData.password}
               onChangeText={(value) => updateFormData("password", value)}
-              placeholder="Minimum 6 caractères"
+              placeholder={t("minimum6Chars")}
               placeholderTextColor="#9ca3af"
               secureTextEntry
             />
@@ -268,12 +271,12 @@ export default function VendorRegistration() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Confirm Password *</Text>
+            <Text style={styles.label}>{t("confirmPassword")} *</Text>
             <TextInput
               style={[styles.input, errors.confirmPassword ? styles.inputError : null]}
               value={formData.confirmPassword}
               onChangeText={(value) => updateFormData("confirmPassword", value)}
-              placeholder="Répétez le mot de passe"
+              placeholder={t("repeatPassword")}
               placeholderTextColor="#9ca3af"
               secureTextEntry
             />
@@ -286,7 +289,7 @@ export default function VendorRegistration() {
             disabled={isLoading}
           >
             <Text style={styles.submitButtonText}>
-              {isLoading ? "Soumission en cours..." : "Soumettre la demande"}
+              {isLoading ? t("submitting") : t("submitApplication")}
             </Text>
             <Ionicons name="arrow-forward" size={20} color="#ffffff" />
           </Pressable>
@@ -294,7 +297,7 @@ export default function VendorRegistration() {
           <View style={styles.infoBox}>
             <Ionicons name="information-circle" size={20} color="#3b82f6" />
             <Text style={styles.infoText}>
-              Votre demande sera examinée par notre équipe. Vous recevrez un email de confirmation dans les 24-48 heures.
+              {t("applicationReviewText")}
             </Text>
           </View>
         </View>

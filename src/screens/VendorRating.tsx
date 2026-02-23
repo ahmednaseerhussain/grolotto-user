@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
+import { getTranslation } from "../utils/translations";
 
 const StarSelector = ({ rating, onRatingChange }: { rating: number; onRatingChange: (rating: number) => void }) => {
   return (
@@ -25,14 +26,6 @@ const StarSelector = ({ rating, onRatingChange }: { rating: number; onRatingChan
   );
 };
 
-const ratingTexts = {
-  1: "Poor - Very disappointed",
-  2: "Below Average - Not satisfied", 
-  3: "Average - It was okay",
-  4: "Good - Happy with service",
-  5: "Excellent - Outstanding service!"
-};
-
 interface RouteParams {
   vendor: any;
   gamePlay?: any;
@@ -44,6 +37,16 @@ export default function VendorRating() {
   const { vendor, gamePlay } = route.params as RouteParams;
   const user = useAppStore(s => s.user);
   const addVendorReview = useAppStore(s => s.addVendorReview);
+  const language = useAppStore(s => s.language);
+  const t = (key: string) => getTranslation(key as any, language);
+
+  const ratingTexts: Record<number, string> = {
+    1: t("poorRating"),
+    2: t("belowAverage"),
+    3: t("averageRating"),
+    4: t("goodRating"),
+    5: t("excellentRating")
+  };
 
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -51,12 +54,12 @@ export default function VendorRating() {
 
   const handleSubmitReview = async () => {
     if (rating === 0) {
-      Alert.alert("Please Rate", "Please select a star rating before submitting.");
+      Alert.alert(t("pleaseRate"), t("pleaseSelectRating"));
       return;
     }
 
     if (!comment.trim()) {
-      Alert.alert("Add Comment", "Please add a comment about your experience.");
+      Alert.alert(t("addComment"), t("pleaseAddComment"));
       return;
     }
 
@@ -84,11 +87,11 @@ export default function VendorRating() {
     setIsSubmitting(false);
 
     Alert.alert(
-      "Review Submitted! ⭐",
-      "Thank you for your feedback. Your review helps other players make informed decisions.",
+      t("reviewSubmitted"),
+      t("thankYouForFeedback"),
       [
         {
-          text: "Done",
+          text: t("done"),
           onPress: () => navigation.goBack()
         }
       ]
@@ -105,7 +108,7 @@ export default function VendorRating() {
         >
           <Ionicons name="arrow-back" size={24} color="#1f2937" />
         </Pressable>
-        <Text style={styles.headerTitle}>Rate Vendor</Text>
+        <Text style={styles.headerTitle}>{t("rateVendor")}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -122,11 +125,11 @@ export default function VendorRating() {
               </Text>
               <View style={styles.vendorRating}>
                 <Ionicons name="star" size={16} color="#f59e0b" />
-                <Text style={styles.ratingText}>{vendor.rating.toFixed(1)} rating</Text>
+                <Text style={styles.ratingText}>{vendor.rating.toFixed(1)} {t("rating")}</Text>
               </View>
               {gamePlay && (
                 <Text style={styles.gamePlayInfo}>
-                  You played: {gamePlay.gameType} • {gamePlay.state} • ${gamePlay.betAmount}
+                  {t("youPlayed")} {gamePlay.gameType} • {gamePlay.state} • ${gamePlay.betAmount}
                 </Text>
               )}
             </View>
@@ -135,24 +138,24 @@ export default function VendorRating() {
 
         {/* Rating Section */}
         <View style={styles.ratingSection}>
-          <Text style={styles.sectionTitle}>How would you rate your experience?</Text>
+          <Text style={styles.sectionTitle}>{t("howWouldYouRate")}</Text>
           <StarSelector rating={rating} onRatingChange={setRating} />
           {rating > 0 && (
             <Text style={styles.ratingDescription}>
-              {ratingTexts[rating as keyof typeof ratingTexts]}
+              {ratingTexts[rating]}
             </Text>
           )}
         </View>
 
         {/* Comment Section */}
         <View style={styles.commentSection}>
-          <Text style={styles.sectionTitle}>Tell us about your experience</Text>
+          <Text style={styles.sectionTitle}>{t("tellUsAboutExperience")}</Text>
           <Text style={styles.commentHint}>
-            Share details about the service, pricing, communication, or anything that would help other players.
+            {t("shareDetailsAboutService")}
           </Text>
           <TextInput
             style={styles.commentInput}
-            placeholder="Write your review here..."
+            placeholder={t("writeYourReview")}
             value={comment}
             onChangeText={setComment}
             multiline
@@ -165,27 +168,27 @@ export default function VendorRating() {
 
         {/* Quick Rating Options */}
         <View style={styles.quickOptionsSection}>
-          <Text style={styles.sectionTitle}>Quick Comments (Optional)</Text>
+          <Text style={styles.sectionTitle}>{t("quickComments")}</Text>
           <View style={styles.quickOptions}>
             {[
-              "Fast service",
-              "Great prices", 
-              "Easy to reach",
-              "Professional",
-              "Reliable payouts",
-              "Helpful support"
+              { key: "fastService", label: t("fastService") },
+              { key: "greatPrices", label: t("greatPrices") }, 
+              { key: "easyToReach", label: t("easyToReach") },
+              { key: "professional", label: t("professional") },
+              { key: "reliablePayouts", label: t("reliablePayouts") },
+              { key: "helpfulSupport", label: t("helpfulSupport") }
             ].map((option) => (
               <Pressable
-                key={option}
+                key={option.key}
                 style={[
                   styles.quickOption,
-                  comment.includes(option) && styles.quickOptionSelected
+                  comment.includes(option.label) && styles.quickOptionSelected
                 ]}
                 onPress={() => {
-                  if (comment.includes(option)) {
-                    setComment(comment.replace(option, "").replace("  ", " ").trim());
+                  if (comment.includes(option.label)) {
+                    setComment(comment.replace(option.label, "").replace("  ", " ").trim());
                   } else {
-                    const newComment = comment ? `${comment} ${option}` : option;
+                    const newComment = comment ? `${comment} ${option.label}` : option.label;
                     if (newComment.length <= 500) {
                       setComment(newComment);
                     }
@@ -194,9 +197,9 @@ export default function VendorRating() {
               >
                 <Text style={[
                   styles.quickOptionText,
-                  comment.includes(option) && styles.quickOptionSelectedText
+                  comment.includes(option.label) && styles.quickOptionSelectedText
                 ]}>
-                  {option}
+                  {option.label}
                 </Text>
               </Pressable>
             ))}
@@ -207,13 +210,13 @@ export default function VendorRating() {
         <View style={styles.guidelinesSection}>
           <View style={styles.guidelinesHeader}>
             <Ionicons name="information-circle" size={16} color="#6b7280" />
-            <Text style={styles.guidelinesTitle}>Review Guidelines</Text>
+            <Text style={styles.guidelinesTitle}>{t("reviewGuidelines")}</Text>
           </View>
           <Text style={styles.guidelinesText}>
-            • Be honest and constructive{"\n"}
-            • Focus on your actual experience{"\n"}
-            • Avoid inappropriate language{"\n"}
-            • Reviews are public and help other players
+            • {t("beHonestConstructive")}{"\n"}
+            • {t("focusActualExperience")}{"\n"}
+            • {t("avoidInappropriateLanguage")}{"\n"}
+            • {t("reviewsArePublic")}
           </Text>
         </View>
       </ScrollView>
@@ -229,7 +232,7 @@ export default function VendorRating() {
           disabled={rating === 0 || !comment.trim() || isSubmitting}
         >
           <Text style={styles.submitButtonText}>
-            {isSubmitting ? "Submitting..." : "Submit Review"}
+            {isSubmitting ? t("submitting") : t("submitReview")}
           </Text>
         </Pressable>
       </View>

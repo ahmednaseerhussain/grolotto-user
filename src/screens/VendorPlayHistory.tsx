@@ -4,13 +4,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
+import { getTranslation } from "../utils/translations";
 import { vendorAPI, getErrorMessage } from "../api/apiClient";
 
-const FILTER_OPTIONS = [
-  { key: "all", label: "Tous", icon: "apps" },
-  { key: "today", label: "Aujourd'hui", icon: "today" },
-  { key: "week", label: "Cette semaine", icon: "calendar" },
-  { key: "month", label: "Ce mois", icon: "calendar-outline" },
+const getFilterOptions = (t: (key: string) => string) => [
+  { key: "all", label: t("all"), icon: "apps" },
+  { key: "today", label: t("today"), icon: "today" },
+  { key: "week", label: t("thisWeek"), icon: "calendar" },
+  { key: "month", label: t("thisMonth"), icon: "calendar-outline" },
 ];
 
 const GAME_TYPE_COLORS = {
@@ -21,12 +22,12 @@ const GAME_TYPE_COLORS = {
   loto5: "#f59e0b",
 };
 
-const STATE_OPTIONS = [
-  { key: "all", label: "Tous les États", icon: "earth" },
-  { key: "FL", label: "Floride", icon: "location" },
-  { key: "NY", label: "New York", icon: "location" },
-  { key: "GA", label: "Géorgie", icon: "location" },
-  { key: "TX", label: "Texas", icon: "location" },
+const getStateOptions = (t: (key: string) => string) => [
+  { key: "all", label: t("allStates"), icon: "earth" },
+  { key: "FL", label: t("florida"), icon: "location" },
+  { key: "NY", label: t("newYork"), icon: "location" },
+  { key: "GA", label: t("georgia"), icon: "location" },
+  { key: "TX", label: t("texas"), icon: "location" },
 ];
 
 export default function VendorPlayHistory() {
@@ -34,6 +35,11 @@ export default function VendorPlayHistory() {
   const user = useAppStore(s => s.user);
   const vendors = useAppStore(s => s.vendors);
   const gamePlays = useAppStore(s => s.gamePlays);
+  const language = useAppStore(s => s.language);
+  
+  const t = (key: string) => getTranslation(key as any, language);
+  const FILTER_OPTIONS = getFilterOptions(t);
+  const STATE_OPTIONS = getStateOptions(t);
   
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -80,12 +86,12 @@ export default function VendorPlayHistory() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Vendeur non trouvé</Text>
+          <Text style={styles.errorText}>{t("vendorNotFound")}</Text>
           <Text style={styles.errorSubtext}>
-            Email utilisateur: {user?.email || "Non connecté"}
+            {t("userEmail")}: {user?.email || t("notConnected")}
           </Text>
           <Text style={styles.errorSubtext}>
-            Available Vendors: {vendors.length}
+            {t("availableVendorsCount")}: {vendors.length}
           </Text>
         </View>
       </SafeAreaView>
@@ -142,7 +148,7 @@ export default function VendorPlayHistory() {
     totalWinnings: filteredGamePlays
       .filter(game => game.status === "won")
       .reduce((sum, game) => sum + (game.winAmount || 0), 0),
-    commission: filteredGamePlays.reduce((sum, game) => sum + game.betAmount, 0) * 0.1, // 10% commission
+    commission: filteredGamePlays.reduce((sum, game) => sum + game.betAmount, 0) * 0.1,
   };
 
   // Group by game type for quick stats
@@ -168,14 +174,14 @@ export default function VendorPlayHistory() {
     // In a real app, this would generate and download a CSV file
     console.log("Exporting to CSV...");
     // Mock implementation
-    alert("Rapport CSV généré! (Fonctionnalité simulée)");
+    alert(t("csvReportGenerated"));
   };
 
   const exportToPDF = () => {
     // In a real app, this would generate and download a PDF file
     console.log("Exporting to PDF...");
     // Mock implementation
-    alert("Rapport PDF généré! (Fonctionnalité simulée)");
+    alert(t("pdfReportGenerated"));
   };
 
   return (
@@ -185,7 +191,7 @@ export default function VendorPlayHistory() {
         <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#1f2937" />
         </Pressable>
-        <Text style={styles.headerTitle}>Historique & Rapports</Text>
+        <Text style={styles.headerTitle}>{t("historyAndReports")}</Text>
         <Pressable style={styles.exportButton}>
           <Ionicons name="download" size={20} color="#3b82f6" />
         </Pressable>
@@ -197,25 +203,25 @@ export default function VendorPlayHistory() {
           <View style={styles.statCard}>
             <Ionicons name="ticket" size={20} color="#3b82f6" />
             <Text style={styles.statValue}>{stats.totalTickets}</Text>
-            <Text style={styles.statLabel}>Billets</Text>
+            <Text style={styles.statLabel}>{t("tickets")}</Text>
           </View>
           
           <View style={styles.statCard}>
             <Ionicons name="cash" size={20} color="#10b981" />
             <Text style={styles.statValue}>${stats.totalAmount.toFixed(0)}</Text>
-            <Text style={styles.statLabel}>Mise Total</Text>
+            <Text style={styles.statLabel}>{t("totalBetAmount")}</Text>
           </View>
           
           <View style={styles.statCard}>
             <Ionicons name="trophy" size={20} color="#f59e0b" />
             <Text style={styles.statValue}>{stats.winningTickets}</Text>
-            <Text style={styles.statLabel}>Winners</Text>
+            <Text style={styles.statLabel}>{t("winners")}</Text>
           </View>
           
           <View style={styles.statCard}>
             <Ionicons name="trending-up" size={20} color="#8b5cf6" />
             <Text style={styles.statValue}>${stats.commission.toFixed(0)}</Text>
-            <Text style={styles.statLabel}>Commission</Text>
+            <Text style={styles.statLabel}>{t("commission")}</Text>
           </View>
         </ScrollView>
       </View>
@@ -248,14 +254,14 @@ export default function VendorPlayHistory() {
         {/* Game Type Filter */}
         {gameTypeStats.length > 0 && (
           <View style={styles.filterSection}>
-            <Text style={styles.filterSectionTitle}>Types de Jeux</Text>
+            <Text style={styles.filterSectionTitle}>{t("gameTypes")}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
               <Pressable
                 style={[styles.gameTypeChip, !selectedGameType && styles.gameTypeChipActive]}
                 onPress={() => setSelectedGameType(null)}
               >
                 <Text style={[styles.gameTypeChipText, !selectedGameType && styles.gameTypeChipTextActive]}>
-                  Tous les jeux
+                  {t("allGames")}
                 </Text>
               </Pressable>
               
@@ -289,7 +295,7 @@ export default function VendorPlayHistory() {
 
         {/* State Filter */}
         <View style={styles.filterSection}>
-          <Text style={styles.filterSectionTitle}>États</Text>
+          <Text style={styles.filterSectionTitle}>{t("states")}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
             {STATE_OPTIONS.map((state) => (
               <Pressable
@@ -321,7 +327,7 @@ export default function VendorPlayHistory() {
           <Ionicons name="search" size={16} color="#9ca3af" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Chercher par numéros..."
+            placeholder={t("searchByNumbers")}
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholderTextColor="#9ca3af"
@@ -340,9 +346,9 @@ export default function VendorPlayHistory() {
           {filteredGamePlays.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="receipt-outline" size={48} color="#d1d5db" />
-              <Text style={styles.emptyStateText}>No results found</Text>
+              <Text style={styles.emptyStateText}>{t("noResultsFound")}</Text>
               <Text style={styles.emptyStateSubtext}>
-                Ajustez vos filtres ou essayez une autre recherche
+                {t("adjustFilters")}
               </Text>
             </View>
           ) : (
@@ -381,8 +387,8 @@ export default function VendorPlayHistory() {
                         game.status === "lost" ? styles.gameStatusLost : styles.gameStatusPending
                       ]}>
                         <Text style={styles.gameStatusText}>
-                          {game.status === "won" ? "Winner" : 
-                           game.status === "lost" ? "Lost" : "Pending"}
+                          {game.status === "won" ? t("winner") : 
+                           game.status === "lost" ? t("lost") : t("pending")}
                         </Text>
                       </View>
                     </View>
@@ -401,7 +407,7 @@ export default function VendorPlayHistory() {
                     
                     {game.status === "won" && game.winAmount && (
                       <Text style={styles.gameWinAmount}>
-                        Gain: ${game.winAmount.toFixed(2)}
+                        {t("winnings")}: ${game.winAmount.toFixed(2)}
                       </Text>
                     )}
                   </View>
@@ -416,12 +422,12 @@ export default function VendorPlayHistory() {
         <View style={styles.exportContainer}>
           <Pressable style={styles.exportOption} onPress={exportToCSV}>
             <Ionicons name="document-text" size={20} color="#10b981" />
-            <Text style={styles.exportOptionText}>Exporter CSV</Text>
+            <Text style={styles.exportOptionText}>{t("exportCSV")}</Text>
           </Pressable>
           
           <Pressable style={styles.exportOption} onPress={exportToPDF}>
             <Ionicons name="document" size={20} color="#ef4444" />
-            <Text style={styles.exportOptionText}>Exporter PDF</Text>
+            <Text style={styles.exportOptionText}>{t("exportPDF")}</Text>
           </Pressable>
         </View>
       )}

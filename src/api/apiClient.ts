@@ -259,6 +259,17 @@ export const vendorAPI = {
     const res = await api.post('/vendors/me/payouts', data);
     return res.data;
   },
+
+  // ─── Vendor Lottery Round Management ─────────────────
+  async getMyRounds(filters?: { status?: string; date?: string; page?: number; limit?: number }) {
+    const res = await api.get('/vendors/me/rounds', { params: filters });
+    return res.data;
+  },
+
+  async getMyRoundDetails(roundId: string) {
+    const res = await api.get(`/vendors/me/rounds/${roundId}`);
+    return res.data;
+  },
 };
 
 // ═════════════════════════════════════════════════════════
@@ -291,9 +302,9 @@ export const lotteryAPI = {
     return res.data;
   },
 
-  // Admin only
-  async publishResults(roundId: string, winningNumbers: Record<string, number[]>) {
-    const res = await api.post('/lottery/results', { roundId, winningNumbers });
+  // Admin only — publishes results globally per state per day
+  async publishResults(drawState: string, winningNumbers: Record<string, number[]>, drawDate?: string) {
+    const res = await api.post('/lottery/results', { drawState, winningNumbers, drawDate });
     return res.data;
   },
 

@@ -4,15 +4,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAppStore, PayoutMethodType } from "../state/appStore";
+import { getTranslation } from "../utils/translations";
 import { vendorAPI, getErrorMessage } from "../api/apiClient";
 
-const PAYOUT_METHODS = [
+const PAYOUT_METHODS_BASE = [
   { 
     key: "moncash" as PayoutMethodType, 
     name: "MonCash", 
     icon: "wallet", 
     color: "#ef4444",
-    description: "Transfert instantané vers MonCash",
+    descriptionKey: "instantTransferMonCash",
     fee: "2%",
     minAmount: 10,
   },
@@ -26,6 +27,10 @@ export default function PayoutManagement() {
   const requestPayout = useAppStore(s => s.requestPayout);
   const currency = useAppStore(s => s.currency);
   const setCurrency = useAppStore(s => s.setCurrency);
+  const language = useAppStore(s => s.language);
+  const t = (key: string) => getTranslation(key as any, language);
+  
+  const PAYOUT_METHODS = PAYOUT_METHODS_BASE.map(m => ({ ...m, description: t(m.descriptionKey) }));
   
   const [selectedMethod, setSelectedMethod] = useState<PayoutMethodType | null>(null);
   const [amount, setAmount] = useState("");
@@ -53,7 +58,7 @@ export default function PayoutManagement() {
   if (!currentVendor) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text>Vendeur non trouvé</Text>
+        <Text>{t("vendorNotFound")}</Text>
       </SafeAreaView>
     );
   }
@@ -65,7 +70,7 @@ export default function PayoutManagement() {
 
   const handleRequestPayout = () => {
     if (!selectedMethod || !amount) {
-      Alert.alert("Error", "Please select a method and enter an amount");
+      Alert.alert(t("error"), t("selectMethodAndAmount"));
       return;
     }
 
@@ -78,12 +83,12 @@ export default function PayoutManagement() {
     
     if (requestAmountUSD < minAmountUSD) {
       const minAmountDisplay = withdrawalCurrency === "HTG" ? `G${(minAmountUSD * 150).toFixed(2)}` : `$${minAmountUSD}`;
-      Alert.alert("Erreur", `Montant minimum: ${minAmountDisplay}`);
+      Alert.alert(t("error"), `${t("minimumAmount")}: ${minAmountDisplay}`);
       return;
     }
 
     if (requestAmountUSD > availableBalance) {
-      Alert.alert("Erreur", "Solde insuffisant");
+      Alert.alert(t("error"), t("insufficientBalance"));
       return;
     }
 
@@ -95,13 +100,13 @@ export default function PayoutManagement() {
       method: selectedMethod,
       currency: withdrawalCurrency,
     }).catch(err => {
-      Alert.alert("Erreur", getErrorMessage(err));
+      Alert.alert(t("error"), getErrorMessage(err));
     });
 
     const amountDisplay = formatCurrency(requestAmount, withdrawalCurrency);
     Alert.alert(
-      "Demande soumise", 
-      `Votre demande de retrait de ${amountDisplay} via ${method.name} a été soumise. Vous recevrez une notification une fois traitée.`,
+      t("withdrawalSubmitted"), 
+      `${t("withdrawalSubmittedMsg").replace("{amount}", amountDisplay).replace("{method}", method.name)}`,
       [{ text: "OK", onPress: () => {
         setShowRequestForm(false);
         setAmount("");
@@ -122,10 +127,10 @@ export default function PayoutManagement() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "pending": return "En attente";
-      case "approved": return "Approuvé";
-      case "rejected": return "Rejeté";
-      case "paid": return "Payé";
+      case "pending": return t("pending");
+      case "approved": return t("approved");
+      case "rejected": return t("rejectedStatus");
+      case "paid": return t("paidStatus");
       default: return status;
     }
   };
@@ -137,7 +142,7 @@ export default function PayoutManagement() {
         <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#1f2937" />
         </Pressable>
-        <Text style={styles.headerTitle}>Retraits</Text>
+        <Text style={styles.headerTitle}>{t("withdrawals")}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -148,7 +153,7 @@ export default function PayoutManagement() {
             <View style={styles.balanceHeader}>
               <View style={styles.balanceHeaderLeft}>
                 <Ionicons name="wallet" size={24} color="#10b981" />
-                <Text style={styles.balanceTitle}>Available Balance</Text>
+                <Text style={styles.balanceTitle}>{t("availableBalance")}</Text>
               </View>
               
               {/* Currency Toggle */}
@@ -184,12 +189,12 @@ export default function PayoutManagement() {
             
             <View style={styles.balanceDetails}>
               <View style={styles.balanceItem}>
-                <Text style={styles.balanceLabel}>En attente</Text>
+                <Text style={styles.balanceLabel}>{t("pendingAmount")}</Text>
                 <Text style={styles.balancePending}>{formatCurrency(pendingAmount)}</Text>
               </View>
               
               <View style={styles.balanceItem}>
-                <Text style={styles.balanceLabel}>Total Earned</Text>
+                <Text style={styles.balanceLabel}>{t("totalEarned")}</Text>
                 <Text style={styles.balanceTotal}>{formatCurrency(currentVendor.totalRevenue)}</Text>
               </View>
             </View>
@@ -200,7 +205,7 @@ export default function PayoutManagement() {
               disabled={availableBalance <= 0}
             >
               <Ionicons name="arrow-down" size={20} color="#ffffff" />
-              <Text style={styles.requestButtonText}>Demander un retrait</Text>
+              <Text style={styles.requestButtonText}>{t("requestWithdrawal")}</Text>
             </Pressable>
           </View>
 
@@ -208,7 +213,7 @@ export default function PayoutManagement() {
           {showRequestForm && (
             <View style={styles.requestForm}>
               <View style={styles.formHeader}>
-                <Text style={styles.formTitle}>New Withdrawal</Text>
+                <Text style={styles.formTitle}>{t("newWithdrawal")}</Text>
                 <Pressable 
                   style={styles.closeButton}
                   onPress={() => setShowRequestForm(false)}
@@ -220,10 +225,10 @@ export default function PayoutManagement() {
               {/* Amount Input */}
               <View style={styles.amountSection}>
                 <View style={styles.amountHeader}>
-                  <Text style={styles.amountLabel}>Montant à retirer</Text>
+                  <Text style={styles.amountLabel}>{t("amountToWithdraw")}</Text>
                   <View style={styles.currencyInfo}>
                     <Text style={styles.currencyInfoText}>
-                      {withdrawalCurrency === "HTG" ? "Gourdes Haïtiennes" : "Dollars US"}
+                      {withdrawalCurrency === "HTG" ? t("haitianGourdes") : t("usDollars")}
                     </Text>
                   </View>
                 </View>
@@ -241,7 +246,7 @@ export default function PayoutManagement() {
                 </View>
                 <View style={styles.availableContainer}>
                   <Text style={styles.availableText}>
-                    Available: {formatCurrency(availableBalance)}
+                    {t("available")}: {formatCurrency(availableBalance)}
                   </Text>
                   {withdrawalCurrency === "HTG" && (
                     <Text style={styles.conversionText}>
@@ -258,7 +263,7 @@ export default function PayoutManagement() {
 
               {/* Payment Methods */}
               <View style={styles.methodsSection}>
-                <Text style={styles.methodsTitle}>Méthode de paiement</Text>
+                <Text style={styles.methodsTitle}>{t("paymentMethod")}</Text>
                 
                 {PAYOUT_METHODS.map((method) => {
                   const isSelected = selectedMethod === method.key;
@@ -289,8 +294,8 @@ export default function PayoutManagement() {
                           <Text style={styles.methodName}>{method.name}</Text>
                           <Text style={styles.methodDescription}>{method.description}</Text>
                           <View style={styles.methodStats}>
-                            <Text style={styles.methodFee}>Frais: {method.fee}</Text>
-                            <Text style={styles.methodMin}>Min: {minAmountDisplay}</Text>
+                            <Text style={styles.methodFee}>{t("fees")}: {method.fee}</Text>
+                            <Text style={styles.methodMin}>{t("minimum")}: {minAmountDisplay}</Text>
                           </View>
                         </View>
                       </View>
@@ -313,21 +318,21 @@ export default function PayoutManagement() {
                 disabled={!selectedMethod || !amount}
               >
                 <Ionicons name="send" size={16} color="#ffffff" />
-                <Text style={styles.submitButtonText}>Soumettre la demande</Text>
+                <Text style={styles.submitButtonText}>{t("submitRequest")}</Text>
               </Pressable>
             </View>
           )}
 
           {/* Payout History */}
           <View style={styles.historySection}>
-            <Text style={styles.historyTitle}>Historique des retraits</Text>
+            <Text style={styles.historyTitle}>{t("withdrawalHistory")}</Text>
             
             {vendorPayouts.length === 0 ? (
               <View style={styles.emptyState}>
                 <Ionicons name="receipt-outline" size={48} color="#d1d5db" />
-                <Text style={styles.emptyStateText}>No withdrawals made</Text>
+                <Text style={styles.emptyStateText}>{t("noWithdrawals")}</Text>
                 <Text style={styles.emptyStateSubtext}>
-                  Vos demandes de retrait apparaîtront ici
+                  {t("withdrawalRequestsAppearHere")}
                 </Text>
               </View>
             ) : (
@@ -359,11 +364,11 @@ export default function PayoutManagement() {
                         
                         <View style={styles.payoutDetails}>
                           <Text style={styles.payoutDate}>
-                            Demandé: {new Date(payout.requestDate).toLocaleDateString("fr-FR")}
+                            {t("requested")}: {new Date(payout.requestDate).toLocaleDateString()}
                           </Text>
                           {payout.processedDate && (
                             <Text style={styles.payoutDate}>
-                              Traité: {new Date(payout.processedDate).toLocaleDateString("fr-FR")}
+                              {t("processed")}: {new Date(payout.processedDate).toLocaleDateString()}
                             </Text>
                           )}
                           {payout.notes && (
@@ -381,13 +386,10 @@ export default function PayoutManagement() {
           <View style={styles.helpCard}>
             <View style={styles.helpHeader}>
               <Ionicons name="help-circle" size={20} color="#3b82f6" />
-              <Text style={styles.helpTitle}>Aide & FAQ</Text>
+              <Text style={styles.helpTitle}>{t("helpAndFAQ")}</Text>
             </View>
             <Text style={styles.helpText}>
-              • Les retraits sont traités sous 24-48h{"\n"}
-              • Frais calculés automatiquement{"\n"}
-              • Montant minimum varie selon la méthode{"\n"}
-              • Contact support: support@groloto.com
+              {t("helpWithdrawalText")}
             </Text>
           </View>
         </View>

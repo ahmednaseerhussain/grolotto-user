@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as vendorService from '../services/vendorService';
+import * as lotteryService from '../services/lotteryService';
 
 export async function getActiveVendors(req: Request, res: Response, next: NextFunction) {
   try {
@@ -129,3 +130,33 @@ export async function requestPayout(req: Request, res: Response, next: NextFunct
     next(error);
   }
 }
+
+// ─── Vendor Lottery Round Management ─────────────────────
+
+export async function getMyRounds(req: Request, res: Response, next: NextFunction) {
+  try {
+    const vendor = await vendorService.getVendorByUserId(req.user!.id);
+    const rounds = await lotteryService.getVendorRounds(vendor.id, {
+      status: req.query.status as string,
+      date: req.query.date as string,
+      page: parseInt(req.query.page as string) || 1,
+      limit: parseInt(req.query.limit as string) || 50,
+    });
+    res.json(rounds);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getMyRoundDetails(req: Request, res: Response, next: NextFunction) {
+  try {
+    const vendor = await vendorService.getVendorByUserId(req.user!.id);
+    const details = await lotteryService.getVendorRoundDetails(vendor.id, req.params.roundId);
+    res.json(details);
+  } catch (error) {
+    next(error);
+  }
+}
+
+// NOTE: publishMyResults and generateRandomNumbers were REMOVED.
+// Vendors no longer publish results — only admin publishes globally.
