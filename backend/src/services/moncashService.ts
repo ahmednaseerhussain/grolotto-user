@@ -148,7 +148,7 @@ export async function createPayment(input: {
     }
 
     // Build the redirect URL for the user
-    const paymentUrl = `${baseUrl}/Moncash-business/Payment/Redirect?token=${paymentToken}`;
+    const paymentUrl = `${baseUrl}/Moncash-middleware/Payment/Redirect?token=${paymentToken}`;
 
     return {
       paymentUrl,
