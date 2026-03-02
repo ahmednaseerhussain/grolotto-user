@@ -23,6 +23,8 @@ export default function PlayerLoginPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
+    dateOfBirth: "",
     password: "",
   });
 
@@ -40,6 +42,8 @@ export default function PlayerLoginPage() {
           email: formData.email,
           password: formData.password,
           role: "player",
+          dateOfBirth: formData.dateOfBirth,
+          phone: formData.phone || undefined,
         });
       }
 
@@ -67,9 +71,7 @@ export default function PlayerLoginPage() {
       </Link>
 
       <div className="text-center mb-6">
-        <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-          <span className="text-white font-bold text-xl">G</span>
-        </div>
+        <img src="/grolotto-logo.png" alt="GroLotto" className="w-14 h-14 rounded-xl mx-auto mb-3 shadow-lg object-contain" />
         <h1 className="text-2xl font-bold text-gray-900">GroLotto</h1>
       </div>
 
@@ -104,6 +106,30 @@ export default function PlayerLoginPage() {
                 required
               />
             </div>
+
+            {!isLogin && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("phoneNumber") || "Phone Number"}</label>
+                  <Input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="+509 1234 5678"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("dateOfBirth") || "Date of Birth"} *</label>
+                  <Input
+                    type="date"
+                    value={formData.dateOfBirth}
+                    onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                    required={!isLogin}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">{t("mustBe18") || "You must be at least 18 years old"}</p>
+                </div>
+              </>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">{t("password")}</label>

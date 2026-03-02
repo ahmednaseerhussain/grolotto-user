@@ -169,7 +169,9 @@ export default function ResultsScreen() {
             {lotteryRounds.map((round: any, idx: number) => {
               const winNums = Array.isArray(round.winningNumbers)
                 ? round.winningNumbers
-                : Object.values(round.winningNumbers || {});
+                : Object.entries(round.winningNumbers || {}).flatMap(([gameType, nums]: [string, any]) =>
+                    Array.isArray(nums) ? nums : []
+                  );
               const isLive = round.status === "open" || round.status === "live";
               return (
                 <div

@@ -55,7 +55,7 @@ export default function PaymentScreen() {
 
       // MonCash flow
       const res = await paymentAPI.createPaymentIntent({ amount: parseFloat(amount), currency, phoneNumber });
-      const { redirectUrl: paymentUrl, orderId } = res || {};
+      const { paymentUrl, orderId } = res || {};
 
       if (paymentUrl) {
         // Open MonCash in new window

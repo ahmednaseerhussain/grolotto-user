@@ -11,7 +11,7 @@ import { useAppStore } from "@/store/app-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowLeft, Store, DollarSign } from "lucide-react";
+import { ArrowLeft, DollarSign } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function VendorRegisterPage() {
@@ -59,6 +59,8 @@ export default function VendorRegisterPage() {
         email: formData.email,
         password: formData.password,
         role: "vendor",
+        dateOfBirth: formData.dateOfBirth,
+        phone: formData.phone,
       });
 
       await vendorAPI.register({
@@ -95,9 +97,7 @@ export default function VendorRegisterPage() {
       </Link>
 
       <div className="text-center mb-6">
-        <div className="w-14 h-14 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-xl flex items-center justify-center mx-auto mb-3">
-          <Store className="h-7 w-7 text-white" />
-        </div>
+        <img src="/grolotto-logo.png" alt="GroLotto" className="w-14 h-14 rounded-xl mx-auto mb-3 object-contain" />
         <h1 className="text-2xl font-bold text-gray-900">{t("vendorRegistration")}</h1>
       </div>
 

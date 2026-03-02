@@ -27,9 +27,7 @@ export default function LoginPage() {
     <div className="w-full max-w-md animate-slide-up">
       {/* Logo */}
       <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-          <span className="text-white font-bold text-2xl">G</span>
-        </div>
+        <img src="/grolotto-logo.png" alt="GroLotto" className="w-16 h-16 rounded-2xl mx-auto mb-4 shadow-lg object-contain" />
         <h1 className="text-3xl font-bold text-gray-900">GroLotto</h1>
         <p className="text-gray-500 mt-1">{t("welcome")}</p>
       </div>

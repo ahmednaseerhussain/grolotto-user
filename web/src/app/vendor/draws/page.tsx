@@ -34,6 +34,7 @@ export default function DrawManagementScreen() {
   const user = useAppStore((s) => s.user);
   const vendors = useAppStore((s) => s.vendors);
   const vendorProfile = useAppStore((s) => s.vendorProfile);
+  const setVendorProfile = useAppStore((s) => s.setVendorProfile);
   const currency = useAppStore((s) => s.currency);
 
   const [expandedDraw, setExpandedDraw] = useState<string | null>(null);
@@ -66,6 +67,8 @@ export default function DrawManagementScreen() {
         updatedDraw.games = { ...updatedDraw.games, senp: { ...updatedDraw.games?.senp, enabled: true } };
       }
       await vendorAPI.updateDrawSettings(drawCode, updatedDraw);
+      // Refresh vendor profile to update draws in store
+      try { const p = await vendorAPI.getMyProfile(); setVendorProfile(p); } catch {}
       toast.success(`${drawCode} ${enabled ? "enabled" : "disabled"}`);
     } catch (err) {
       toast.error("Failed to update");
@@ -87,6 +90,7 @@ export default function DrawManagementScreen() {
         games: { ...draw.games, [gameKey]: { ...draw.games?.[gameKey], enabled } },
       };
       await vendorAPI.updateDrawSettings(drawCode, updatedDraw);
+      try { const p = await vendorAPI.getMyProfile(); setVendorProfile(p); } catch {}
       toast.success(`${GAME_LABELS[gameKey]} ${enabled ? "enabled" : "disabled"}`);
     } catch (err) {
       toast.error("Failed to update");
@@ -113,6 +117,7 @@ export default function DrawManagementScreen() {
         },
       };
       await vendorAPI.updateDrawSettings(drawCode, updatedDraw);
+      try { const p = await vendorAPI.getMyProfile(); setVendorProfile(p); } catch {}
       toast.success("Limits saved");
       setEditingLimits(null);
     } catch (err) {

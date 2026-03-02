@@ -52,9 +52,7 @@ export default function VendorLoginPage() {
       </Link>
 
       <div className="text-center mb-6">
-        <div className="w-14 h-14 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-          <span className="text-white font-bold text-xl">G</span>
-        </div>
+        <img src="/grolotto-logo.png" alt="GroLotto" className="w-14 h-14 rounded-xl mx-auto mb-3 shadow-lg object-contain" />
         <h1 className="text-2xl font-bold text-gray-900">GroLotto</h1>
         <p className="text-sm text-gray-500">{t("vendorPortal")}</p>
       </div>

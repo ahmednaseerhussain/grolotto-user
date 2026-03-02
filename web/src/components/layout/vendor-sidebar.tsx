@@ -53,9 +53,7 @@ export function VendorSidebar() {
     <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r border-gray-200 h-screen sticky top-0">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-100">
-        <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-xl flex items-center justify-center">
-          <span className="text-white font-bold text-lg">G</span>
-        </div>
+        <img src="/grolotto-logo.png" alt="GroLotto" className="w-10 h-10 rounded-xl object-contain" />
         <div>
           <h1 className="font-bold text-gray-900 text-lg">GroLotto</h1>
           <p className="text-xs text-gray-500">{t("vendor")}</p>

@@ -254,6 +254,8 @@ export interface VendorStats {
   todayBets?: number;
   enabledGames?: number;
   balance?: number;
+  totalTicketsSold?: number;
+  earningsToday?: number;
 }
 
 export interface AppSettings {

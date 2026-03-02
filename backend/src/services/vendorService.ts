@@ -39,7 +39,7 @@ export async function getActiveVendors(): Promise<VendorPublic[]> {
             v.status, v.bio, v.location, v.business_hours, v.specialties,
             v.rating, v.total_tickets_sold, v.is_active,
             v.total_revenue, v.total_players, v.available_balance,
-            v.operating_currency
+            CASE WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='vendors' AND column_name='operating_currency') THEN v.operating_currency ELSE 'HTG' END AS operating_currency
      FROM vendors v
      WHERE v.status IN ('approved', 'active') AND v.is_active = TRUE
      ORDER BY v.rating DESC`

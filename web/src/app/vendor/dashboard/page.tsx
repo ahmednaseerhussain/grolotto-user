@@ -62,8 +62,8 @@ export default function VendorDashboard() {
 
   const stats = vendorStats || {} as Partial<VendorStats>;
   const balance = currency === "HTG"
-    ? (((stats as any).balance || stats.availableBalance || 0) * 150)
-    : ((stats as any).balance || stats.availableBalance || 0);
+    ? (stats.availableBalance || 0)
+    : (stats.availableBalance || 0);
 
   const quickActions = [
     { label: t("pricesAndStates") || "Prices & States", icon: Settings, href: "/vendor/draws", color: "bg-blue-50 text-blue-600" },
@@ -131,7 +131,7 @@ export default function VendorDashboard() {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         <StatCard
           title={t("activePlayers") || "Active Players"}
-          value={stats.activePlayers || stats.activePlayersCount || 0}
+          value={stats.totalPlayers || stats.activePlayers || stats.activePlayersCount || 0}
           icon={<Users className="h-5 w-5 text-blue-600" />}
           onClick={() => setActiveModal("players")}
         />
@@ -142,26 +142,26 @@ export default function VendorDashboard() {
           onClick={() => setActiveModal("tickets")}
         />
         <StatCard
-          title={t("thisWeek") || "This Week"}
-          value={formatCurrency(stats.weeklyEarnings || 0, currency)}
+          title={t("totalEarnings") || "Total Earnings"}
+          value={formatCurrency(stats.totalRevenue || stats.totalEarnings || 0, currency)}
           icon={<TrendingUp className="h-5 w-5 text-purple-600" />}
           onClick={() => setActiveModal("weekly")}
         />
         <StatCard
-          title={t("totalEarnings") || "Total Earnings"}
-          value={formatCurrency(stats.totalEarnings || 0, currency)}
+          title={t("todayBets") || "Today's Bets"}
+          value={formatCurrency(Number(stats.todayBets || 0), currency)}
           icon={<DollarSign className="h-5 w-5 text-amber-600" />}
           onClick={() => setActiveModal("earnings")}
         />
         <StatCard
-          title={t("ticketsToday") || "Today Bets"}
-          value={formatCurrency(Number(stats.todayBets || stats.todayEarnings || 0), currency)}
+          title={t("todayCommission") || "Today's Commission"}
+          value={formatCurrency(Number(stats.earningsToday || (stats.todayBets ? Number(stats.todayBets) * 0.1 : 0)), currency)}
           icon={<BarChart3 className="h-5 w-5 text-red-600" />}
           onClick={() => setActiveModal("todayEarnings")}
         />
         <StatCard
-          title={t("enabledGames") || "Enabled Games"}
-          value={stats.enabledGames || 0}
+          title={t("totalTickets") || "Total Tickets"}
+          value={stats.totalTicketsSold || stats.totalPlays || 0}
           icon={<Gamepad2 className="h-5 w-5 text-indigo-600" />}
           onClick={() => setActiveModal("games")}
         />

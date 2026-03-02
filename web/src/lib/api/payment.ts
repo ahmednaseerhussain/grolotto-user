@@ -5,13 +5,13 @@ export const paymentAPI = {
     amount: number;
     currency?: string;
     phoneNumber: string;
-  }): Promise<{ transactionId: string; redirectUrl?: string; orderId?: string }> {
+  }): Promise<{ paymentUrl: string; orderId: string; transactionId?: string; redirectUrl?: string }> {
     const response = await apiClient.post("/payments/intent", data);
     return response.data.data || response.data;
   },
 
-  async verifyPayment(transactionId: string): Promise<{ status: string; amount?: number }> {
-    const response = await apiClient.post("/payments/verify", { transactionId });
+  async verifyPayment(orderId: string): Promise<{ status: string; amount?: number }> {
+    const response = await apiClient.post("/payments/verify", { orderId });
     return response.data.data || response.data;
   },
 

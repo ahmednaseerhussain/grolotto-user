@@ -20,6 +20,10 @@ const TX_ICONS: Record<string, { icon: any; color: string; sign: string }> = {
   bet_payment: { icon: ArrowUpCircle, color: "text-red-500 bg-red-50", sign: "-" },
   winning_payout: { icon: ArrowDownCircle, color: "text-amber-500 bg-amber-50", sign: "+" },
   withdrawal: { icon: ArrowUpCircle, color: "text-purple-500 bg-purple-50", sign: "-" },
+  gift_card_purchase: { icon: ArrowUpCircle, color: "text-orange-500 bg-orange-50", sign: "-" },
+  gift_card_redeem: { icon: ArrowDownCircle, color: "text-amber-500 bg-amber-50", sign: "+" },
+  commission: { icon: ArrowDownCircle, color: "text-emerald-500 bg-emerald-50", sign: "+" },
+  refund: { icon: ArrowDownCircle, color: "text-blue-500 bg-blue-50", sign: "+" },
 };
 
 const TX_LABELS: Record<string, string> = {
@@ -27,6 +31,10 @@ const TX_LABELS: Record<string, string> = {
   bet_payment: "Bet Payment",
   winning_payout: "Winning Payout",
   withdrawal: "Withdrawal",
+  gift_card_purchase: "Gift Card Purchase",
+  gift_card_redeem: "Gift Card Redeemed",
+  commission: "Commission",
+  refund: "Refund",
 };
 
 export default function TransactionsScreen() {

@@ -51,7 +51,9 @@ export default function VendorHistoryScreen() {
     setLoading(true);
     try {
       const res = await vendorAPI.getPlayHistory(1, 200);
-      setHistory(res.data?.tickets || res.data || []);
+      const raw = res.data?.data || res.data;
+      const data = raw?.plays || raw?.tickets || raw;
+      setHistory(Array.isArray(data) ? data : []);
     } catch {
       toast.error("Failed to load play history");
     } finally {

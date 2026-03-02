@@ -66,9 +66,7 @@ export function TopNav() {
       <div className="flex items-center justify-between h-16 px-4 lg:px-8">
         {/* Mobile logo */}
         <div className="lg:hidden flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">G</span>
-          </div>
+          <img src="/grolotto-logo.png" alt="GroLotto" className="w-8 h-8 rounded-lg object-contain" />
           <span className="font-bold text-gray-900">GroLotto</span>
         </div>
 
