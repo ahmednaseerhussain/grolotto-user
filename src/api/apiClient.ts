@@ -522,4 +522,24 @@ export const advertisementAPI = {
   },
 };
 
+// ═════════════════════════════════════════════════════════
+//  GIFT CARD API
+// ═════════════════════════════════════════════════════════
+export const giftCardAPI = {
+  async purchase(data: { amount: number; currency: string; recipientName?: string; message?: string }) {
+    const res = await api.post('/gift-cards/purchase', data);
+    return res.data;
+  },
+
+  async redeem(code: string) {
+    const res = await api.post('/gift-cards/redeem', { code });
+    return res.data;
+  },
+
+  async getMyCards() {
+    const res = await api.get('/gift-cards/my-cards');
+    return res.data;
+  },
+};
+
 export default api;

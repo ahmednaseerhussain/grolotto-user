@@ -32,7 +32,6 @@ export default function SettingsScreen() {
   
   const [notifications, setNotifications] = useState(true);
   const [autoPlay, setAutoPlay] = useState(false);
-  const [biometric, setBiometric] = useState(false);
 
   const handleLanguageChange = (newLanguage: Language) => {
     setLanguage(newLanguage);
@@ -256,23 +255,6 @@ export default function SettingsScreen() {
                   onValueChange={setAutoPlay}
                   trackColor={{ false: "#e5e7eb", true: "#16a34a" }}
                   thumbColor={autoPlay ? "#15803d" : "#9ca3af"}
-                />
-              </View>
-
-              <View className="flex-row items-center justify-between">
-                <View className="flex-1">
-                  <Text className="text-base font-medium text-gray-800">
-                    Biometric Authentication
-                  </Text>
-                  <Text className="text-gray-600 text-sm">
-                    Use fingerprint or face ID to sign in
-                  </Text>
-                </View>
-                <Switch
-                  value={biometric}
-                  onValueChange={setBiometric}
-                  trackColor={{ false: "#e5e7eb", true: "#8b5cf6" }}
-                  thumbColor={biometric ? "#7c3aed" : "#9ca3af"}
                 />
               </View>
             </View>

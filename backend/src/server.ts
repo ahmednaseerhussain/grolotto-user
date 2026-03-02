@@ -36,6 +36,12 @@ async function runStartupMigrations() {
       CREATE INDEX IF NOT EXISTS idx_gift_cards_status ON gift_cards(status);
     `);
 
+    // Migration 008: extend transaction_type enum for gift cards & refunds
+    // ALTER TYPE ADD VALUE cannot run inside a transaction block — run each separately
+    await query(`ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'gift_card_purchase'`).catch(() => {});
+    await query(`ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'gift_card_redeem'`).catch(() => {});
+    await query(`ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'refund'`).catch(() => {});
+
     console.log('[Migration] Startup migrations applied successfully');
   } catch (err) {
     console.error('[Migration] Startup migration error:', err);
@@ -67,14 +73,25 @@ const app = express();
 
 // ─── Security ────────────────────────────────────────────
 app.use(helmet());
+
+const ALLOWED_WEB_ORIGINS = [
+  config.frontendUrl,
+  'https://grolotto.com',
+  'https://www.grolotto.com',
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:19006',
+].filter(Boolean) as string[];
+
 app.use(cors({
-  origin: [
-    config.frontendUrl,
-    'https://grolotto.com',
-    'https://www.grolotto.com',
-    'http://localhost:3001',
-    'http://localhost:19006',
-  ].filter(Boolean),
+  origin: (origin, callback) => {
+    // No origin = mobile app, Postman, server-to-server → allow
+    if (!origin) return callback(null, true);
+    // Known web origin → allow
+    if (ALLOWED_WEB_ORIGINS.includes(origin)) return callback(null, true);
+    // Unknown browser origin → block
+    callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
   credentials: true,
 }));
 

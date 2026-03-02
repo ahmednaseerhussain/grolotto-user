@@ -35,6 +35,7 @@ import PaymentScreen from "../screens/PaymentScreen";
 import PaymentProfileScreen from "../screens/PaymentProfileScreen";
 import TransactionHistory from "../screens/TransactionHistory";
 import RewardsScreen from "../screens/RewardsScreen";
+import GiftCardScreen from "../screens/GiftCardScreen";
 import AdminDashboard from "../screens/AdminDashboard";
 import AdminPayoutManagement from "../screens/AdminPayoutManagement";
 import AdminPayoutProcessing from "../screens/AdminPayoutProcessing";
@@ -93,6 +94,7 @@ export type RootStackParamList = {
   PaymentProfileScreen: undefined;
   TransactionHistory: undefined;
   RewardsScreen: undefined;
+  GiftCardScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -166,8 +168,10 @@ export default function AppNavigator() {
               <Stack.Screen name="PaymentProfileScreen" component={PaymentProfileScreen} />
               <Stack.Screen name="TransactionHistory" component={TransactionHistory} />
               <Stack.Screen name="RewardsScreen" component={RewardsScreen} />
+              <Stack.Screen name="GiftCardScreen" component={GiftCardScreen} />
               <Stack.Screen name="ResultsScreen" component={ResultsScreen} />
               <Stack.Screen name="HistoryScreen" component={HistoryScreen} />
+              <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
             </>
            ) : user?.role === "vendor" ? (
             <>

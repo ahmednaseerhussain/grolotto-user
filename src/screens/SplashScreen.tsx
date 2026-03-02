@@ -54,7 +54,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
           {/* Actual GROLOTTO Logo with transparent background */}
           <Animated.View style={[styles.logoContainer, logoAnimatedStyle]}>
             <Image 
-              source={require('../../assets/icon.png')}
+              source={require('../../assets/assets/grolotto-logo.png')}
               style={styles.logoImage}
               resizeMode="contain"
             />

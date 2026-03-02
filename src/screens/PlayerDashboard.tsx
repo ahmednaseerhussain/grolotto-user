@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, Alert, Dimensions, Linking } from "react-native";
+import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, Alert, Dimensions, Linking, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -17,10 +17,10 @@ const AdvertisingSlideshow = () => {
   const recordAdImpression = useAppStore(s => s.recordAdImpression);
   const recordAdClick = useAppStore(s => s.recordAdClick);
 
-  // Get active slideshow ads, sorted by order
+  // Get active slideshow ads, sorted by order — backend pre-filters active only
   const activeAds = advertisements
-    .filter(ad => ad.status === "active" && ad.type === "slideshow")
-    .sort((a, b) => a.order - b.order);
+    .filter(ad => !ad.type || ad.type === "slideshow" || ad.type === "banner")
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   // Auto-slide functionality
   useEffect(() => {
@@ -297,7 +297,7 @@ export default function PlayerDashboard() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.brandText}>GROLOTTO</Text>
+          <Image source={require('../../assets/assets/grolotto-logo.png')} style={{ width: 130, height: 38 }} resizeMode="contain" />
           <Text style={styles.welcomeText}>{t("welcome")}, {user?.name || t("player")}</Text>
           <Text style={styles.subText}>{t("readyToPlay")}</Text>
         </View>
@@ -400,13 +400,31 @@ export default function PlayerDashboard() {
             <Text style={styles.actionTitle}>{t("history")}</Text>
             <Text style={styles.actionSubtitle}>{t("pastPlays")}</Text>
           </Pressable>
+
+          <Pressable 
+            style={[styles.actionCard, { backgroundColor: "#ec4899" }]}
+            onPress={() => (navigation as any).navigate("GiftCardScreen")}
+          >
+            <Ionicons name="gift" size={32} color="#ffffff" />
+            <Text style={styles.actionTitle}>Gift Cards</Text>
+            <Text style={styles.actionSubtitle}>Buy & Redeem</Text>
+          </Pressable>
+
+          <Pressable 
+            style={[styles.actionCard, { backgroundColor: "#f97316" }]}
+            onPress={() => (navigation as any).navigate("RewardsScreen")}
+          >
+            <Ionicons name="trophy" size={32} color="#ffffff" />
+            <Text style={styles.actionTitle}>{t("rewards")}</Text>
+            <Text style={styles.actionSubtitle}>Earn & Claim</Text>
+          </Pressable>
         </View>
 
         {/* Dynamic Banner Ads from Firebase */}
         {(() => {
           const bannerAds = advertisements
-            .filter((ad: any) => ad.status === "active" && ad.type === "banner" && (ad.targetAudience === "all" || ad.targetAudience === "active_players" || ad.targetAudience === "new_players"))
-            .sort((a: any, b: any) => a.order - b.order);
+            .filter((ad: any) => ad.type === "banner")
+            .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
           
           if (bannerAds.length > 0) {
             const bannerAd = bannerAds[0]; // Show first active banner

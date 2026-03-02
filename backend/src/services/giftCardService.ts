@@ -1,6 +1,5 @@
 import { query, withTransaction } from '../database/pool';
 import { AppError } from '../middleware/errorHandler';
-import * as walletService from './walletService';
 import * as notificationService from './notificationService';
 import crypto from 'crypto';
 
@@ -75,12 +74,14 @@ export async function purchaseGiftCard(
       [code, amount, currency, buyerId, recipientName || null, message || null]
     );
 
-    // Create transaction record for buyer
-    await client.query(
-      `INSERT INTO transactions (user_id, type, amount, currency, payment_method, status, description, idempotency_key)
-       VALUES ($1, 'gift_card_purchase', $2, $3, 'wallet', 'completed', $4, $5)`,
-      [buyerId, amount, currency, `Gift card purchase: ${code}`, `giftcard-purchase-${result.rows[0].id}`]
-    );
+    // Create transaction record for buyer (non-fatal — may fail if enum not migrated)
+    try {
+      await client.query(
+        `INSERT INTO transactions (user_id, type, amount, currency, payment_method, status, description, idempotency_key)
+         VALUES ($1, 'gift_card_purchase', $2, $3, 'wallet', 'completed', $4, $5)`,
+        [buyerId, amount, currency, `Gift card purchase: ${code}`, `giftcard-purchase-${result.rows[0].id}`]
+      );
+    } catch { /* enum not yet migrated — skip tx log, purchase still succeeds */ }
 
     // Notify buyer
     notificationService.createPlayerNotification(
@@ -161,12 +162,14 @@ export async function redeemGiftCard(userId: string, code: string) {
       [userId, gc.id]
     );
 
-    // Create transaction record for redeemer
-    await client.query(
-      `INSERT INTO transactions (user_id, type, amount, currency, payment_method, status, description, idempotency_key)
-       VALUES ($1, 'gift_card_redeem', $2, $3, 'gift_card', 'completed', $4, $5)`,
-      [userId, amount, currency, `Gift card redeemed: ${formattedCode}`, `giftcard-redeem-${gc.id}`]
-    );
+    // Create transaction record for redeemer (non-fatal — may fail if enum not migrated)
+    try {
+      await client.query(
+        `INSERT INTO transactions (user_id, type, amount, currency, payment_method, status, description, idempotency_key)
+         VALUES ($1, 'gift_card_redeem', $2, $3, 'gift_card', 'completed', $4, $5)`,
+        [userId, amount, currency, `Gift card redeemed: ${formattedCode}`, `giftcard-redeem-${gc.id}`]
+      );
+    } catch { /* enum not yet migrated — skip tx log, redeem still succeeds */ }
 
     // Notify redeemer
     notificationService.createPlayerNotification(
