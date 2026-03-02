@@ -87,11 +87,10 @@ export default function PlayerDashboard() {
   const balanceUsd = wallet?.balanceUsd ?? 0;
 
   const filteredVendors = (vendors || []).filter((v: any) => {
-    const matchesSearch = !searchQuery || 
+    return !searchQuery ||
       v.businessName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      v.firstName?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCurrency = !v.operatingCurrency || v.operatingCurrency === currency;
-    return matchesSearch && matchesCurrency;
+      v.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      v.displayName?.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   const getEnabledGames = (vendor: any) => {

@@ -72,7 +72,7 @@ export const useAppStore = create<AppState>()(
 
       // Initial state
       language: "en",
-      currency: "USD",
+      currency: "HTG",
       hasCompletedOnboarding: false,
       user: null,
       isAuthenticated: false,
