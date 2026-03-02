@@ -1,0 +1,50 @@
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native build artifacts
+android/app/build/
+android/build/
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+/ios
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+backend/.env
+
+# typescript build info
+*.tsbuildinfo
+
+# Sub-projects not needed for mobile build
+web/
+backend/
+grolotto-admin/
+
+# Logs and temp files
+*.log
+*.txt
+changes screenshot/
+splash screen/
