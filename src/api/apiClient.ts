@@ -7,10 +7,10 @@ import { Platform } from 'react-native';
 const getBaseUrl = () => {
   if (__DEV__) {
     return Platform.OS === 'android'
-      ? 'https://grolotto-user.onrender.com/api'
-      : 'https://grolotto-user.onrender.com/api';
+      ? 'https://grolotto-user-wk3b.onrender.com/api'
+      : 'https://grolotto-user-wk3b.onrender.com/api';
   }
-  return 'https://grolotto-user.onrender.com/api';
+  return 'https://grolotto-user-wk3b.onrender.com/api';
 };
 
 const TOKEN_KEY = 'groloto_access_token';

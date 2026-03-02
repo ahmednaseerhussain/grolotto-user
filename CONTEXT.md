@@ -22,7 +22,7 @@ Grolotto is a Haitian lottery platform (borlette) where **vendors accept bets an
 
 ### API Base URL
 ```
-https://grolotto-user.onrender.com/api
+https://grolotto-user-wk3b.onrender.com/api
 ```
 
 ### Database Connection

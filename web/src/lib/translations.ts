@@ -3213,6 +3213,42 @@ export const translations = {
     en: "Help",
     fr: "Aide",
     es: "Ayuda"
+  },
+  giftCard: {
+    ht: "Kat Kado",
+    en: "Gift Cards",
+    fr: "Cartes Cadeau",
+    es: "Tarjetas de Regalo"
+  },
+  buyGiftCard: {
+    ht: "Achte",
+    en: "Buy",
+    fr: "Acheter",
+    es: "Comprar"
+  },
+  redeemCode: {
+    ht: "Itilize Kòd",
+    en: "Redeem",
+    fr: "Utiliser le Code",
+    es: "Canjear Código"
+  },
+  buyOrRedeemGiftCards: {
+    ht: "Achte oswa itilize kat kado",
+    en: "Buy or redeem gift cards",
+    fr: "Acheter ou utiliser des cartes cadeau",
+    es: "Comprar o canjear tarjetas de regalo"
+  },
+  redeemGiftCard: {
+    ht: "Itilize Kat Kado",
+    en: "Redeem Gift Card",
+    fr: "Utiliser la Carte Cadeau",
+    es: "Canjear Tarjeta de Regalo"
+  },
+  contactSupport: {
+    ht: "Kontakte Sipò",
+    en: "Contact Support",
+    fr: "Contacter le Support",
+    es: "Contactar Soporte"
   }
 };
 

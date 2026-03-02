@@ -119,9 +119,9 @@ async function test() {
     console.log('   Phone: 50937000001 or 50933000001');
     console.log('   PIN:   1234 or 1111');
     console.log('\n🔗 MonCash Return URL (configure in MonCash Business dashboard):');
-    console.log('   https://grolotto-user.onrender.com/api/payments/moncash/return');
+    console.log('   https://grolotto-user-wk3b.onrender.com/api/payments/moncash/return');
     console.log('\n🔗 MonCash Alert/Notify URL:');
-    console.log('   https://grolotto-user.onrender.com/api/payments/moncash/notify');
+    console.log('   https://grolotto-user-wk3b.onrender.com/api/payments/moncash/notify');
     console.log('');
 
   } catch (err: any) {

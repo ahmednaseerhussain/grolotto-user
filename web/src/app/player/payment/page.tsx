@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  ArrowLeft, Wallet, CheckCircle, Smartphone, DollarSign, Loader2, CreditCard, Globe
+  ArrowLeft, Wallet, CheckCircle, Smartphone, DollarSign, Loader2, CreditCard, Globe, Gift, Ticket
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -37,12 +37,23 @@ export default function PaymentScreen() {
     ? (wallet?.balanceHtg ?? wallet?.balance ?? 0)
     : (wallet?.balanceUsd ?? wallet?.balance ?? 0);
 
-  const canProceed = parseFloat(amount) > 0 && selectedMethod === "moncash" && phoneNumber.length >= 8;
+  const canProceed = parseFloat(amount) > 0 && (
+    (selectedMethod === "moncash" && phoneNumber.length >= 8) ||
+    (selectedMethod === "paypal")
+  );
 
   const handlePayment = async () => {
     if (!canProceed) return;
     setProcessing(true);
     try {
+      if (selectedMethod === "paypal") {
+        // PayPal: open PayPal checkout (placeholder — integrate PayPal SDK when credentials are ready)
+        toast.error("PayPal integration is being configured. Please use MonCash for now.");
+        setProcessing(false);
+        return;
+      }
+
+      // MonCash flow
       const res = await paymentAPI.createPaymentIntent({ amount: parseFloat(amount), currency, phoneNumber });
       const { redirectUrl: paymentUrl, orderId } = res || {};
 
@@ -181,10 +192,14 @@ export default function PaymentScreen() {
             </div>
           </button>
 
-          {/* PayPal - Coming Soon */}
+          {/* PayPal */}
           <button
-            onClick={() => toast(t("comingSoon") || "Coming Soon")}
-            className="w-full p-4 rounded-xl border-2 border-slate-700 bg-slate-800 flex items-center gap-4 opacity-50 cursor-not-allowed"
+            onClick={() => setSelectedMethod("paypal")}
+            className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all bg-slate-800 ${
+              selectedMethod === "paypal"
+                ? "border-blue-500"
+                : "border-slate-700 hover:border-slate-600"
+            }`}
           >
             <div className="bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center">
               <Globe className="h-6 w-6 text-white" />
@@ -193,9 +208,11 @@ export default function PaymentScreen() {
               <p className="font-semibold text-white">{t("paypal") || "PayPal"}</p>
               <p className="text-sm text-slate-400">Pay with PayPal account</p>
             </div>
-            <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-1 rounded-full font-medium">
-              {t("comingSoon") || "Coming Soon"}
-            </span>
+            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+              selectedMethod === "paypal" ? "border-blue-500" : "border-slate-600"
+            }`}>
+              {selectedMethod === "paypal" && <div className="w-3 h-3 rounded-full bg-blue-500" />}
+            </div>
           </button>
 
           {/* Credit/Debit Card - Coming Soon */}
@@ -214,6 +231,33 @@ export default function PaymentScreen() {
               {t("comingSoon") || "Coming Soon"}
             </span>
           </button>
+
+          {/* Gift Card */}
+          <div className="w-full p-4 rounded-xl border-2 border-slate-700 bg-slate-800">
+            <div className="flex items-center gap-4">
+              <div className="bg-amber-500 w-12 h-12 rounded-full flex items-center justify-center">
+                <Gift className="h-6 w-6 text-white" />
+              </div>
+              <div className="text-left flex-1">
+                <p className="font-semibold text-white">{t("giftCard") || "Gift Card"}</p>
+                <p className="text-sm text-slate-400">{t("buyOrRedeemGiftCards") || "Buy or redeem gift cards"}</p>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => router.push("/player/gift-cards")}
+                className="flex-1 py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold transition-colors"
+              >
+                🎁 {t("buyGiftCard") || "Buy Gift Card"}
+              </button>
+              <button
+                onClick={() => router.push("/player/gift-cards?tab=redeem")}
+                className="flex-1 py-2 px-3 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold transition-colors"
+              >
+                🎟️ {t("redeemCode") || "Redeem Code"}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

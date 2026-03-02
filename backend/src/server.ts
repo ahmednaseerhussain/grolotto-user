@@ -16,6 +16,7 @@ import adminRoutes from './routes/adminRoutes';
 import tchalaRoutes from './routes/tchalaRoutes';
 import rewardRoutes from './routes/rewardRoutes';
 import notificationRoutes from './routes/notificationRoutes';
+import giftCardRoutes from './routes/giftCardRoutes';
 
 const app = express();
 
@@ -72,6 +73,7 @@ app.use('/api/wallet', walletRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/rewards', rewardRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/gift-cards', giftCardRoutes);
 
 // Public app settings (non-sensitive only)
 app.get('/api/settings/public', async (_req, res, next) => {

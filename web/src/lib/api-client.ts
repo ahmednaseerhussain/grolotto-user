@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from "axios";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://grolotto-user.onrender.com/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://grolotto-user-wk3b.onrender.com/api";
 
 // Token management
 const getAccessToken = (): string | null => {
