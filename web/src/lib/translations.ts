@@ -431,7 +431,7 @@ export const translations = {
   
   // Common errors and alerts
   insufficientBalance: {
-    ht: "Pa gen ase lajan",
+    ht: "Balans ou pa ase",
     en: "Insufficient balance",
     fr: "Solde insuffisant",
     es: "Saldo insuficiente"
@@ -1149,8 +1149,8 @@ export const translations = {
     es: "Notificaciones"
   },
   comingSoon: {
-    ht: "Ap vini byento",
-    en: "Coming soon",
+    ht: "Byento disponib",
+    en: "Coming Soon",
     fr: "Bientôt disponible",
     es: "Próximamente"
   },
@@ -3073,6 +3073,146 @@ export const translations = {
     en: "Excellent - Outstanding service!",
     fr: "Excellent - Service exceptionnel !",
     es: "Excelente - ¡Servicio excepcional!"
+  },
+
+  // Navigation & Layout
+  home: {
+    ht: "Lakay",
+    en: "Home",
+    fr: "Accueil",
+    es: "Inicio"
+  },
+  play: {
+    ht: "Jwe",
+    en: "Play",
+    fr: "Jouer",
+    es: "Jugar"
+  },
+  ticket: {
+    ht: "Tikè",
+    en: "Ticket",
+    fr: "Billet",
+    es: "Boleto"
+  },
+  wallet: {
+    ht: "Bous",
+    en: "Wallet",
+    fr: "Portefeuille",
+    es: "Billetera"
+  },
+  transactions: {
+    ht: "Gade tranzaksyon yo",
+    en: "Transactions",
+    fr: "Transactions",
+    es: "Transacciones"
+  },
+
+  // Dual Wallet
+  htgWallet: {
+    ht: "Bous HTG",
+    en: "HTG Wallet",
+    fr: "Portefeuille HTG",
+    es: "Billetera HTG"
+  },
+  usdWallet: {
+    ht: "Bous USD",
+    en: "USD Wallet",
+    fr: "Portefeuille USD",
+    es: "Billetera USD"
+  },
+
+  // Payment Methods
+  paypal: {
+    ht: "PayPal",
+    en: "PayPal",
+    fr: "PayPal",
+    es: "PayPal"
+  },
+  creditDebitCard: {
+    ht: "Kat Kredi/Debi",
+    en: "Credit/Debit Card",
+    fr: "Carte Crédit/Débit",
+    es: "Tarjeta Crédito/Débito"
+  },
+
+  // Balance & Betting
+  addMoneyToPlay: {
+    ht: "Ajoute lajan pou jwe",
+    en: "Add money to play",
+    fr: "Ajoutez de l'argent pour jouer",
+    es: "Agregue dinero para jugar"
+  },
+
+  // Profile
+  nameNotEditable: {
+    ht: "Non pa ka chanje",
+    en: "Name cannot be changed",
+    fr: "Le nom ne peut pas être modifié",
+    es: "El nombre no se puede cambiar"
+  },
+
+  // Vendor Currency
+  operatingCurrency: {
+    ht: "Lajan Operasyon",
+    en: "Operating Currency",
+    fr: "Devise d'Opération",
+    es: "Moneda de Operación"
+  },
+  vendorCurrencyNote: {
+    ht: "Chwazi ki lajan ou vle aksepte nan biznis ou",
+    en: "Choose which currency you want to accept in your business",
+    fr: "Choisissez quelle devise vous souhaitez accepter",
+    es: "Elija qué moneda desea aceptar en su negocio"
+  },
+
+  // Login / Role Selection
+  loginAs: {
+    ht: "Konekte kòm",
+    en: "Login as",
+    fr: "Se connecter en tant que",
+    es: "Iniciar sesión como"
+  },
+  selectYourRole: {
+    ht: "Chwazi wòl ou",
+    en: "Select your role",
+    fr: "Sélectionnez votre rôle",
+    es: "Seleccione su rol"
+  },
+  playAndWin: {
+    ht: "Jwe epi genyen",
+    en: "Play and win",
+    fr: "Jouez et gagnez",
+    es: "Juega y gana"
+  },
+  manageYourBusiness: {
+    ht: "Jere biznis ou",
+    en: "Manage your business",
+    fr: "Gérez votre entreprise",
+    es: "Gestiona tu negocio"
+  },
+  viewTransactionHistory: {
+    ht: "Gade istwa tranzaksyon yo",
+    en: "View transaction history",
+    fr: "Voir l'historique des transactions",
+    es: "Ver historial de transacciones"
+  },
+  checkRewards: {
+    ht: "Gade rekonpans yo",
+    en: "Check rewards",
+    fr: "Vérifier les récompenses",
+    es: "Verificar recompensas"
+  },
+  fillInformation: {
+    ht: "Ranpli enfòmasyon ou",
+    en: "Fill in your information",
+    fr: "Remplissez vos informations",
+    es: "Complete su información"
+  },
+  help: {
+    ht: "Èd",
+    en: "Help",
+    fr: "Aide",
+    es: "Ayuda"
   }
 };
 

@@ -30,7 +30,7 @@ const DRAWS = [
 
 const GAME_CONFIGS: Record<string, { digits: number; range: number[]; description: string }> = {
   senp: { digits: 1, range: [0, 99], description: "Pick 2 digits (00-99)" },
-  maryaj: { digits: 1, range: [0, 99], description: "Pick 2 digits combo (00-99)" },
+  maryaj: { digits: 2, range: [0, 99], description: "Pick 2 pairs of numbers (00-99 each)" },
   loto3: { digits: 3, range: [0, 9], description: "Pick 3 single digits (0-9)" },
   loto4: { digits: 4, range: [0, 9], description: "Pick 4 single digits (0-9)" },
   loto5: { digits: 5, range: [0, 9], description: "Pick 5 single digits (0-9)" },
@@ -112,8 +112,10 @@ export default function PlayScreen() {
     if (selectedGame) {
       const config = GAME_CONFIGS[selectedGame];
       if (config) {
-        if (selectedGame === "senp" || selectedGame === "maryaj") {
+        if (selectedGame === "senp") {
           setNumbers([""]);
+        } else if (selectedGame === "maryaj") {
+          setNumbers(["", ""]);
         } else {
           setNumbers(Array(config.digits).fill(""));
         }
@@ -140,15 +142,21 @@ export default function PlayScreen() {
   const maxBet = currentGameConfig?.maxAmount || 10000;
 
   const getNumberString = () => {
-    if (selectedGame === "senp" || selectedGame === "maryaj") {
+    if (selectedGame === "senp") {
       return numbers[0]?.padStart(2, "0") || "";
+    }
+    if (selectedGame === "maryaj") {
+      return (numbers[0]?.padStart(2, "0") || "") + "-" + (numbers[1]?.padStart(2, "0") || "");
     }
     return numbers.join("");
   };
 
   const isNumbersComplete = () => {
-    if (selectedGame === "senp" || selectedGame === "maryaj") {
+    if (selectedGame === "senp") {
       return numbers[0]?.length === 2;
+    }
+    if (selectedGame === "maryaj") {
+      return numbers[0]?.length === 2 && numbers[1]?.length === 2;
     }
     const config = GAME_CONFIGS[selectedGame];
     return config && numbers.every((n) => n.length === 1);
@@ -168,7 +176,8 @@ export default function PlayScreen() {
     const numStr = getNumberString();
     // Check duplicate
     const isDuplicate = gameSelections.some(
-      (s) => s.state === selectedState && s.gameType === selectedGame && s.numbers.join("") === numStr
+      (s) => s.state === selectedState && s.gameType === selectedGame && 
+        (selectedGame === "maryaj" ? s.numbers.join("-") === numStr : s.numbers.join("") === numStr)
     );
     if (isDuplicate) {
       toast.error("You already have this selection in your cart");
@@ -181,14 +190,16 @@ export default function PlayScreen() {
         id: Date.now().toString(),
         state: selectedState,
         gameType: selectedGame,
-        numbers: selectedGame === "senp" || selectedGame === "maryaj" ? [numStr] : [...numbers],
+        numbers: selectedGame === "senp" ? [numStr] : selectedGame === "maryaj" ? [numbers[0]?.padStart(2, "0"), numbers[1]?.padStart(2, "0")] : [...numbers],
         betAmount: amt,
       },
     ]);
     // Reset for next selection
     const config = GAME_CONFIGS[selectedGame];
-    if (selectedGame === "senp" || selectedGame === "maryaj") {
+    if (selectedGame === "senp") {
       setNumbers([""]);
+    } else if (selectedGame === "maryaj") {
+      setNumbers(["", ""]);
     } else {
       setNumbers(Array(config?.digits || 1).fill(""));
     }
@@ -204,6 +215,17 @@ export default function PlayScreen() {
 
   const handlePlaceBets = async () => {
     if (gameSelections.length === 0) return;
+
+    // Pre-check balance
+    const currentBalance = currency === "HTG"
+      ? (wallet?.balanceHtg ?? wallet?.balance ?? 0)
+      : (wallet?.balanceUsd ?? wallet?.balance ?? 0);
+    if (totalAmount > currentBalance) {
+      toast.error(t("insufficientBalance") || "Insufficient balance");
+      router.push(`/player/payment?amount=${totalAmount - currentBalance}`);
+      return;
+    }
+
     setProcessing(true);
     try {
       let allSuccess = true;
@@ -242,7 +264,7 @@ export default function PlayScreen() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
       </div>
     );
   }
@@ -284,8 +306,8 @@ export default function PlayScreen() {
               onClick={() => { setSelectedState(draw.code); setSelectedGame(""); }}
               className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
                 selectedState === draw.code
-                  ? "bg-emerald-600 text-white border-emerald-600"
-                  : "bg-white text-gray-700 border-gray-200 hover:border-emerald-300"
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-blue-300"
               }`}
             >
               {draw.flag} {draw.code}
@@ -307,7 +329,7 @@ export default function PlayScreen() {
                   onClick={() => setSelectedGame(game)}
                   className={`p-3 rounded-lg border text-left transition-all ${
                     selectedGame === game
-                      ? "ring-2 ring-emerald-500 border-emerald-500 bg-emerald-50"
+                      ? "ring-2 ring-green-500 border-green-500 bg-green-50"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
@@ -334,7 +356,7 @@ export default function PlayScreen() {
             <p className="text-sm text-gray-500">{GAME_CONFIGS[selectedGame]?.description}</p>
 
             <div className="flex items-center gap-3 justify-center">
-              {(selectedGame === "senp" || selectedGame === "maryaj") ? (
+              {selectedGame === "senp" ? (
                 <input
                   type="text"
                   value={numbers[0] || ""}
@@ -346,6 +368,36 @@ export default function PlayScreen() {
                   maxLength={2}
                   className="w-20 h-16 text-center text-2xl font-bold border-2 border-amber-400 rounded-xl bg-amber-50 focus:outline-none focus:border-amber-500"
                 />
+              ) : selectedGame === "maryaj" ? (
+                <div className="flex items-center gap-3">
+                  <input
+                    type="text"
+                    value={numbers[0] || ""}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "").slice(0, 2);
+                      setNumbers([val, numbers[1] || ""]);
+                      if (val.length === 2) {
+                        document.getElementById("maryaj-num-2")?.focus();
+                      }
+                    }}
+                    placeholder="00"
+                    maxLength={2}
+                    className="w-20 h-16 text-center text-2xl font-bold border-2 border-amber-400 rounded-xl bg-amber-50 focus:outline-none focus:border-amber-500"
+                  />
+                  <span className="text-2xl font-bold text-gray-400">+</span>
+                  <input
+                    id="maryaj-num-2"
+                    type="text"
+                    value={numbers[1] || ""}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "").slice(0, 2);
+                      setNumbers([numbers[0] || "", val]);
+                    }}
+                    placeholder="00"
+                    maxLength={2}
+                    className="w-20 h-16 text-center text-2xl font-bold border-2 border-amber-400 rounded-xl bg-amber-50 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
               ) : (
                 numbers.map((num, idx) => (
                   <input
@@ -391,7 +443,7 @@ export default function PlayScreen() {
               </p>
             </div>
 
-            <Button onClick={handleAddSelection} className="w-full" size="lg">
+            <Button onClick={handleAddSelection} className="w-full bg-blue-600 hover:bg-blue-700" size="lg">
               {t("addSelection") || "Add Selection"}
             </Button>
           </CardContent>
@@ -403,7 +455,7 @@ export default function PlayScreen() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-3">
-              <ShoppingCart className="h-5 w-5 text-emerald-600" />
+              <ShoppingCart className="h-5 w-5 text-blue-600" />
               <h3 className="font-semibold">{t("yourSelections") || "Your Selections"} ({gameSelections.length})</h3>
             </div>
             <div className="space-y-2">
@@ -414,10 +466,10 @@ export default function PlayScreen() {
                       {GAME_LABELS[sel.gameType]}
                     </span>
                     <Badge variant="outline">{sel.state}</Badge>
-                    <span className="font-mono font-bold text-lg">{sel.numbers.join("")}</span>
+                    <span className="font-mono font-bold text-lg">{sel.gameType === "maryaj" ? sel.numbers.join("+") : sel.numbers.join("")}</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="font-semibold text-emerald-700">{formatCurrency(sel.betAmount, currency)}</span>
+                    <span className="font-semibold text-blue-600">{formatCurrency(sel.betAmount, currency)}</span>
                     <button onClick={() => handleRemoveSelection(sel.id)} className="text-red-400 hover:text-red-600">
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -427,12 +479,12 @@ export default function PlayScreen() {
             </div>
             <div className="flex justify-between items-center mt-4 pt-4 border-t">
               <span className="font-semibold text-gray-700">{t("total") || "Total"}</span>
-              <span className="text-xl font-bold text-emerald-700">{formatCurrency(totalAmount, currency)}</span>
+              <span className="text-xl font-bold text-blue-600">{formatCurrency(totalAmount, currency)}</span>
             </div>
             <Button
               onClick={handlePlaceBets}
               loading={processing}
-              className="w-full mt-4"
+              className="w-full mt-4 bg-green-600 hover:bg-green-700"
               size="lg"
             >
               {processing ? "Processing..." : `${t("pay") || "Pay"} ${formatCurrency(totalAmount, currency)}`}

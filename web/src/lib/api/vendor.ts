@@ -34,7 +34,7 @@ export const vendorAPI = {
     return response.data.data || response.data;
   },
 
-  async register(data: { firstName: string; lastName: string; email: string; phone: string; dateOfBirth: string; businessName?: string; password: string }): Promise<Vendor> {
+  async register(data: { firstName: string; lastName: string; email: string; phone: string; dateOfBirth: string; businessName?: string; password: string; operatingCurrency?: string }): Promise<Vendor> {
     const response = await apiClient.post("/vendors/register", data);
     return response.data.data || response.data;
   },

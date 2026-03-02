@@ -8,7 +8,7 @@ import { authAPI } from "@/lib/api/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, User, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, User, Save, Loader2, Lock } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function ProfileScreen() {
@@ -29,9 +29,10 @@ export default function ProfileScreen() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await authAPI.updateProfile(form);
+      const updateData = { email: form.email, phone: form.phone };
+      const res = await authAPI.updateProfile(updateData);
       if (res) {
-        setUser({ ...user, ...form } as any);
+        setUser({ ...user, ...updateData } as any);
       }
       toast.success(t("profileUpdated") || "Profile updated");
       setEditing(false);
@@ -64,8 +65,8 @@ export default function ProfileScreen() {
 
       {/* Avatar */}
       <div className="flex flex-col items-center">
-        <div className="bg-emerald-100 p-6 rounded-full mb-3">
-          <User className="h-12 w-12 text-emerald-600" />
+        <div className="bg-gradient-to-br from-amber-400 to-yellow-500 p-6 rounded-full mb-3">
+          <User className="h-12 w-12 text-white" />
         </div>
         <h2 className="text-lg font-semibold">{user?.firstName} {user?.lastName}</h2>
         <p className="text-sm text-gray-500">{user?.role}</p>
@@ -75,22 +76,31 @@ export default function ProfileScreen() {
       <Card>
         <CardContent className="p-4 space-y-4">
           <div>
-            <label className="text-sm font-medium text-gray-700">First Name</label>
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">First Name</label>
+              <Lock className="h-3.5 w-3.5 text-red-500" />
+            </div>
             <Input
               value={form.firstName}
-              onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-              disabled={!editing}
-              className="mt-1"
+              disabled={true}
+              className="mt-1 bg-gray-50"
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-700">Last Name</label>
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">Last Name</label>
+              <Lock className="h-3.5 w-3.5 text-red-500" />
+            </div>
             <Input
               value={form.lastName}
-              onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-              disabled={!editing}
-              className="mt-1"
+              disabled={true}
+              className="mt-1 bg-gray-50"
             />
+          </div>
+          <div className="bg-amber-50 border border-amber-300 rounded-lg p-3">
+            <p className="text-xs text-amber-700 flex items-center gap-1">
+              <Lock className="h-3 w-3" /> {t("nameNotEditable") || "Name cannot be changed"}
+            </p>
           </div>
           <div>
             <label className="text-sm font-medium text-gray-700">Email</label>
@@ -114,6 +124,17 @@ export default function ProfileScreen() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Save Button */}
+      {editing && (
+        <Button
+          className="w-full bg-green-600 hover:bg-green-700 rounded-2xl py-6 text-base"
+          onClick={handleSave}
+          loading={saving}
+        >
+          <Save className="h-5 w-5 mr-2" /> {t("saveChanges") || "Save Changes"}
+        </Button>
+      )}
     </div>
   );
 }

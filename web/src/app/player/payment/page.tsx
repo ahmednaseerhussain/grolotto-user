@@ -10,12 +10,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  ArrowLeft, Wallet, CheckCircle, Smartphone, DollarSign, Loader2
+  ArrowLeft, Wallet, CheckCircle, Smartphone, DollarSign, Loader2, CreditCard, Globe
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
 
-const QUICK_AMOUNTS = [10, 25, 50, 100, 250, 500];
+const QUICK_AMOUNTS_HTG = [500, 1000, 2000, 10000, 50000, 100000];
+const QUICK_AMOUNTS_USD = [5, 10, 15, 100, 350, 700];
 
 export default function PaymentScreen() {
   const router = useRouter();
@@ -36,7 +37,7 @@ export default function PaymentScreen() {
     ? (wallet?.balanceHtg ?? wallet?.balance ?? 0)
     : (wallet?.balanceUsd ?? wallet?.balance ?? 0);
 
-  const canProceed = parseFloat(amount) > 0 && selectedMethod && (!selectedMethod || phoneNumber.length >= 8);
+  const canProceed = parseFloat(amount) > 0 && selectedMethod === "moncash" && phoneNumber.length >= 8;
 
   const handlePayment = async () => {
     if (!canProceed) return;
@@ -93,12 +94,12 @@ export default function PaymentScreen() {
 
   if (showSuccess) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-        <div className="bg-emerald-100 p-6 rounded-full mb-4">
-          <CheckCircle className="h-16 w-16 text-emerald-600" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center bg-slate-900 rounded-2xl p-8">
+        <div className="bg-green-500 p-6 rounded-full mb-6">
+          <CheckCircle className="h-16 w-16 text-white" />
         </div>
-        <h2 className="text-2xl font-bold text-emerald-700">Payment Successful!</h2>
-        <p className="text-gray-500 mt-2">
+        <h2 className="text-3xl font-bold text-white mb-3">Success!</h2>
+        <p className="text-lg text-slate-300">
           {formatCurrency(parseFloat(amount), currency)} has been added to your wallet
         </p>
       </div>
@@ -106,51 +107,46 @@ export default function PaymentScreen() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
+    <div className="space-y-6 max-w-2xl mx-auto bg-slate-900 rounded-2xl p-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => router.back()}>
+      <div className="flex items-center gap-3 border-b border-slate-700 pb-4">
+        <Button variant="ghost" size="sm" onClick={() => router.back()} className="text-slate-200 hover:text-white hover:bg-slate-800">
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-xl font-bold">Make Payment</h1>
+        <h1 className="text-xl font-bold text-slate-100">Make Payment</h1>
       </div>
 
       {/* Current Balance */}
-      <Card className="bg-gray-50">
-        <CardContent className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Wallet className="h-5 w-5 text-gray-500" />
-            <span className="text-sm text-gray-600">Current Balance</span>
-          </div>
-          <span className="font-bold text-lg">{formatCurrency(balance, currency)}</span>
-        </CardContent>
-      </Card>
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6">
+        <p className="text-slate-200 text-sm mb-2">Current Balance</p>
+        <p className="text-white text-4xl font-bold">{formatCurrency(balance, currency)}</p>
+      </div>
 
       {/* Amount */}
       <div>
-        <label className="text-sm font-medium text-gray-700 block mb-2">Amount</label>
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-bold text-gray-500">{currency === "HTG" ? "G" : "$"}</span>
-          <Input
+        <label className="text-sm font-semibold text-slate-300 block mb-3">Enter Amount</label>
+        <div className="flex items-center gap-2 bg-slate-800 rounded-xl border-2 border-slate-700 px-4 py-4">
+          <span className="text-2xl text-slate-400">{currency === "HTG" ? "G" : "$"}</span>
+          <input
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            placeholder="Enter amount"
-            className="text-lg"
+            placeholder="0.00"
+            className="flex-1 bg-transparent text-white text-2xl font-semibold outline-none placeholder:text-slate-600"
           />
         </div>
       </div>
 
       {/* Quick Amounts */}
-      <div className="grid grid-cols-3 gap-2">
-        {QUICK_AMOUNTS.map((qa) => (
+      <div className="flex flex-wrap gap-2">
+        {(currency === "HTG" ? QUICK_AMOUNTS_HTG : QUICK_AMOUNTS_USD).map((qa) => (
           <button
             key={qa}
             onClick={() => setAmount(String(qa))}
-            className={`py-2 rounded-lg border text-sm font-medium transition-all ${
+            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
               amount === String(qa)
-                ? "bg-emerald-50 border-emerald-500 text-emerald-700"
-                : "border-gray-200 text-gray-600 hover:border-gray-300"
+                ? "bg-blue-600 border-blue-500 text-white"
+                : "bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-600"
             }`}
           >
             {formatCurrency(qa, currency)}
@@ -160,73 +156,113 @@ export default function PaymentScreen() {
 
       {/* Payment Method */}
       <div>
-        <label className="text-sm font-medium text-gray-700 block mb-2">Payment Method</label>
-        <button
-          onClick={() => setSelectedMethod("moncash")}
-          className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${
-            selectedMethod === "moncash"
-              ? "border-red-500 bg-red-50"
-              : "border-gray-200 hover:border-gray-300"
-          }`}
-        >
-          <div className="bg-red-500 p-2 rounded-lg">
-            <Smartphone className="h-6 w-6 text-white" />
-          </div>
-          <div className="text-left flex-1">
-            <p className="font-semibold">MonCash</p>
-            <p className="text-xs text-gray-500">Pay with Digicel mobile money</p>
-          </div>
-          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-            selectedMethod === "moncash" ? "border-red-500" : "border-gray-300"
-          }`}>
-            {selectedMethod === "moncash" && <div className="w-3 h-3 rounded-full bg-red-500" />}
-          </div>
-        </button>
+        <label className="text-sm font-semibold text-slate-300 block mb-3">Select Payment Method</label>
+        <div className="space-y-3">
+          {/* MonCash */}
+          <button
+            onClick={() => setSelectedMethod("moncash")}
+            className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all bg-slate-800 ${
+              selectedMethod === "moncash"
+                ? "border-blue-500"
+                : "border-slate-700 hover:border-slate-600"
+            }`}
+          >
+            <div className="bg-red-500 w-12 h-12 rounded-full flex items-center justify-center">
+              <Smartphone className="h-6 w-6 text-white" />
+            </div>
+            <div className="text-left flex-1">
+              <p className="font-semibold text-white">MonCash</p>
+              <p className="text-sm text-slate-400">Digicel mobile money</p>
+            </div>
+            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+              selectedMethod === "moncash" ? "border-blue-500" : "border-slate-600"
+            }`}>
+              {selectedMethod === "moncash" && <div className="w-3 h-3 rounded-full bg-blue-500" />}
+            </div>
+          </button>
+
+          {/* PayPal - Coming Soon */}
+          <button
+            onClick={() => toast(t("comingSoon") || "Coming Soon")}
+            className="w-full p-4 rounded-xl border-2 border-slate-700 bg-slate-800 flex items-center gap-4 opacity-50 cursor-not-allowed"
+          >
+            <div className="bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center">
+              <Globe className="h-6 w-6 text-white" />
+            </div>
+            <div className="text-left flex-1">
+              <p className="font-semibold text-white">{t("paypal") || "PayPal"}</p>
+              <p className="text-sm text-slate-400">Pay with PayPal account</p>
+            </div>
+            <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-1 rounded-full font-medium">
+              {t("comingSoon") || "Coming Soon"}
+            </span>
+          </button>
+
+          {/* Credit/Debit Card - Coming Soon */}
+          <button
+            onClick={() => toast(t("comingSoon") || "Coming Soon")}
+            className="w-full p-4 rounded-xl border-2 border-slate-700 bg-slate-800 flex items-center gap-4 opacity-50 cursor-not-allowed"
+          >
+            <div className="bg-purple-600 w-12 h-12 rounded-full flex items-center justify-center">
+              <CreditCard className="h-6 w-6 text-white" />
+            </div>
+            <div className="text-left flex-1">
+              <p className="font-semibold text-white">{t("creditDebitCard") || "Credit/Debit Card"}</p>
+              <p className="text-sm text-slate-400">Visa, Mastercard, etc.</p>
+            </div>
+            <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-1 rounded-full font-medium">
+              {t("comingSoon") || "Coming Soon"}
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Phone Number */}
       {selectedMethod === "moncash" && (
         <div>
-          <label className="text-sm font-medium text-gray-700 block mb-2">MonCash Phone Number</label>
-          <Input
-            type="tel"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            placeholder="+509 XXXX XXXX"
-          />
+          <label className="text-sm font-semibold text-slate-300 block mb-3">MonCash Phone Number</label>
+          <div className="bg-slate-800 rounded-xl border border-slate-700 px-4 py-4">
+            <input
+              type="tel"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="+509 1234 5678"
+              className="w-full bg-transparent text-white text-base outline-none placeholder:text-slate-500"
+            />
+          </div>
         </div>
       )}
 
       {/* Summary */}
       {parseFloat(amount) > 0 && (
-        <Card className="bg-gray-50">
-          <CardContent className="p-4 space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Amount</span>
-              <span className="font-medium">{formatCurrency(parseFloat(amount), currency)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Processing Fee</span>
-              <span className="font-medium text-emerald-600">Free</span>
-            </div>
-            <div className="flex justify-between font-semibold border-t pt-2">
-              <span>Total</span>
-              <span>{formatCurrency(parseFloat(amount), currency)}</span>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 space-y-2">
+          <p className="text-sm text-slate-400 mb-3">Payment Summary</p>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-300">Amount</span>
+            <span className="font-semibold text-white">{formatCurrency(parseFloat(amount), currency)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-300">Processing Fee</span>
+            <span className="font-semibold text-white">{formatCurrency(0, currency)}</span>
+          </div>
+          <div className="border-t border-slate-700 my-2"></div>
+          <div className="flex justify-between">
+            <span className="font-bold text-white">Total</span>
+            <span className="font-bold text-lg text-green-400">{formatCurrency(parseFloat(amount), currency)}</span>
+          </div>
+        </div>
       )}
 
       {/* Pay Button */}
-      <Button
-        className="w-full"
-        size="lg"
+      <button
         onClick={handlePayment}
-        disabled={!canProceed}
-        loading={processing}
+        disabled={!canProceed || processing}
+        className={`w-full rounded-xl py-4 flex items-center justify-center gap-2 font-bold text-lg text-white transition-colors ${
+          canProceed && !processing ? "bg-green-600 hover:bg-green-700" : "bg-slate-700 cursor-not-allowed"
+        }`}
       >
-        {processing ? "Processing..." : `Pay ${amount ? formatCurrency(parseFloat(amount), currency) : ""}`}
-      </Button>
+        {processing ? "Processing..." : `🔒 Pay ${amount ? formatCurrency(parseFloat(amount), currency) : ""}`}
+      </button>
     </div>
   );
 }

@@ -65,7 +65,7 @@ export default function SettingsScreen() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-xl font-bold text-emerald-700">GROLOTTO</h1>
+          <h1 className="text-xl font-bold text-amber-500">GROLOTTO</h1>
           <p className="text-sm text-gray-500">{t("settings") || "Settings"}</p>
         </div>
       </div>
@@ -76,8 +76,8 @@ export default function SettingsScreen() {
         onClick={() => router.push("/player/profile")}
       >
         <CardContent className="p-4 flex items-center gap-4">
-          <div className="bg-emerald-100 p-3 rounded-full">
-            <User className="h-6 w-6 text-emerald-600" />
+          <div className="bg-amber-100 p-3 rounded-full">
+            <User className="h-6 w-6 text-amber-600" />
           </div>
           <div className="flex-1">
             <p className="font-semibold">{user?.firstName} {user?.lastName}</p>
@@ -105,7 +105,7 @@ export default function SettingsScreen() {
                 }}
                 className={`p-3 rounded-lg border text-left flex items-center gap-2 transition-all ${
                   language === lang.code
-                    ? "border-emerald-500 bg-emerald-50"
+                    ? "border-amber-500 bg-amber-50"
                     : "border-gray-200 hover:border-gray-300"
                 }`}
               >
@@ -134,7 +134,7 @@ export default function SettingsScreen() {
                 }}
                 className={`p-3 rounded-lg border text-left flex items-center gap-2 transition-all ${
                   currency === cur.code
-                    ? "border-emerald-500 bg-emerald-50"
+                    ? "border-green-500 bg-green-50"
                     : "border-gray-200 hover:border-gray-300"
                 }`}
               >
@@ -156,9 +156,9 @@ export default function SettingsScreen() {
             <Shield className="h-5 w-5 text-gray-500" /> Preferences
           </h3>
           {[
-            { label: "Push Notifications", icon: Bell, value: notifications, onChange: setNotifications },
-            { label: "Auto-play Results", icon: Clock, value: autoPlay, onChange: setAutoPlay },
-            { label: "Biometric Auth", icon: Fingerprint, value: biometric, onChange: setBiometric },
+            { label: "Push Notifications", icon: Bell, value: notifications, onChange: setNotifications, activeColor: "bg-amber-500" },
+            { label: "Auto-play Results", icon: Clock, value: autoPlay, onChange: setAutoPlay, activeColor: "bg-green-500" },
+            { label: "Biometric Auth", icon: Fingerprint, value: biometric, onChange: setBiometric, activeColor: "bg-violet-500" },
           ].map((pref) => (
             <div key={pref.label} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -168,7 +168,7 @@ export default function SettingsScreen() {
               <button
                 onClick={() => pref.onChange(!pref.value)}
                 className={`relative w-11 h-6 rounded-full transition-colors ${
-                  pref.value ? "bg-emerald-500" : "bg-gray-300"
+                  pref.value ? pref.activeColor : "bg-gray-300"
                 }`}
               >
                 <span
@@ -233,8 +233,8 @@ export default function SettingsScreen() {
       </Card>
 
       {/* Logout */}
-      <Button variant="destructive" className="w-full" onClick={handleLogout}>
-        <LogOut className="h-4 w-4 mr-2" /> {t("signOut") || "Sign Out"}
+      <Button variant="destructive" className="w-full rounded-2xl py-6 text-base" onClick={handleLogout}>
+        <LogOut className="h-5 w-5 mr-2" /> {t("signOut") || "Sign Out"}
       </Button>
     </div>
   );

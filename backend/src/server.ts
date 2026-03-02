@@ -22,7 +22,13 @@ const app = express();
 // ─── Security ────────────────────────────────────────────
 app.use(helmet());
 app.use(cors({
-  origin: true,
+  origin: [
+    config.frontendUrl,
+    'https://grolotto.com',
+    'https://www.grolotto.com',
+    'http://localhost:3001',
+    'http://localhost:19006',
+  ].filter(Boolean),
   credentials: true,
 }));
 
@@ -50,7 +56,7 @@ app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));
 
 // ─── Body parsing ────────────────────────────────────────
 // Note: payment webhook route uses raw() parser, registered in its own route file
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '256kb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // ─── Health check ────────────────────────────────────────

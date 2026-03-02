@@ -11,7 +11,7 @@ import { useAppStore } from "@/store/app-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowLeft, Store } from "lucide-react";
+import { ArrowLeft, Store, DollarSign } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function VendorRegisterPage() {
@@ -27,6 +27,7 @@ export default function VendorRegisterPage() {
     phone: "",
     dateOfBirth: "",
     businessName: "",
+    operatingCurrency: "HTG" as "HTG" | "USD",
     password: "",
     confirmPassword: "",
   });
@@ -67,6 +68,7 @@ export default function VendorRegisterPage() {
         phone: formData.phone,
         dateOfBirth: formData.dateOfBirth,
         businessName: formData.businessName || undefined,
+        operatingCurrency: formData.operatingCurrency,
         password: formData.password,
       });
 
@@ -140,6 +142,40 @@ export default function VendorRegisterPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">{t("businessName")} ({t("optional")})</label>
               <Input value={formData.businessName} onChange={(e) => updateField("businessName", e.target.value)} placeholder={t("yourBusinessName")} />
+            </div>
+
+            {/* Operating Currency */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("operatingCurrency") || "Operating Currency"} *</label>
+              <p className="text-xs text-gray-500 mb-2">{t("vendorCurrencyNote") || "Choose which currency you want to accept"}</p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => updateField("operatingCurrency", "HTG")}
+                  className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
+                    formData.operatingCurrency === "HTG"
+                      ? "border-emerald-500 bg-emerald-50"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <span className="text-2xl">🇭🇹</span>
+                  <span className="font-semibold">HTG</span>
+                  <span className="text-xs text-gray-500">Gourde Haïtienne</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateField("operatingCurrency", "USD")}
+                  className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
+                    formData.operatingCurrency === "USD"
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <span className="text-2xl">🇺🇸</span>
+                  <span className="font-semibold">USD</span>
+                  <span className="text-xs text-gray-500">US Dollar</span>
+                </button>
+              </div>
             </div>
 
             <hr className="my-2" />

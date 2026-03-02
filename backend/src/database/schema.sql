@@ -131,6 +131,7 @@ CREATE TABLE vendors (
     notes TEXT,
     last_login TIMESTAMPTZ,
     is_active BOOLEAN DEFAULT FALSE,
+    operating_currency VARCHAR(3) DEFAULT 'HTG',
 
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()

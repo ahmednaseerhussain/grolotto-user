@@ -15,7 +15,7 @@ import { StatCard } from "@/components/common/stat-card";
 import { EmptyState } from "@/components/common/empty-state";
 import {
   Wallet, Search, Trophy, Clock, Gift, Star, ChevronRight, Eye, EyeOff,
-  Plus, DollarSign, Sparkles, TrendingUp, User
+  Plus, DollarSign, Sparkles, TrendingUp, User, ArrowRightLeft
 } from "lucide-react";
 import { formatCurrency, GAME_LABELS } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -33,6 +33,7 @@ export default function PlayerDashboard() {
   const t = useTranslation();
   const user = useAppStore((s) => s.user);
   const currency = useAppStore((s) => s.currency);
+  const setCurrency = useAppStore((s) => s.setCurrency);
   const wallet = useAppStore((s) => s.wallet);
   const vendors = useAppStore((s) => s.vendors);
   const advertisements = useAppStore((s) => s.advertisements);
@@ -82,11 +83,16 @@ export default function PlayerDashboard() {
     ? (wallet?.balanceHtg ?? wallet?.balance ?? 0)
     : (wallet?.balanceUsd ?? wallet?.balance ?? 0);
 
-  const filteredVendors = (vendors || []).filter((v: any) =>
-    !searchQuery || 
-    v.businessName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    v.firstName?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const balanceHtg = wallet?.balanceHtg ?? wallet?.balance ?? 0;
+  const balanceUsd = wallet?.balanceUsd ?? 0;
+
+  const filteredVendors = (vendors || []).filter((v: any) => {
+    const matchesSearch = !searchQuery || 
+      v.businessName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      v.firstName?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCurrency = !v.operatingCurrency || v.operatingCurrency === currency;
+    return matchesSearch && matchesCurrency;
+  });
 
   const getEnabledGames = (vendor: any) => {
     if (!vendor.draws) return [];
@@ -130,7 +136,7 @@ export default function PlayerDashboard() {
       {/* Welcome Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-emerald-700">GROLOTTO</h1>
+          <h1 className="text-2xl font-bold text-amber-500">GROLOTTO</h1>
           <p className="text-gray-600">
             {t("welcome")}, {user?.firstName || user?.name?.split(" ")[0] || t("player")}! {t("readyToPlay")}
           </p>
@@ -142,7 +148,7 @@ export default function PlayerDashboard() {
 
       {/* Advertisement Slideshow */}
       {advertisements.length > 0 && (
-        <div className="relative overflow-hidden rounded-xl h-40 bg-gradient-to-r from-emerald-500 to-teal-600">
+        <div className="relative overflow-hidden rounded-xl h-40 bg-gradient-to-r from-blue-500 to-blue-600">
           {advertisements.map((ad: any, i: number) => (
             <div
               key={ad.id || i}
@@ -179,37 +185,42 @@ export default function PlayerDashboard() {
       )}
 
       {/* Balance Card */}
-      <Card className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white border-0">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Wallet className="h-5 w-5" />
-              <span className="text-sm opacity-80">{t("availableBalance")}</span>
+      <Card className="bg-white shadow-md border-0">
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-sm text-gray-500">{t("availableBalance") || "Available Balance"}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <p className="text-3xl font-bold text-gray-900">
+                  {showBalance ? formatCurrency(balance, currency) : "••••••"}
+                </p>
+                <button
+                  onClick={() => setShowBalance(!showBalance)}
+                  className="p-1 text-gray-400 hover:text-gray-600"
+                >
+                  {showBalance ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 mt-1 italic">
+                {showBalance ? "Tap eye to hide balance" : "Tap eye to show balance"}
+              </p>
             </div>
-            <button onClick={() => setShowBalance(!showBalance)} className="opacity-80 hover:opacity-100">
-              {showBalance ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-            </button>
-          </div>
-          <p className="text-3xl font-bold mb-4">
-            {showBalance ? formatCurrency(balance, currency) : "••••••"}
-          </p>
-          <div className="flex gap-3">
             <Button
-              variant="secondary"
               size="sm"
-              className="bg-white/20 hover:bg-white/30 text-white border-0"
+              className="bg-blue-500 hover:bg-blue-600 text-white"
               onClick={() => router.push("/player/payment")}
             >
               <Plus className="h-4 w-4 mr-1" /> {t("addFunds") || "Add Funds"}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-white/10"
+          </div>
+          <div className="flex items-center justify-center mt-3 pt-3 border-t border-gray-200">
+            <button
               onClick={() => router.push("/player/transactions")}
+              className="flex items-center gap-1 text-sm text-blue-500 font-medium hover:text-blue-600"
             >
-              {t("viewTransactionHistory") || "View History"} <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
+              {t("viewTransactionHistory") || "View Transaction History"}
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         </CardContent>
       </Card>
@@ -217,38 +228,41 @@ export default function PlayerDashboard() {
       {/* Quick Actions */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { icon: Wallet, label: t("wallet") || "Wallet", color: "text-blue-600 bg-blue-50", href: "/player/payment" },
-          { icon: Sparkles, label: t("tchala") || "Tchala", color: "text-purple-600 bg-purple-50", href: "/player/tchala" },
-          { icon: Trophy, label: t("results") || "Results", color: "text-amber-600 bg-amber-50", href: "/player/results" },
-          { icon: Clock, label: t("history") || "History", color: "text-emerald-600 bg-emerald-50", href: "/player/history" },
+          { icon: Wallet, label: t("wallet") || "Wallet", subtitle: t("addFunds") || "Add Funds", color: "bg-blue-500", href: "/player/payment" },
+          { icon: Sparkles, label: t("tchala") || "Tchala", subtitle: t("dreamNumbers") || "Dream Numbers", color: "bg-amber-500", href: "/player/tchala" },
+          { icon: Trophy, label: t("results") || "Results", subtitle: t("offers") || "Latest", color: "bg-emerald-500", href: "/player/results" },
+          { icon: Clock, label: t("history") || "History", subtitle: t("pastPlays") || "Past Plays", color: "bg-violet-500", href: "/player/history" },
         ].map((action) => (
           <button
             key={action.href}
             onClick={() => router.push(action.href)}
-            className="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all"
+            className={`flex flex-col items-center justify-center gap-2 p-5 rounded-2xl ${action.color} text-white hover:opacity-90 transition-all min-h-[100px]`}
           >
-            <div className={`p-3 rounded-full ${action.color}`}>
-              <action.icon className="h-5 w-5" />
-            </div>
-            <span className="text-sm font-medium text-gray-700">{action.label}</span>
+            <action.icon className="h-8 w-8" />
+            <span className="text-base font-semibold">{action.label}</span>
+            <span className="text-xs opacity-80">{action.subtitle}</span>
           </button>
         ))}
       </div>
 
       {/* Rewards Banner */}
-      <button
+      <div
         onClick={() => router.push("/player/rewards")}
-        className="w-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 flex items-center justify-between text-white hover:opacity-95 transition-opacity"
+        className="w-full bg-amber-100 border-2 border-amber-400 rounded-2xl p-4 cursor-pointer hover:bg-amber-50 transition-colors"
       >
-        <div className="flex items-center gap-3">
-          <Gift className="h-8 w-8" />
-          <div className="text-left">
-            <p className="font-semibold">{t("rewards") || "Rewards"}</p>
-            <p className="text-sm opacity-90">{t("checkRewards") || "Check your rewards & bonuses"}</p>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center">
+            <Gift className="h-8 w-8 text-amber-500" />
+          </div>
+          <div className="flex-1">
+            <p className="font-bold text-amber-900 text-lg">🎁 {t("rewards") || "Rewards"}</p>
+            <p className="text-sm text-amber-800">{t("checkRewards") || "Check your rewards & bonuses"}</p>
           </div>
         </div>
-        <ChevronRight className="h-5 w-5" />
-      </button>
+        <button className="w-full bg-amber-500 text-white py-3 rounded-xl font-bold text-base hover:bg-amber-600 transition-colors">
+          {t("viewRewards") || "View Rewards"}
+        </button>
+      </div>
 
       {/* Find Vendors */}
       <div>

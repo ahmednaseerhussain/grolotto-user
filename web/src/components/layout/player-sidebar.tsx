@@ -10,7 +10,7 @@ import {
   Bell,
   HelpCircle,
   Settings,
-  Gamepad2,
+  Ticket,
   Gift,
   CreditCard,
   Wallet,
@@ -19,7 +19,7 @@ import {
 
 const navItems = [
   { href: "/player/dashboard", icon: Home, labelKey: "home" },
-  { href: "/player/play", icon: Gamepad2, labelKey: "play" },
+  { href: "/player/play", icon: Ticket, labelKey: "ticket" },
   { href: "/player/history", icon: History, labelKey: "history" },
   { href: "/player/results", icon: BookOpen, labelKey: "results" },
   { href: "/player/tchala", icon: BookOpen, labelKey: "tchala" },
@@ -38,7 +38,7 @@ export function PlayerSidebar() {
     <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r border-gray-200 h-screen sticky top-0">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-100">
-        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center">
           <span className="text-white font-bold text-lg">G</span>
         </div>
         <div>
@@ -60,11 +60,11 @@ export function PlayerSidebar() {
                   className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                     isActive
-                      ? "bg-blue-50 text-blue-700"
+                      ? "bg-amber-50 text-amber-700"
                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                   )}
                 >
-                  <Icon className={cn("h-5 w-5", isActive ? "text-blue-600" : "text-gray-400")} />
+                  <Icon className={cn("h-5 w-5", isActive ? "text-amber-600" : "text-gray-400")} />
                   {t(item.labelKey)}
                 </Link>
               </li>
@@ -83,14 +83,14 @@ export function PlayerBottomNav() {
 
   const bottomItems = [
     { href: "/player/dashboard", icon: Home, labelKey: "home" },
-    { href: "/player/history", icon: History, labelKey: "history" },
-    { href: "/player/play", icon: Gamepad2, labelKey: "play" },
     { href: "/player/notifications", icon: Bell, labelKey: "notifications" },
+    { href: "/player/history", icon: History, labelKey: "history" },
+    { href: "/player/help", icon: HelpCircle, labelKey: "help" },
     { href: "/player/settings", icon: Settings, labelKey: "settings" },
   ];
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-40">
       <div className="flex items-center justify-around py-2">
         {bottomItems.map((item) => {
           const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
@@ -101,11 +101,11 @@ export function PlayerBottomNav() {
               href={item.href}
               className={cn(
                 "flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-colors",
-                isActive ? "text-blue-600" : "text-gray-400"
+                isActive ? "text-amber-600" : "text-gray-400"
               )}
             >
-              <Icon className="h-5 w-5" />
-              <span className="text-[10px] font-medium">{t(item.labelKey)}</span>
+              <Icon className="h-6 w-6" />
+              <span className="text-[11px] font-semibold">{t(item.labelKey)}</span>
             </Link>
           );
         })}

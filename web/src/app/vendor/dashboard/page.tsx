@@ -155,7 +155,7 @@ export default function VendorDashboard() {
         />
         <StatCard
           title={t("ticketsToday") || "Today Bets"}
-          value={formatCurrency(stats.todayBets || stats.todayEarnings || 0, currency)}
+          value={formatCurrency(Number(stats.todayBets || stats.todayEarnings || 0), currency)}
           icon={<BarChart3 className="h-5 w-5 text-red-600" />}
           onClick={() => setActiveModal("todayEarnings")}
         />

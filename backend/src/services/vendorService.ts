@@ -21,6 +21,7 @@ export interface VendorPublic {
   totalRevenue: number;
   totalPlayers: number;
   availableBalance: number;
+  operatingCurrency: string;
 }
 
 interface DrawConfig {
@@ -37,7 +38,8 @@ export async function getActiveVendors(): Promise<VendorPublic[]> {
     `SELECT v.id, v.user_id, v.first_name, v.last_name, v.business_name, v.display_name,
             v.status, v.bio, v.location, v.business_hours, v.specialties,
             v.rating, v.total_tickets_sold, v.is_active,
-            v.total_revenue, v.total_players, v.available_balance
+            v.total_revenue, v.total_players, v.available_balance,
+            v.operating_currency
      FROM vendors v
      WHERE v.status IN ('approved', 'active') AND v.is_active = TRUE
      ORDER BY v.rating DESC`
@@ -66,6 +68,7 @@ export async function getActiveVendors(): Promise<VendorPublic[]> {
       totalRevenue: parseFloat(row.total_revenue || '0'),
       totalPlayers: row.total_players || 0,
       availableBalance: parseFloat(row.available_balance || '0'),
+      operatingCurrency: row.operating_currency || 'HTG',
     });
   }
 
@@ -110,6 +113,7 @@ export async function getVendorById(vendorId: string): Promise<VendorPublic> {
     totalRevenue: parseFloat(row.total_revenue || '0'),
     totalPlayers: row.total_players || 0,
     availableBalance: parseFloat(row.available_balance || '0'),
+    operatingCurrency: row.operating_currency || 'HTG',
   };
 }
 
@@ -225,13 +229,15 @@ export async function registerVendor(
     phone: string;
     dateOfBirth: string;
     businessName?: string;
+    operatingCurrency?: string;
   }
 ): Promise<{ vendorId: string }> {
+  const currency = data.operatingCurrency === 'USD' ? 'USD' : 'HTG';
   const result = await query(
-    `INSERT INTO vendors (user_id, first_name, last_name, business_name, display_name, status, application_date)
-     VALUES ($1, $2, $3, $4, $5, 'pending', NOW())
+    `INSERT INTO vendors (user_id, first_name, last_name, business_name, display_name, status, application_date, operating_currency)
+     VALUES ($1, $2, $3, $4, $5, 'pending', NOW(), $6)
      RETURNING id`,
-    [userId, data.firstName, data.lastName, data.businessName || null, `${data.firstName} ${data.lastName}`]
+    [userId, data.firstName, data.lastName, data.businessName || null, `${data.firstName} ${data.lastName}`, currency]
   );
 
   return { vendorId: result.rows[0].id };

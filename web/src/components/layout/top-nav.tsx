@@ -66,7 +66,7 @@ export function TopNav() {
       <div className="flex items-center justify-between h-16 px-4 lg:px-8">
         {/* Mobile logo */}
         <div className="lg:hidden flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">G</span>
           </div>
           <span className="font-bold text-gray-900">GroLotto</span>
@@ -107,7 +107,7 @@ export function TopNav() {
                     }}
                     className={cn(
                       "w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50",
-                      language === lang.value ? "font-medium text-blue-600" : "text-gray-700"
+                      language === lang.value ? "font-medium text-amber-600" : "text-gray-700"
                     )}
                   >
                     {lang.flag} {lang.label}
