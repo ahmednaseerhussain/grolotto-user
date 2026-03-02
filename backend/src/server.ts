@@ -1,3 +1,48 @@
+import { query } from './database/pool';
+
+// ─── Startup migrations ─────────────────────────────────
+async function runStartupMigrations() {
+  try {
+    // Migration 006: operating_currency on vendors
+    await query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'vendors' AND column_name = 'operating_currency'
+        ) THEN
+          ALTER TABLE vendors ADD COLUMN operating_currency VARCHAR(3) DEFAULT 'HTG';
+        END IF;
+      END $$;
+    `);
+
+    // Migration 007: gift_cards table
+    await query(`
+      CREATE TABLE IF NOT EXISTS gift_cards (
+        id            SERIAL PRIMARY KEY,
+        code          VARCHAR(20) UNIQUE NOT NULL,
+        amount        NUMERIC(12,2) NOT NULL,
+        currency      VARCHAR(3) NOT NULL DEFAULT 'HTG',
+        status        VARCHAR(20) NOT NULL DEFAULT 'active',
+        purchased_by  UUID NOT NULL REFERENCES users(id),
+        redeemed_by   UUID REFERENCES users(id),
+        recipient_name VARCHAR(100),
+        message       TEXT,
+        purchased_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        redeemed_at   TIMESTAMPTZ,
+        expires_at    TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '1 year')
+      );
+      CREATE INDEX IF NOT EXISTS idx_gift_cards_code ON gift_cards(code);
+      CREATE INDEX IF NOT EXISTS idx_gift_cards_purchased_by ON gift_cards(purchased_by);
+      CREATE INDEX IF NOT EXISTS idx_gift_cards_status ON gift_cards(status);
+    `);
+
+    console.log('[Migration] Startup migrations applied successfully');
+  } catch (err) {
+    console.error('[Migration] Startup migration error:', err);
+    // Non-fatal — server still starts
+  }
+}
+
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -141,7 +186,8 @@ app.use(errorHandler);
 
 // ─── Start server ────────────────────────────────────────
 const PORT = config.port;
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+  await runStartupMigrations();
   console.log(`
 ╔══════════════════════════════════════════════════╗
 ║           GROLOTTO API SERVER                    ║

@@ -233,14 +233,25 @@ export async function registerVendor(
   }
 ): Promise<{ vendorId: string }> {
   const currency = data.operatingCurrency === 'USD' ? 'USD' : 'HTG';
+
+  // Insert without operating_currency in case the column hasn't been migrated yet
   const result = await query(
-    `INSERT INTO vendors (user_id, first_name, last_name, business_name, display_name, status, application_date, operating_currency)
-     VALUES ($1, $2, $3, $4, $5, 'pending', NOW(), $6)
+    `INSERT INTO vendors (user_id, first_name, last_name, business_name, display_name, status, application_date)
+     VALUES ($1, $2, $3, $4, $5, 'pending', NOW())
      RETURNING id`,
-    [userId, data.firstName, data.lastName, data.businessName || null, `${data.firstName} ${data.lastName}`, currency]
+    [userId, data.firstName, data.lastName, data.businessName || null, `${data.firstName} ${data.lastName}`]
   );
 
-  return { vendorId: result.rows[0].id };
+  const vendorId = result.rows[0].id;
+
+  // Try to set operating_currency — silently skip if column doesn't exist yet
+  try {
+    await query(`UPDATE vendors SET operating_currency = $1 WHERE id = $2`, [currency, vendorId]);
+  } catch (_e) {
+    // Column doesn't exist yet — migration-006 not run; will default to 'HTG'
+  }
+
+  return { vendorId };
 }
 
 /**
