@@ -15,6 +15,7 @@ export default function VendorRegistration() {
     phone: "",
     dateOfBirth: "",
     businessName: "",
+    operatingCurrency: "HTG" as "HTG" | "USD",
     password: "",
     confirmPassword: "",
   });
@@ -78,6 +79,7 @@ export default function VendorRegistration() {
         phone: formData.phone,
         dateOfBirth: formData.dateOfBirth,
         businessName: formData.businessName || undefined,
+        operatingCurrency: formData.operatingCurrency,
       });
 
       // Set user in store so the app navigates to authenticated state
@@ -215,6 +217,41 @@ export default function VendorRegistration() {
               placeholder={t("yourBusinessName")}
               placeholderTextColor="#9ca3af"
             />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Operating Currency *</Text>
+            <Text style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
+              This cannot be changed after registration
+            </Text>
+            <View style={{ flexDirection: "row", gap: 12 }}>
+              <Pressable
+                style={[
+                  styles.input,
+                  { flex: 1, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8 },
+                  formData.operatingCurrency === "HTG" && { borderColor: "#f59e0b", backgroundColor: "rgba(245,158,11,0.08)" },
+                ]}
+                onPress={() => updateFormData("operatingCurrency", "HTG")}
+              >
+                <Text style={{ fontSize: 18 }}>🇭🇹</Text>
+                <Text style={[styles.label, { marginBottom: 0, fontWeight: formData.operatingCurrency === "HTG" ? "700" : "500" }]}>
+                  HTG (Gourde)
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.input,
+                  { flex: 1, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8 },
+                  formData.operatingCurrency === "USD" && { borderColor: "#f59e0b", backgroundColor: "rgba(245,158,11,0.08)" },
+                ]}
+                onPress={() => updateFormData("operatingCurrency", "USD")}
+              >
+                <Text style={{ fontSize: 18 }}>🇺🇸</Text>
+                <Text style={[styles.label, { marginBottom: 0, fontWeight: formData.operatingCurrency === "USD" ? "700" : "500" }]}>
+                  USD (Dollar)
+                </Text>
+              </Pressable>
+            </View>
           </View>
 
           <Text style={[styles.sectionTitle, styles.sectionSpacing]}>{t("requiredDocuments")}</Text>

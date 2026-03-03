@@ -85,12 +85,12 @@ export default function VendorSettingsScreen() {
         </CardContent>
       </Card>
 
-      {/* Currency */}
+      {/* Currency (Display) */}
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
             <DollarSign className="h-5 w-5 text-emerald-600" />
-            <h3 className="font-semibold">{t("currency") || "Currency"}</h3>
+            <h3 className="font-semibold">{t("currency") || "Display Currency"}</h3>
           </div>
           <div className="flex gap-2">
             {CURRENCIES.map((cur) => (
@@ -108,6 +108,9 @@ export default function VendorSettingsScreen() {
               </button>
             ))}
           </div>
+          <p className="text-xs text-gray-400 mt-2">
+            Display currency can be changed anytime. Your operating currency is locked at registration.
+          </p>
         </CardContent>
       </Card>
 

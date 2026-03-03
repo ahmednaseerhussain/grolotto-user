@@ -48,7 +48,7 @@ export const MULTIPLIERS: Record<string, number> = {
 export const GAME_LABELS: Record<string, string> = {
   senp: "Senp",
   maryaj: "Maryaj",
-  loto3: "Loto 3",
-  loto4: "Loto 4",
-  loto5: "Loto 5",
+  loto3: "Lotto 3",
+  loto4: "Lotto 4",
+  loto5: "Lotto 5",
 };

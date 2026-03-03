@@ -272,6 +272,17 @@ export async function getVendorStats(vendorId: string) {
     [vendorId]
   );
 
+  // Get system commission rate from app_settings (default 10%)
+  let commissionRate = 0.10;
+  try {
+    const commResult = await query(
+      `SELECT value FROM app_settings WHERE key = 'system_commission'`
+    );
+    if (commResult.rows.length > 0) {
+      commissionRate = parseFloat(commResult.rows[0].value) || 0.10;
+    }
+  } catch {}
+
   const v = vendor.rows[0];
   const t = todayTickets.rows[0];
 
@@ -283,7 +294,8 @@ export async function getVendorStats(vendorId: string) {
     totalTicketsSold: v.total_tickets_sold,
     ticketsToday: parseInt(t.count),
     todayBets: parseFloat(t.total_bets),
-    earningsToday: parseFloat(t.total_bets) * 0.1, // 10% commission
+    earningsToday: parseFloat(t.total_bets) * commissionRate,
+    commissionRate: commissionRate,
   };
 }
 
@@ -424,7 +436,14 @@ export async function requestPayout(
   vendorId: string,
   amount: number,
   method: string,
-  currency: string = 'HTG'
+  currency: string = 'HTG',
+  bankDetails?: {
+    bankName?: string;
+    bankAccountName?: string;
+    bankAccountNumber?: string;
+    bankRoutingNumber?: string;
+    moncashPhone?: string;
+  }
 ) {
   // Check vendor balance
   const vendorResult = await query(
@@ -444,10 +463,18 @@ export async function requestPayout(
   );
 
   const result = await query(
-    `INSERT INTO vendor_payouts (vendor_id, amount, currency, method, status, request_date)
-     VALUES ($1, $2, $3, $4, 'pending', NOW())
+    `INSERT INTO vendor_payouts (vendor_id, amount, currency, method, status, request_date,
+       bank_name, bank_account_name, bank_account_number, bank_routing_number, moncash_phone)
+     VALUES ($1, $2, $3, $4, 'pending', NOW(), $5, $6, $7, $8, $9)
      RETURNING *`,
-    [vendorId, amount, currency, method]
+    [
+      vendorId, amount, currency, method,
+      bankDetails?.bankName || null,
+      bankDetails?.bankAccountName || null,
+      bankDetails?.bankAccountNumber || null,
+      bankDetails?.bankRoutingNumber || null,
+      bankDetails?.moncashPhone || null
+    ]
   );
 
   return result.rows[0];

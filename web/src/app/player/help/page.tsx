@@ -66,11 +66,11 @@ export default function HelpPage() {
       items: [
         {
           question: "How do I play GroLotto?",
-          answer: "Go to the Play tab and choose a game type: Borlèt (pick 2 digits 00-99), Maryaj (pick 2 pairs of numbers), or Loto3/Loto4/Loto5 (pick 3, 4, or 5 numbers). Select your numbers, choose a draw time (Morning, Afternoon, or Evening), enter your bet amount, and tap Play!",
+          answer: "Go to the Play tab and choose a game type: Borlèt (pick 2 digits 00-99), Maryaj (pick 2 pairs of numbers), or Lotto 3/Lotto 4/Lotto 5 (pick 3, 4, or 5 numbers). Select your numbers, choose a draw time (Morning, Afternoon, or Evening), enter your bet amount, and tap Play!",
         },
         {
           question: "What are the different game types?",
-          answer: "Borlèt: Pick a 2-digit number (00-99). Maryaj: Pick 2 pairs of numbers. Loto3: Pick 3 numbers. Loto4: Pick 4 numbers. Loto5: Pick 5 numbers. Tchala: Dream-number interpretations — search a dream symbol and play its associated number.",
+          answer: "Borlèt: Pick a 2-digit number (00-99). Maryaj: Pick 2 pairs of numbers. Lotto 3: Pick 3 numbers. Lotto 4: Pick 4 numbers. Lotto 5: Pick 5 numbers. Tchala: Dream-number interpretations — search a dream symbol and play its associated number.",
         },
         {
           question: "What are the draw times?",

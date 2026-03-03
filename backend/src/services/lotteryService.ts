@@ -14,6 +14,7 @@ export interface PlaceBetInput {
   numbers: number[];
   betAmount: number;
   currency: 'USD' | 'HTG';
+  drawTime?: 'midday' | 'evening';
 }
 
 /**
@@ -44,6 +45,17 @@ const GAME_MAX_NUMBER: Record<GameType, number> = {
  */
 export async function placeBet(input: PlaceBetInput) {
   const { playerId, vendorId, drawState, gameType, numbers, betAmount, currency } = input;
+
+  // Determine draw time: use provided value, or auto-detect from current time
+  // Before 3 PM ET = midday, after 3 PM ET = evening
+  let drawTime = input.drawTime || 'midday';
+  if (!input.drawTime) {
+    const now = new Date();
+    // Approximate ET offset (UTC-5 or -4 DST)
+    const utcHour = now.getUTCHours();
+    const etHour = (utcHour - 5 + 24) % 24;
+    drawTime = etHour >= 15 ? 'evening' : 'midday';
+  }
 
   // 1. Validate number count
   if (numbers.length !== GAME_NUMBER_COUNT[gameType]) {
@@ -141,21 +153,21 @@ export async function placeBet(input: PlaceBetInput) {
       throw new AppError('Insufficient balance', 400, 'INSUFFICIENT_BALANCE');
     }
 
-    // 7. Find or create current open GLOBAL round (one per state+date)
+    // 7. Find or create current open GLOBAL round (one per state+date+drawTime)
     let roundResult = await client.query(
       `SELECT id FROM lottery_rounds
-       WHERE draw_state = $1 AND draw_date = CURRENT_DATE AND status = 'open'
-       ORDER BY draw_time LIMIT 1`,
-      [drawState]
+       WHERE draw_state = $1 AND draw_date = CURRENT_DATE AND draw_time = $2 AND status = 'open'
+       ORDER BY created_at DESC LIMIT 1`,
+      [drawState, drawTime]
     );
 
     if (roundResult.rows.length === 0) {
-      // Create a new global round
+      // Create a new global round for this draw time
       roundResult = await client.query(
         `INSERT INTO lottery_rounds (draw_state, draw_date, draw_time, status)
-         VALUES ($1, CURRENT_DATE, 'midday', 'open')
+         VALUES ($1, CURRENT_DATE, $2, 'open')
          RETURNING id`,
-        [drawState]
+        [drawState, drawTime]
       );
     }
 
@@ -242,6 +254,30 @@ export async function placeBet(input: PlaceBetInput) {
          AND (draw_date = CURRENT_DATE OR draw_date IS NULL)`,
         [betAmount, vendorId, drawState, formattedNumber]
       );
+    }
+
+    // 15b. Auto-stop numbers that reach the global threshold (default $1000)
+    try {
+      const thresholdResult = await client.query(
+        `SELECT value FROM app_settings WHERE key = 'number_auto_stop_threshold'`
+      );
+      const autoStopThreshold = thresholdResult.rows.length > 0
+        ? parseFloat(thresholdResult.rows[0].value)
+        : 1000;
+
+      for (const num of numbers) {
+        const formattedNumber = num.toString().padStart(2, '0');
+        await client.query(
+          `UPDATE number_limits SET is_stopped = TRUE
+           WHERE vendor_id = $1 AND draw_state = $2 AND number = $3
+           AND (draw_date = CURRENT_DATE OR draw_date IS NULL)
+           AND current_total >= $4 AND is_stopped = FALSE`,
+          [vendorId, drawState, formattedNumber, autoStopThreshold]
+        );
+      }
+    } catch (autoStopErr) {
+      // Non-fatal: auto-stop is optional
+      console.error('[AutoStop] Error checking threshold:', autoStopErr);
     }
 
     // 15. Send notifications (non-blocking)

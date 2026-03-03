@@ -11,7 +11,17 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "GroLotto - Lottery Platform",
   description: "GroLotto - Haiti's premier lottery platform for players and vendors",
-  icons: { icon: "/favicon.ico" },
+  icons: { icon: "/favicon.ico", apple: "/grolotto-logo.png" },
+  manifest: "/manifest.json",
+  themeColor: "#f59e0b",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "GroLotto",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({

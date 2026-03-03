@@ -117,22 +117,22 @@ export const translations = {
     es: "MARYAJ"
   },
   loto3: {
-    ht: "LOTO 3",
-    en: "LOTO 3",
-    fr: "LOTO 3",
-    es: "LOTO 3"
+    ht: "LOTTO 3",
+    en: "LOTTO 3",
+    fr: "LOTTO 3",
+    es: "LOTTO 3"
   },
   loto4: {
-    ht: "LOTO 4", 
-    en: "LOTO 4",
-    fr: "LOTO 4",
-    es: "LOTO 4"
+    ht: "LOTTO 4", 
+    en: "LOTTO 4",
+    fr: "LOTTO 4",
+    es: "LOTTO 4"
   },
   loto5: {
-    ht: "LOTO 5",
-    en: "LOTO 5",
-    fr: "LOTO 5",
-    es: "LOTO 5"
+    ht: "LOTTO 5",
+    en: "LOTTO 5",
+    fr: "LOTTO 5",
+    es: "LOTTO 5"
   },
   
   // Game descriptions

@@ -1,0 +1,20 @@
+{
+  "name": "GroLotto - Lottery Platform",
+  "short_name": "GroLotto",
+  "description": "Haiti's premier lottery platform for players and vendors",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#f59e0b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/grolotto-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "entertainment"],
+  "lang": "en"
+}

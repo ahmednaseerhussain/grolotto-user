@@ -87,6 +87,9 @@ export default function PlayerDashboard() {
   const balanceUsd = wallet?.balanceUsd ?? 0;
 
   const filteredVendors = (vendors || []).filter((v: any) => {
+    // Filter by operating currency match
+    const matchesCurrency = !v.operatingCurrency || v.operatingCurrency === currency;
+    if (!matchesCurrency) return false;
     return !searchQuery ||
       v.businessName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       v.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||

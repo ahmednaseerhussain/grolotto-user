@@ -184,7 +184,7 @@ export default function GiftCardScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Pressable onPress={() => { setPurchasedCard(null); navigation.goBack(); }}>
-            <Ionicons name="close" size={24} color="#374151" />
+            <Ionicons name="close" size={24} color="#f1f5f9" />
           </Pressable>
           <Text style={styles.headerTitle}>Gift Card Purchased!</Text>
           <View style={{ width: 24 }} />
@@ -252,7 +252,7 @@ export default function GiftCardScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Pressable onPress={() => { setRedeemResult(null); navigation.goBack(); }}>
-            <Ionicons name="close" size={24} color="#374151" />
+            <Ionicons name="close" size={24} color="#f1f5f9" />
           </Pressable>
           <Text style={styles.headerTitle}>Redeemed!</Text>
           <View style={{ width: 24 }} />
@@ -275,8 +275,8 @@ export default function GiftCardScreen() {
           <Pressable style={styles.doneButton} onPress={() => setRedeemResult(null)}>
             <Text style={styles.doneText}>Redeem Another</Text>
           </Pressable>
-          <Pressable style={[styles.doneButton, { backgroundColor: "#f3f4f6", marginTop: 8 }]} onPress={() => { setRedeemResult(null); navigation.goBack(); }}>
-            <Text style={[styles.doneText, { color: "#374151" }]}>Done</Text>
+          <Pressable style={[styles.doneButton, { backgroundColor: "#334155", marginTop: 8 }]} onPress={() => { setRedeemResult(null); navigation.goBack(); }}>
+            <Text style={[styles.doneText, { color: "#f1f5f9" }]}>Done</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -288,7 +288,7 @@ export default function GiftCardScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color="#374151" />
+          <Ionicons name="chevron-back" size={24} color="#f1f5f9" />
         </Pressable>
         <Text style={styles.headerTitle}>Gift Cards</Text>
         <View style={{ width: 24 }} />
@@ -296,7 +296,7 @@ export default function GiftCardScreen() {
 
       {/* Balance chip */}
       <View style={styles.balanceRow}>
-        <Ionicons name="wallet-outline" size={16} color="#6b7280" />
+        <Ionicons name="wallet-outline" size={16} color="#94a3b8" />
         <Text style={styles.balanceText}>
           Balance: {symbol}{balance.toFixed(2)} {currency}
         </Text>
@@ -408,7 +408,7 @@ export default function GiftCardScreen() {
             <View style={styles.historyHeader}>
               <Text style={styles.sectionTitle}>My Gift Cards</Text>
               <Pressable onPress={fetchHistory}>
-                <Ionicons name="refresh" size={20} color="#6b7280" />
+                <Ionicons name="refresh" size={20} color="#94a3b8" />
               </Pressable>
             </View>
 
@@ -471,36 +471,36 @@ export default function GiftCardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9fafb" },
+  container: { flex: 1, backgroundColor: "#0f172a" },
   header: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    paddingHorizontal: 20, paddingVertical: 14, backgroundColor: "#ffffff",
-    borderBottomWidth: 1, borderBottomColor: "#e5e7eb",
+    paddingHorizontal: 20, paddingVertical: 14, backgroundColor: "#1e293b",
+    borderBottomWidth: 1, borderBottomColor: "#334155",
   },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: "#111827" },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: "#f1f5f9" },
   balanceRow: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
-    backgroundColor: "#f0fdf4", paddingVertical: 8, gap: 6,
+    backgroundColor: "rgba(16,185,129,0.1)", paddingVertical: 8, gap: 6,
   },
-  balanceText: { fontSize: 14, color: "#374151", fontWeight: "500" },
-  tabs: { flexDirection: "row", backgroundColor: "#ffffff", borderBottomWidth: 1, borderBottomColor: "#e5e7eb" },
+  balanceText: { fontSize: 14, color: "#94a3b8", fontWeight: "500" },
+  tabs: { flexDirection: "row", backgroundColor: "#1e293b", borderBottomWidth: 1, borderBottomColor: "#334155" },
   tab: { flex: 1, paddingVertical: 12, alignItems: "center" },
   tabActive: { borderBottomWidth: 2, borderBottomColor: "#ec4899" },
-  tabText: { fontSize: 15, color: "#9ca3af", fontWeight: "500" },
+  tabText: { fontSize: 15, color: "#64748b", fontWeight: "500" },
   tabTextActive: { color: "#ec4899", fontWeight: "700" },
-  sectionTitle: { fontSize: 15, fontWeight: "600", color: "#374151", marginBottom: 10, marginTop: 16 },
+  sectionTitle: { fontSize: 15, fontWeight: "600", color: "#f1f5f9", marginBottom: 10, marginTop: 16 },
   amountGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   amountChip: {
     paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12,
-    borderWidth: 2, borderColor: "#e5e7eb", backgroundColor: "#ffffff",
+    borderWidth: 2, borderColor: "#334155", backgroundColor: "#1e293b",
   },
-  amountChipSelected: { borderColor: "#ec4899", backgroundColor: "#fdf2f8" },
-  amountText: { fontSize: 16, fontWeight: "600", color: "#374151" },
+  amountChipSelected: { borderColor: "#ec4899", backgroundColor: "rgba(236,72,153,0.1)" },
+  amountText: { fontSize: 16, fontWeight: "600", color: "#f1f5f9" },
   amountTextSelected: { color: "#ec4899" },
   input: {
-    backgroundColor: "#ffffff", borderWidth: 1, borderColor: "#e5e7eb",
+    backgroundColor: "#1e293b", borderWidth: 1, borderColor: "#334155",
     borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16,
-    color: "#111827",
+    color: "#f1f5f9",
   },
   primaryButton: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
@@ -508,8 +508,8 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: { fontSize: 16, fontWeight: "700", color: "#ffffff" },
   successIcon: { alignItems: "center", marginTop: 20, marginBottom: 12 },
-  successTitle: { fontSize: 24, fontWeight: "700", color: "#111827", textAlign: "center" },
-  successSub: { fontSize: 15, color: "#6b7280", textAlign: "center", marginTop: 4, marginBottom: 24 },
+  successTitle: { fontSize: 24, fontWeight: "700", color: "#f1f5f9", textAlign: "center" },
+  successSub: { fontSize: 15, color: "#94a3b8", textAlign: "center", marginTop: 4, marginBottom: 24 },
   giftCardVisual: {
     backgroundColor: "#f97316", borderRadius: 20, padding: 24, marginBottom: 16,
     shadowColor: "#f97316", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8,
@@ -522,9 +522,9 @@ const styles = StyleSheet.create({
   codeLabel: { fontSize: 10, color: "rgba(255,255,255,0.8)", letterSpacing: 2, marginBottom: 4 },
   codeText: { fontSize: 22, fontWeight: "700", color: "#ffffff", letterSpacing: 3 },
   expiryText: { fontSize: 12, color: "rgba(255,255,255,0.7)", textAlign: "right" },
-  messageBox: { backgroundColor: "#ffffff", borderRadius: 12, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#e5e7eb" },
-  messageLabel: { fontSize: 12, color: "#9ca3af", marginBottom: 4, fontWeight: "600" },
-  messageText: { fontSize: 15, color: "#374151" },
+  messageBox: { backgroundColor: "#1e293b", borderRadius: 12, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#334155" },
+  messageLabel: { fontSize: 12, color: "#94a3b8", marginBottom: 4, fontWeight: "600" },
+  messageText: { fontSize: 15, color: "#f1f5f9" },
   shareRow: { flexDirection: "row", gap: 12, marginBottom: 12 },
   shareBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 14, borderRadius: 12, gap: 8 },
   shareBtnText: { fontSize: 15, fontWeight: "600", color: "#ffffff" },
@@ -534,31 +534,31 @@ const styles = StyleSheet.create({
   },
   doneText: { fontSize: 16, fontWeight: "700", color: "#ffffff" },
   redeemHero: { alignItems: "center", paddingVertical: 20, marginBottom: 8 },
-  redeemHeroTitle: { fontSize: 22, fontWeight: "700", color: "#111827", marginTop: 12 },
-  redeemHeroSub: { fontSize: 14, color: "#6b7280", textAlign: "center", marginTop: 4, paddingHorizontal: 20 },
+  redeemHeroTitle: { fontSize: 22, fontWeight: "700", color: "#f1f5f9", marginTop: 12 },
+  redeemHeroSub: { fontSize: 14, color: "#94a3b8", textAlign: "center", marginTop: 4, paddingHorizontal: 20 },
   redeemResultBox: {
-    backgroundColor: "#f0fdf4", borderRadius: 20, padding: 32, alignItems: "center",
+    backgroundColor: "rgba(16,185,129,0.1)", borderRadius: 20, padding: 32, alignItems: "center",
     borderWidth: 2, borderColor: "#10b981", marginVertical: 24, width: "100%",
   },
-  redeemAmountLabel: { fontSize: 14, color: "#6b7280", marginBottom: 4 },
+  redeemAmountLabel: { fontSize: 14, color: "#94a3b8", marginBottom: 4 },
   redeemAmount: { fontSize: 48, fontWeight: "800", color: "#10b981" },
   historyHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  loadingText: { textAlign: "center", color: "#9ca3af", marginTop: 20 },
+  loadingText: { textAlign: "center", color: "#94a3b8", marginTop: 20 },
   emptyState: { alignItems: "center", paddingTop: 40, gap: 8 },
-  emptyText: { fontSize: 18, fontWeight: "600", color: "#374151" },
-  emptySub: { fontSize: 14, color: "#9ca3af", marginBottom: 8 },
+  emptyText: { fontSize: 18, fontWeight: "600", color: "#f1f5f9" },
+  emptySub: { fontSize: 14, color: "#94a3b8", marginBottom: 8 },
   historyCard: {
-    backgroundColor: "#ffffff", borderRadius: 14, padding: 16, marginBottom: 12,
-    borderWidth: 1, borderColor: "#e5e7eb",
+    backgroundColor: "#1e293b", borderRadius: 14, padding: 16, marginBottom: 12,
+    borderWidth: 1, borderColor: "#334155",
   },
   historyCardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
-  historyCode: { fontSize: 16, fontWeight: "700", color: "#111827", letterSpacing: 1 },
+  historyCode: { fontSize: 16, fontWeight: "700", color: "#f1f5f9", letterSpacing: 1 },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   statusText: { fontSize: 11, fontWeight: "700" },
-  historyAmount: { fontSize: 22, fontWeight: "700", color: "#374151", marginBottom: 8 },
-  historyMeta: { fontSize: 13, color: "#6b7280", marginBottom: 2 },
+  historyAmount: { fontSize: 22, fontWeight: "700", color: "#f1f5f9", marginBottom: 8 },
+  historyMeta: { fontSize: 13, color: "#94a3b8", marginBottom: 2 },
   historyDates: { marginTop: 4, marginBottom: 8 },
   historyActions: { flexDirection: "row", gap: 10 },
-  historyBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, backgroundColor: "#eff6ff" },
+  historyBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, backgroundColor: "rgba(59,130,246,0.1)" },
   historyBtnText: { fontSize: 13, color: "#3b82f6", fontWeight: "500" },
 });

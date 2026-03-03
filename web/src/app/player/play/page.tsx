@@ -67,6 +67,7 @@ export default function PlayScreen() {
   const [selectedGame, setSelectedGame] = useState("");
   const [numbers, setNumbers] = useState<string[]>([]);
   const [betAmount, setBetAmount] = useState("");
+  const [drawTime, setDrawTime] = useState<"midday" | "evening">("midday");
   const [gameSelections, setGameSelections] = useState<GameSelection[]>([]);
   const [processing, setProcessing] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -238,6 +239,7 @@ export default function PlayScreen() {
             numbers: sel.numbers.map(Number),
             betAmount: sel.betAmount,
             currency,
+            drawTime,
           });
         } catch (err: any) {
           allSuccess = false;
@@ -313,6 +315,33 @@ export default function PlayScreen() {
               {draw.flag} {draw.code}
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* Draw Time Selection */}
+      <div>
+        <h3 className="text-sm font-medium text-gray-700 mb-2">{t("drawTime") || "Draw Time"}</h3>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setDrawTime("midday")}
+            className={`flex-1 px-4 py-3 rounded-lg border text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+              drawTime === "midday"
+                ? "bg-amber-500 text-white border-amber-500"
+                : "bg-white text-gray-700 border-gray-200 hover:border-amber-300"
+            }`}
+          >
+            ☀️ {t("midday") || "Day (Midday)"}
+          </button>
+          <button
+            onClick={() => setDrawTime("evening")}
+            className={`flex-1 px-4 py-3 rounded-lg border text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+              drawTime === "evening"
+                ? "bg-indigo-600 text-white border-indigo-600"
+                : "bg-white text-gray-700 border-gray-200 hover:border-indigo-300"
+            }`}
+          >
+            🌙 {t("evening") || "Night (Evening)"}
+          </button>
         </div>
       </div>
 

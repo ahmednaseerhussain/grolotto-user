@@ -18,14 +18,20 @@ const AddPaymentModal = ({ visible, type, onClose, onAdd }: AddPaymentModalProps
   const [selectedType, setSelectedType] = useState<PaymentMethodType | PayoutMethodType | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const currency = useAppStore(s => s.currency);
 
-  const depositMethods = [
-    { type: "moncash" as PaymentMethodType, name: "MonCash", icon: "wallet" as const, color: "#ef4444" },
+  const allDepositMethods = [
+    { type: "moncash" as PaymentMethodType, name: "MonCash", icon: "wallet" as const, color: "#ef4444", currencies: ["HTG"] },
+    { type: "paypal" as PaymentMethodType, name: "PayPal", icon: "logo-paypal" as const, color: "#0070ba", currencies: ["USD"] },
   ];
 
-  const payoutMethods = [
-    { type: "moncash" as PayoutMethodType, name: "MonCash", icon: "wallet" as const, color: "#ef4444" },
+  const allPayoutMethods = [
+    { type: "moncash" as PayoutMethodType, name: "MonCash", icon: "wallet" as const, color: "#ef4444", currencies: ["HTG"] },
+    { type: "bank_transfer" as PayoutMethodType, name: "Bank Transfer", icon: "business" as const, color: "#3b82f6", currencies: ["USD"] },
   ];
+
+  const depositMethods = allDepositMethods.filter(m => m.currencies.includes(currency));
+  const payoutMethods = allPayoutMethods.filter(m => m.currencies.includes(currency));
 
   const methods = type === "deposit" ? depositMethods : payoutMethods;
 

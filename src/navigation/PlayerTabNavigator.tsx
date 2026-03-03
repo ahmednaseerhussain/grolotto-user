@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { View, Text, Platform, StyleSheet, FlatList, Pressable, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, Platform, StyleSheet, FlatList, Pressable, ActivityIndicator, RefreshControl, ScrollView } from "react-native";
 import { SafeAreaView, useSafeAreaInsets, EdgeInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import PlayerDashboard from "../screens/PlayerDashboard";
@@ -161,87 +161,209 @@ const NotificationsScreen = () => {
   );
 };
 
+interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+interface FAQSection {
+  title: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  items: FAQItem[];
+}
+
 const HelpScreen = () => {
   const language = useAppStore(s => s.language);
   const t = (key: string) => getTranslation(key as any, language);
+  const [openItems, setOpenItems] = useState<Set<string>>(new Set());
+
+  const toggleItem = (key: string) => {
+    setOpenItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const sections: FAQSection[] = [
+    {
+      title: "🎮 How to Play",
+      icon: "game-controller",
+      color: "#3b82f6",
+      items: [
+        { question: "How do I play GroLotto?", answer: "Go to the Play tab and choose a game type: Borlèt (pick 2 digits 00-99), Maryaj (pick 2 pairs of numbers), or Lotto 3/Lotto 4/Lotto 5 (pick 3, 4, or 5 numbers). Select your numbers, choose a draw time, enter your bet amount, and tap Play!" },
+        { question: "What are the different game types?", answer: "Borlèt: Pick a 2-digit number (00-99). Maryaj: Pick 2 pairs of numbers. Lotto 3: Pick 3 numbers. Lotto 4: Pick 4 numbers. Lotto 5: Pick 5 numbers. Tchala: Dream-number interpretations — search a dream symbol and play its associated number." },
+        { question: "What are the draw times?", answer: "There are three daily draws: Morning (Maten) at 10:00 AM, Afternoon (Aprèmidi) at 2:00 PM, and Evening (Aswè) at 8:00 PM. All times are Eastern Time (Haiti)." },
+        { question: "How do I know if I won?", answer: "After each draw, check the Results tab to see winning numbers. You'll also receive a notification if you win. Winnings are automatically credited to your wallet." },
+        { question: "What is the minimum and maximum bet?", answer: "The minimum bet is 10 HTG (or $1 USD). Maximum bet varies by game type and is displayed on the play screen." },
+      ],
+    },
+    {
+      title: "💳 Payments & Wallet",
+      icon: "card",
+      color: "#10b981",
+      items: [
+        { question: "How do I add money to my wallet?", answer: "Go to Payment, select a deposit amount (or enter a custom amount), choose your payment method (MonCash or PayPal), and complete the payment. Funds will appear in your wallet within minutes." },
+        { question: "What payment methods are available?", answer: "We currently support MonCash (Digicel mobile money) and PayPal. You can also fund your wallet with a Gift Card code." },
+        { question: "How do I withdraw my winnings?", answer: "Go to Payment, switch to the Withdraw tab, enter the amount you'd like to withdraw, and choose your withdrawal method. Processing typically takes 24-48 hours." },
+        { question: "Can I switch between HTG and USD?", answer: "Yes! Go to Settings and change your preferred currency. Your wallet shows balances in both HTG and USD." },
+      ],
+    },
+    {
+      title: "🎁 Gift Cards",
+      icon: "gift",
+      color: "#f59e0b",
+      items: [
+        { question: "How do gift cards work?", answer: "You can buy a gift card from your wallet balance and get a unique 12-character code (XXXX-XXXX-XXXX). Share this code with a friend, and they can redeem it to add funds to their wallet." },
+        { question: "What gift card amounts are available?", answer: "In HTG: 500, 1,000, 2,000, 5,000, and 10,000. In USD: $5, $10, $25, $50, and $100." },
+        { question: "Do gift cards expire?", answer: "Yes, gift cards are valid for 1 year from the date of purchase." },
+        { question: "How do I redeem a gift card?", answer: "Go to Gift Cards → Redeem tab. Enter the 12-character code and tap Redeem. The amount will be instantly added to your wallet." },
+      ],
+    },
+    {
+      title: "🛡️ Account & Security",
+      icon: "shield-checkmark",
+      color: "#8b5cf6",
+      items: [
+        { question: "How do I change my password?", answer: "Go to Settings → Security. You can update your password there. You'll need to enter your current password first." },
+        { question: "Is my data secure?", answer: "Yes. We use industry-standard encryption for all data in transit and at rest. Your password is hashed and never stored in plain text." },
+        { question: "What if I forget my password?", answer: "On the login screen, tap 'Forgot Password' and enter your registered phone number or email. You'll receive a reset link to create a new password." },
+      ],
+    },
+    {
+      title: "🏆 Rewards & Bonuses",
+      icon: "trophy",
+      color: "#eab308",
+      items: [
+        { question: "How do rewards work?", answer: "You earn reward points every time you play. These points accumulate and can unlock special bonuses. Check the Rewards section to see your current points." },
+        { question: "What is the referral bonus?", answer: "Invite friends to GroLotto using your referral code. When they sign up and make their first deposit, both you and your friend receive a bonus credited to your wallets." },
+      ],
+    },
+  ];
+
   return (
-  <SafeAreaView className="flex-1 bg-gray-50">
-    <View className="bg-white px-6 py-4 border-b border-gray-200">
-      <Text className="text-2xl font-bold text-gray-800">{t("helpCenter")}</Text>
-      <Text className="text-gray-600">{t("howCanWeHelp")}</Text>
-    </View>
-    
-    <View className="p-6">
-      {/* Contact Us Section */}
-      <Text className="text-xl font-bold text-gray-800 mb-4">{t("contactUs")}</Text>
-      
-      <View className="flex-row justify-between mb-6">
-        <View className="bg-white rounded-2xl p-4 flex-1 mr-2 border border-gray-200 items-center">
-          <View className="w-14 h-14 bg-green-100 rounded-full items-center justify-center mb-2">
-            <Ionicons name="logo-whatsapp" size={28} color="#10b981" />
+    <SafeAreaView style={helpStyles.container}>
+      {/* Header */}
+      <View style={helpStyles.headerBar}>
+        <Text style={helpStyles.screenTitle}>{t("helpCenter")}</Text>
+        <Text style={helpStyles.screenSubtitle}>{t("howCanWeHelp")}</Text>
+      </View>
+
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+        {/* Hero */}
+        <View style={helpStyles.hero}>
+          <Ionicons name="help-circle" size={48} color="#f59e0b" />
+          <Text style={helpStyles.heroTitle}>{t("howCanWeHelp") || "How can we help you?"}</Text>
+          <Text style={helpStyles.heroSub}>Find answers to common questions below</Text>
+        </View>
+
+        {/* FAQ Sections */}
+        {sections.map((section, si) => (
+          <View key={si} style={helpStyles.sectionCard}>
+            <Text style={helpStyles.sectionTitle}>{section.title}</Text>
+            {section.items.map((item, qi) => {
+              const key = `${si}-${qi}`;
+              const isOpen = openItems.has(key);
+              return (
+                <Pressable key={key} onPress={() => toggleItem(key)} style={helpStyles.faqItem}>
+                  <View style={helpStyles.faqQuestion}>
+                    <Text style={helpStyles.faqQuestionText}>{item.question}</Text>
+                    <Ionicons
+                      name={isOpen ? "chevron-up" : "chevron-down"}
+                      size={18}
+                      color={isOpen ? "#f59e0b" : "#64748b"}
+                    />
+                  </View>
+                  {isOpen && (
+                    <Text style={helpStyles.faqAnswer}>{item.answer}</Text>
+                  )}
+                </Pressable>
+              );
+            })}
           </View>
-          <Text className="text-gray-800 font-semibold">WhatsApp</Text>
-          <Text className="text-gray-400 text-xs">Chat with us</Text>
-        </View>
-        
-        <View className="bg-white rounded-2xl p-4 flex-1 mx-1 border border-gray-200 items-center">
-          <View className="w-14 h-14 bg-blue-100 rounded-full items-center justify-center mb-2">
-            <Ionicons name="mail" size={28} color="#3b82f6" />
+        ))}
+
+        {/* Contact Section */}
+        <View style={helpStyles.sectionCard}>
+          <Text style={helpStyles.sectionTitle}>📞 {t("contactUs")}</Text>
+          <Text style={helpStyles.contactSub}>Still need help? Reach out to our support team:</Text>
+          <View style={helpStyles.contactRow}>
+            <View style={helpStyles.contactCard}>
+              <View style={[helpStyles.contactIconWrap, { backgroundColor: "rgba(16,185,129,0.15)" }]}>
+                <Ionicons name="logo-whatsapp" size={26} color="#10b981" />
+              </View>
+              <Text style={helpStyles.contactLabel}>WhatsApp</Text>
+              <Text style={helpStyles.contactMeta}>Chat with us</Text>
+            </View>
+            <View style={helpStyles.contactCard}>
+              <View style={[helpStyles.contactIconWrap, { backgroundColor: "rgba(59,130,246,0.15)" }]}>
+                <Ionicons name="mail" size={26} color="#3b82f6" />
+              </View>
+              <Text style={helpStyles.contactLabel}>Email</Text>
+              <Text style={helpStyles.contactMeta}>support@grolotto.com</Text>
+            </View>
+            <View style={helpStyles.contactCard}>
+              <View style={[helpStyles.contactIconWrap, { backgroundColor: "rgba(16,185,129,0.15)" }]}>
+                <Ionicons name="call" size={26} color="#10b981" />
+              </View>
+              <Text style={helpStyles.contactLabel}>Phone</Text>
+              <Text style={helpStyles.contactMeta}>+509 37 00 0000</Text>
+            </View>
           </View>
-          <Text className="text-gray-800 font-semibold">Email</Text>
-          <Text className="text-gray-400 text-xs text-center">support@groloto.com</Text>
         </View>
-        
-        <View className="bg-white rounded-2xl p-4 flex-1 ml-2 border border-gray-200 items-center">
-          <View className="w-14 h-14 bg-green-100 rounded-full items-center justify-center mb-2">
-            <Ionicons name="call" size={28} color="#10b981" />
-          </View>
-          <Text className="text-gray-800 font-semibold">Phone</Text>
-          <Text className="text-gray-400 text-xs">+509 XXXX-XXXX</Text>
-        </View>
-      </View>
-      
-      {/* FAQ Section */}
-      <Text className="text-xl font-bold text-gray-800 mb-4">{t("faq")}</Text>
-      
-      <View className="bg-white rounded-2xl border border-gray-200 mb-3 p-4">
-        <View className="flex-row justify-between items-center">
-          <Text className="text-gray-800 font-semibold flex-1">How do I place a bet?</Text>
-          <Ionicons name="chevron-down" size={20} color="#9ca3af" />
-        </View>
-      </View>
-      
-      <View className="bg-white rounded-2xl border border-gray-200 mb-3 p-4">
-        <View className="flex-row justify-between items-center">
-          <Text className="text-gray-800 font-semibold flex-1">What payment methods are accepted?</Text>
-          <Ionicons name="chevron-down" size={20} color="#9ca3af" />
-        </View>
-      </View>
-      
-      <View className="bg-white rounded-2xl border border-gray-200 mb-3 p-4">
-        <View className="flex-row justify-between items-center">
-          <Text className="text-gray-800 font-semibold flex-1">How do I withdraw my winnings?</Text>
-          <Ionicons name="chevron-down" size={20} color="#9ca3af" />
-        </View>
-      </View>
-      
-      <View className="bg-white rounded-2xl border border-gray-200 mb-3 p-4">
-        <View className="flex-row justify-between items-center">
-          <Text className="text-gray-800 font-semibold flex-1">What are the different game types?</Text>
-          <Ionicons name="chevron-down" size={20} color="#9ca3af" />
-        </View>
-      </View>
-      
-      <View className="bg-white rounded-2xl border border-gray-200 p-4">
-        <View className="flex-row justify-between items-center">
-          <Text className="text-gray-800 font-semibold flex-1">When are results published?</Text>
-          <Ionicons name="chevron-down" size={20} color="#9ca3af" />
-        </View>
-      </View>
-    </View>
-  </SafeAreaView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
+
+const helpStyles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#0f172a" },
+  headerBar: {
+    paddingHorizontal: 20, paddingVertical: 16,
+    backgroundColor: "#1e293b", borderBottomWidth: 1, borderBottomColor: "#334155",
+  },
+  screenTitle: { fontSize: 22, fontWeight: "700", color: "#f1f5f9" },
+  screenSubtitle: { fontSize: 14, color: "#94a3b8", marginTop: 2 },
+  hero: {
+    alignItems: "center", paddingVertical: 24, marginBottom: 8,
+    backgroundColor: "rgba(245,158,11,0.08)", borderRadius: 16,
+    borderWidth: 1, borderColor: "rgba(245,158,11,0.15)",
+  },
+  heroTitle: { fontSize: 18, fontWeight: "700", color: "#ffffff", marginTop: 10 },
+  heroSub: { fontSize: 14, color: "#94a3b8", marginTop: 4 },
+  sectionCard: {
+    backgroundColor: "#1e293b", borderRadius: 16, padding: 16, marginTop: 12,
+    borderWidth: 1, borderColor: "#334155",
+  },
+  sectionTitle: { fontSize: 17, fontWeight: "700", color: "#ffffff", marginBottom: 10 },
+  faqItem: {
+    borderWidth: 1, borderColor: "#334155", borderRadius: 12,
+    overflow: "hidden", marginBottom: 8,
+  },
+  faqQuestion: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    padding: 14,
+  },
+  faqQuestionText: { fontSize: 14, fontWeight: "600", color: "#f1f5f9", flex: 1, marginRight: 8 },
+  faqAnswer: {
+    fontSize: 13, color: "#94a3b8", lineHeight: 20,
+    paddingHorizontal: 14, paddingBottom: 14, paddingTop: 0,
+    borderTopWidth: 1, borderTopColor: "rgba(51,65,85,0.5)", paddingTop: 10,
+  },
+  contactSub: { fontSize: 13, color: "#94a3b8", marginBottom: 12 },
+  contactRow: { flexDirection: "row", justifyContent: "space-between", gap: 8 },
+  contactCard: {
+    flex: 1, backgroundColor: "#0f172a", borderRadius: 14, padding: 14,
+    alignItems: "center", borderWidth: 1, borderColor: "#334155",
+  },
+  contactIconWrap: {
+    width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center", marginBottom: 8,
+  },
+  contactLabel: { fontSize: 13, fontWeight: "600", color: "#f1f5f9" },
+  contactMeta: { fontSize: 10, color: "#94a3b8", textAlign: "center", marginTop: 2 },
+});
 
 export default function PlayerTabNavigator() {
   const insets = useSafeAreaInsets();

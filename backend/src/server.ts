@@ -42,6 +42,22 @@ async function runStartupMigrations() {
     await query(`ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'gift_card_redeem'`).catch(() => {});
     await query(`ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'refund'`).catch(() => {});
 
+    // Migration 009: bank details on vendor_payouts
+    await query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'vendor_payouts' AND column_name = 'bank_name'
+        ) THEN
+          ALTER TABLE vendor_payouts ADD COLUMN bank_name VARCHAR(100);
+          ALTER TABLE vendor_payouts ADD COLUMN bank_account_name VARCHAR(100);
+          ALTER TABLE vendor_payouts ADD COLUMN bank_account_number VARCHAR(50);
+          ALTER TABLE vendor_payouts ADD COLUMN bank_routing_number VARCHAR(50);
+          ALTER TABLE vendor_payouts ADD COLUMN moncash_phone VARCHAR(20);
+        END IF;
+      END $$;
+    `);
+
     console.log('[Migration] Startup migrations applied successfully');
   } catch (err) {
     console.error('[Migration] Startup migration error:', err);

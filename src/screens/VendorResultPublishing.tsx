@@ -63,9 +63,9 @@ interface RoundDetails {
 const GAME_CONFIG: Record<string, { label: string }> = {
   senp: { label: "Senp (50x)" },
   maryaj: { label: "Maryaj (100x)" },
-  loto3: { label: "Loto 3 (500x)" },
-  loto4: { label: "Loto 4 (5,000x)" },
-  loto5: { label: "Loto 5 (50,000x)" },
+  loto3: { label: "Lotto 3 (500x)" },
+  loto4: { label: "Lotto 4 (5,000x)" },
+  loto5: { label: "Lotto 5 (50,000x)" },
 };
 
 // ─── Main Component ──────────────────────────────────────

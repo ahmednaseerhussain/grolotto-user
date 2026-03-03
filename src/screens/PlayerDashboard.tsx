@@ -193,7 +193,12 @@ export default function PlayerDashboard() {
   }, []);
   
   // Filter active vendors
-  const activeVendors = vendors.filter(v => v.status === "approved" && v.isActive);
+  const activeVendors = vendors.filter(v => {
+    if (v.status !== "approved" || !v.isActive) return false;
+    // Filter by operating currency match
+    if (v.operatingCurrency && v.operatingCurrency !== currency) return false;
+    return true;
+  });
   
   // Filter vendors based on search
   const filteredVendors = activeVendors.filter(vendor => {

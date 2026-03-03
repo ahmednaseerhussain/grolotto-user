@@ -34,6 +34,7 @@ export default function NumberSelection() {
   const [selectedGame, setSelectedGame] = useState("senp");
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
   const [betAmount, setBetAmount] = useState("");
+  const [drawTime, setDrawTime] = useState<"midday" | "evening">("midday");
   const [gameSelections, setGameSelections] = useState<any[]>([]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const inputRefs = useRef<(TextInput | null)[]>([]);
@@ -374,6 +375,7 @@ export default function NumberSelection() {
           numbers: selection.numbers,
           betAmount: selection.betAmount,
           currency: selection.currency,
+          drawTime,
         });
         
         // Also update local store for immediate UI feedback
@@ -498,6 +500,41 @@ export default function NumberSelection() {
                 ))}
               </View>
             </ScrollView>
+          </View>
+
+          {/* Draw Time Selection */}
+          <View className="bg-white rounded-2xl p-4 mb-6 border border-gray-200">
+            <Text className="text-xl font-bold text-gray-800 mb-3">
+              {t("drawTime") || "Draw Time"}
+            </Text>
+            <View className="flex-row space-x-3">
+              <Pressable
+                onPress={() => setDrawTime("midday")}
+                className={`flex-1 py-3 rounded-xl border-2 items-center ${
+                  drawTime === "midday"
+                    ? "border-amber-500 bg-amber-50"
+                    : "border-gray-300 bg-white"
+                }`}
+              >
+                <Text style={{ fontSize: 20 }}>☀️</Text>
+                <Text className={`font-bold mt-1 ${drawTime === "midday" ? "text-amber-600" : "text-gray-700"}`}>
+                  {t("midday") || "Day"}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setDrawTime("evening")}
+                className={`flex-1 py-3 rounded-xl border-2 items-center ${
+                  drawTime === "evening"
+                    ? "border-indigo-500 bg-indigo-50"
+                    : "border-gray-300 bg-white"
+                }`}
+              >
+                <Text style={{ fontSize: 20 }}>🌙</Text>
+                <Text className={`font-bold mt-1 ${drawTime === "evening" ? "text-indigo-600" : "text-gray-700"}`}>
+                  {t("evening") || "Night"}
+                </Text>
+              </Pressable>
+            </View>
           </View>
 
           {/* Game Type Selection */}

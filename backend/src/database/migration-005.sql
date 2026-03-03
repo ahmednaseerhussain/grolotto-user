@@ -63,9 +63,9 @@ INSERT INTO app_settings (key, value, description) VALUES
   ('game_types', '[
     {"id":"senp","name":"senp","displayName":"Senp","isActive":true,"minPrice":0.25,"maxPrice":500,"isMandatory":true},
     {"id":"maryaj","name":"maryaj","displayName":"Maryaj","isActive":true,"minPrice":0.25,"maxPrice":500,"isMandatory":false},
-    {"id":"loto3","name":"loto3","displayName":"Loto 3","isActive":true,"minPrice":0.25,"maxPrice":500,"isMandatory":false},
-    {"id":"loto4","name":"loto4","displayName":"Loto 4","isActive":true,"minPrice":0.25,"maxPrice":500,"isMandatory":false},
-    {"id":"loto5","name":"loto5","displayName":"Loto 5","isActive":true,"minPrice":0.25,"maxPrice":500,"isMandatory":false}
+    {"id":"loto3","name":"loto3","displayName":"Lotto 3","isActive":true,"minPrice":0.25,"maxPrice":500,"isMandatory":false},
+    {"id":"loto4","name":"loto4","displayName":"Lotto 4","isActive":true,"minPrice":0.25,"maxPrice":500,"isMandatory":false},
+    {"id":"loto5","name":"loto5","displayName":"Lotto 5","isActive":true,"minPrice":0.25,"maxPrice":500,"isMandatory":false}
   ]', 'Available game types configuration'),
   ('state_lotteries', '[
     {"id":"ny","state":"NY","fullName":"New York","abbreviation":"NY","isActive":true},

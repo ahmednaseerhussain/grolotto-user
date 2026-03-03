@@ -29,6 +29,11 @@ export default function PayoutsScreen() {
   const [selectedMethod, setSelectedMethod] = useState<string | null>("moncash");
   const [withdrawalCurrency, setWithdrawalCurrency] = useState<"HTG" | "USD">(currency as any);
   const [processing, setProcessing] = useState(false);
+  const [moncashPhone, setMoncashPhone] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [bankAccountName, setBankAccountName] = useState("");
+  const [bankAccountNumber, setBankAccountNumber] = useState("");
+  const [bankRoutingNumber, setBankRoutingNumber] = useState("");
 
   const balance = vendorStats?.balance || 0;
   const displayBalance = withdrawalCurrency === "HTG" ? balance * 150 : balance;
@@ -57,6 +62,13 @@ export default function PayoutsScreen() {
         amount: amt,
         method: selectedMethod || "moncash",
         currency: withdrawalCurrency,
+        ...(selectedMethod === "bank_transfer" && {
+          bankName,
+          bankAccountName,
+          bankAccountNumber,
+          bankRoutingNumber,
+        }),
+        ...(selectedMethod === "moncash" && { moncashPhone }),
       });
       toast.success(t("withdrawalSubmitted") || "Withdrawal request submitted!");
       setShowRequestForm(false);
@@ -149,20 +161,68 @@ export default function PayoutsScreen() {
 
             <div>
               <label className="text-sm text-gray-600">{t("paymentMethod") || "Payment Method"}</label>
-              <button
-                onClick={() => setSelectedMethod("moncash")}
-                className={`w-full mt-1 p-3 rounded-lg border-2 flex items-center gap-3 ${
-                  selectedMethod === "moncash" ? "border-red-500 bg-red-50" : "border-gray-200"
-                }`}
-              >
-                <div className="bg-red-500 p-1.5 rounded">
-                  <Smartphone className="h-4 w-4 text-white" />
+              {withdrawalCurrency === "HTG" ? (
+                <button
+                  onClick={() => setSelectedMethod("moncash")}
+                  className={`w-full mt-1 p-3 rounded-lg border-2 flex items-center gap-3 ${
+                    selectedMethod === "moncash" ? "border-red-500 bg-red-50" : "border-gray-200"
+                  }`}
+                >
+                  <div className="bg-red-500 p-1.5 rounded">
+                    <Smartphone className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="text-left flex-1">
+                    <p className="font-medium text-sm">MonCash</p>
+                    <p className="text-xs text-gray-500">{t("fees") || "Fee"}: 2% | {t("minimum") || "Min"}: $10</p>
+                  </div>
+                </button>
+              ) : (
+                <button
+                  onClick={() => setSelectedMethod("bank_transfer")}
+                  className={`w-full mt-1 p-3 rounded-lg border-2 flex items-center gap-3 ${
+                    selectedMethod === "bank_transfer" ? "border-blue-500 bg-blue-50" : "border-gray-200"
+                  }`}
+                >
+                  <div className="bg-blue-500 p-1.5 rounded">
+                    <Smartphone className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="text-left flex-1">
+                    <p className="font-medium text-sm">Bank Transfer</p>
+                    <p className="text-xs text-gray-500">{t("fees") || "Fee"}: 1% | {t("minimum") || "Min"}: $10</p>
+                  </div>
+                </button>
+              )}
+
+              {/* Bank Details Fields */}
+              {selectedMethod === "bank_transfer" && withdrawalCurrency === "USD" && (
+                <div className="mt-3 space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="text-sm font-semibold text-blue-800">Bank Details</h4>
+                  <div>
+                    <label className="text-xs text-gray-600">Bank Name</label>
+                    <Input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="e.g. Bank of America" className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600">Account Holder Name</label>
+                    <Input value={bankAccountName} onChange={(e) => setBankAccountName(e.target.value)} placeholder="Full name on account" className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600">Account Number</label>
+                    <Input value={bankAccountNumber} onChange={(e) => setBankAccountNumber(e.target.value)} placeholder="Account number" className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600">Routing Number</label>
+                    <Input value={bankRoutingNumber} onChange={(e) => setBankRoutingNumber(e.target.value)} placeholder="Routing number" className="mt-1" />
+                  </div>
                 </div>
-                <div className="text-left flex-1">
-                  <p className="font-medium text-sm">MonCash</p>
-                  <p className="text-xs text-gray-500">{t("fees") || "Fee"}: 2% | {t("minimum") || "Min"}: $10</p>
+              )}
+
+              {/* MonCash Phone */}
+              {selectedMethod === "moncash" && withdrawalCurrency === "HTG" && (
+                <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-200">
+                  <label className="text-xs text-gray-600">MonCash Phone Number</label>
+                  <Input value={moncashPhone} onChange={(e) => setMoncashPhone(e.target.value)} placeholder="+509 XXXX XXXX" className="mt-1" />
                 </div>
-              </button>
+              )}
             </div>
 
             <div className="flex gap-2">

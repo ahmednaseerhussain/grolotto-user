@@ -7,13 +7,22 @@ import { useAppStore, PaymentMethodType } from "../state/appStore";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 import { paymentAPI, walletAPI, getErrorMessage } from "../api/apiClient";
 
-const PAYMENT_METHODS = [
+const ALL_PAYMENT_METHODS = [
   {
     type: "moncash" as PaymentMethodType,
     name: "MonCash",
     icon: "wallet" as const,
     color: "#ef4444",
     description: "Digicel mobile money",
+    currencies: ["HTG"],
+  },
+  {
+    type: "paypal" as PaymentMethodType,
+    name: "PayPal",
+    icon: "logo-paypal" as const,
+    color: "#0070ba",
+    description: "Pay with PayPal",
+    currencies: ["USD"],
   },
 ];
 
@@ -25,6 +34,9 @@ export default function PaymentScreen() {
   const currency = useAppStore(s => s.currency);
   const user = useAppStore(s => s.user);
   const processPayment = useAppStore(s => s.processPayment);
+
+  // Filter payment methods by currency
+  const PAYMENT_METHODS = ALL_PAYMENT_METHODS.filter(m => m.currencies.includes(currency));
 
   const [amount, setAmount] = useState("");
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType | null>(null);

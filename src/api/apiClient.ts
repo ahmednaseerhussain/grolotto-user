@@ -225,6 +225,7 @@ export const vendorAPI = {
     phone: string;
     dateOfBirth: string;
     businessName?: string;
+    operatingCurrency?: string;
   }) {
     const res = await api.post('/vendors/register', data);
     return res.data;

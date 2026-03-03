@@ -70,6 +70,7 @@ export default function VendorDashboard() {
     ticketsToday: vendorStats?.ticketsToday ?? todayGamePlays.length,
     totalTickets: vendorStats?.totalTicketsSold ?? currentVendor?.totalTicketsSold ?? 0,
     availableBalance: vendorStats?.availableBalance ?? currentVendor?.availableBalance ?? 0,
+    todayBets: vendorStats?.todayBets ?? todayGamePlays.reduce((sum, game) => sum + game.betAmount, 0),
     enabledGames: currentVendor ? Object.values(currentVendor.draws).filter(draw => draw.enabled).length : 0,
   };
 
@@ -214,7 +215,7 @@ export default function VendorDashboard() {
             <Pressable style={styles.statCard} onPress={() => handleStatCardPress('todayEarnings')}>
               <View style={styles.statHeader}>
                 <Ionicons name="cash" size={20} color="#10b981" />
-                <Text style={styles.statLabel}>{t("ticketsToday")}</Text>
+                <Text style={styles.statLabel}>{t("todayCommission") || "Today's Commission"}</Text>
               </View>
               <Text style={styles.statValue}>{formatCurrency(stats.earningsToday)}</Text>
               <Ionicons name="chevron-forward" size={16} color="#9ca3af" style={styles.statChevron} />
@@ -223,9 +224,9 @@ export default function VendorDashboard() {
             <Pressable style={styles.statCard} onPress={() => handleStatCardPress('weeklyEarnings')}>
               <View style={styles.statHeader}>
                 <Ionicons name="calendar" size={20} color="#f59e0b" />
-                <Text style={styles.statLabel}>{t("thisWeek")}</Text>
+                <Text style={styles.statLabel}>{t("todayBets") || "Today's Bets"}</Text>
               </View>
-              <Text style={styles.statValue}>{formatCurrency(stats.earningsWeek)}</Text>
+              <Text style={styles.statValue}>{formatCurrency(stats.todayBets || 0)}</Text>
               <Ionicons name="chevron-forward" size={16} color="#9ca3af" style={styles.statChevron} />
             </Pressable>
 

@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store/app-store";
 import { useTranslation } from "@/hooks/use-translation";
+import { vendorAPI } from "@/lib/api/vendor";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  ArrowLeft, Plus, Trash2, StopCircle, PlayCircle, AlertTriangle, Shield, Loader2
+  ArrowLeft, Plus, Trash2, StopCircle, PlayCircle, AlertTriangle, Shield, Loader2, Pencil
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -26,17 +27,19 @@ const DRAWS = [
 ];
 
 interface NumberLimit {
+  id: string;
+  drawState: string;
   number: string;
-  limit: number;
-  stopped: boolean;
+  betLimit: number;
+  currentTotal: number;
+  isStopped: boolean;
+  createdAt: string;
 }
 
 export default function NumberLimitsScreen() {
   const router = useRouter();
   const t = useTranslation();
   const user = useAppStore((s) => s.user);
-  const vendorProfile = useAppStore((s) => s.vendorProfile);
-  const vendors = useAppStore((s) => s.vendors);
   const currency = useAppStore((s) => s.currency);
 
   const [selectedDraw, setSelectedDraw] = useState("NY");
@@ -45,31 +48,32 @@ export default function NumberLimitsScreen() {
   const [newNumber, setNewNumber] = useState("");
   const [newLimit, setNewLimit] = useState("");
   const [stopNumber, setStopNumber] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [allLimits, setAllLimits] = useState<NumberLimit[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editLimit, setEditLimit] = useState("");
 
-  const vendor = vendorProfile || vendors.find((v: any) => v.userId === user?.id);
-  const vendorDraws: Record<string, any> = vendor?.draws || {};
-  const drawData = vendorDraws[selectedDraw] || {};
-  const numberLimits: Record<string, any> = drawData.numberLimits || {};
-  const stoppedNumbers: string[] = drawData.stoppedNumbers || [];
-
-  // Merge limits and stopped numbers
-  const managedNumbers: NumberLimit[] = [];
-  Object.entries(numberLimits).forEach(([num, data]: [string, any]) => {
-    managedNumbers.push({
-      number: num,
-      limit: typeof data === "number" ? data : data?.limit || 0,
-      stopped: stoppedNumbers.includes(num),
-    });
-  });
-  stoppedNumbers.forEach((num) => {
-    if (!numberLimits[num]) {
-      managedNumbers.push({ number: num, limit: 0, stopped: true });
+  const fetchLimits = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await vendorAPI.getNumberLimits();
+      setAllLimits(data);
+    } catch (err) {
+      toast.error("Failed to load number limits");
+    } finally {
+      setLoading(false);
     }
-  });
+  }, []);
 
-  const totalLimits = managedNumbers.reduce((s, n) => s + n.limit, 0);
+  useEffect(() => {
+    fetchLimits();
+  }, [fetchLimits]);
 
-  const handleAddLimit = () => {
+  const managedNumbers = allLimits.filter((l) => l.drawState === selectedDraw);
+  const totalLimits = managedNumbers.reduce((s, n) => s + n.betLimit, 0);
+
+  const handleAddLimit = async () => {
     const num = parseInt(newNumber);
     if (isNaN(num) || num < 0 || num > 99) {
       toast.error("Number must be between 00 and 99");
@@ -80,21 +84,86 @@ export default function NumberLimitsScreen() {
       toast.error("Please enter a valid limit amount");
       return;
     }
-    toast.success(`Limit set for number ${String(num).padStart(2, "0")}`);
-    setNewNumber("");
-    setNewLimit("");
-    setIsAdding(false);
+    setSaving(true);
+    try {
+      await vendorAPI.createNumberLimit({
+        drawState: selectedDraw,
+        number: String(num).padStart(2, "0"),
+        betLimit: limit,
+      });
+      toast.success(`Limit set for number ${String(num).padStart(2, "0")}`);
+      setNewNumber("");
+      setNewLimit("");
+      setIsAdding(false);
+      fetchLimits();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to set limit");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleStopSales = () => {
+  const handleStopSales = async () => {
     const num = parseInt(stopNumber);
     if (isNaN(num) || num < 0 || num > 99) {
       toast.error("Number must be between 00 and 99");
       return;
     }
-    toast.success(`Sales stopped for number ${String(num).padStart(2, "0")}`);
-    setStopNumber("");
-    setIsStopping(false);
+    setSaving(true);
+    try {
+      // Create limit with isStopped=true (or update existing)
+      await vendorAPI.createNumberLimit({
+        drawState: selectedDraw,
+        number: String(num).padStart(2, "0"),
+        betLimit: 0,
+        isStopped: true,
+      } as any);
+      toast.success(`Sales stopped for number ${String(num).padStart(2, "0")}`);
+      setStopNumber("");
+      setIsStopping(false);
+      fetchLimits();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to stop sales");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleToggleStop = async (item: NumberLimit) => {
+    try {
+      await vendorAPI.updateNumberLimit(item.id, { isStopped: !item.isStopped });
+      toast.success(item.isStopped ? `Sales resumed for ${item.number}` : `Sales stopped for ${item.number}`);
+      fetchLimits();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to update");
+    }
+  };
+
+  const handleDelete = async (item: NumberLimit) => {
+    try {
+      await vendorAPI.deleteNumberLimit(item.id);
+      toast.success(`Limit removed for number ${item.number}`);
+      fetchLimits();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to delete");
+    }
+  };
+
+  const handleEditSave = async (item: NumberLimit) => {
+    const newVal = parseFloat(editLimit);
+    if (isNaN(newVal) || newVal <= 0) {
+      toast.error("Please enter a valid limit amount");
+      return;
+    }
+    try {
+      await vendorAPI.updateNumberLimit(item.id, { betLimit: newVal });
+      toast.success(`Limit updated for number ${item.number}`);
+      setEditingId(null);
+      setEditLimit("");
+      fetchLimits();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to update");
+    }
   };
 
   return (
@@ -226,7 +295,14 @@ export default function NumberLimitsScreen() {
       {/* Managed Numbers List */}
       <div>
         <h2 className="text-sm font-semibold text-gray-700 mb-2">{t("managedNumbers") || "Managed Numbers"}</h2>
-        {managedNumbers.length === 0 ? (
+        {loading ? (
+          <Card className="bg-gray-50">
+            <CardContent className="p-6 text-center text-gray-400">
+              <Loader2 className="h-8 w-8 mx-auto mb-2 animate-spin text-gray-300" />
+              <p className="text-sm">Loading limits...</p>
+            </CardContent>
+          </Card>
+        ) : managedNumbers.length === 0 ? (
           <Card className="bg-gray-50">
             <CardContent className="p-6 text-center text-gray-400">
               <Shield className="h-8 w-8 mx-auto mb-2 text-gray-300" />
@@ -237,24 +313,37 @@ export default function NumberLimitsScreen() {
         ) : (
           <div className="space-y-2">
             {managedNumbers.map((item) => {
-              const percentage = item.limit > 0 ? Math.min(100, 0) : 0; // needs real bet data
+              const percentage = item.betLimit > 0 ? Math.min(100, (item.currentTotal / item.betLimit) * 100) : 0;
+              const isEditing = editingId === item.id;
               return (
-                <Card key={item.number}>
+                <Card key={item.id}>
                   <CardContent className="p-3 flex items-center gap-4">
                     <div className="bg-emerald-100 text-emerald-800 font-bold text-lg w-12 h-12 flex items-center justify-center rounded-xl">
                       {item.number.padStart(2, "0")}
                     </div>
                     <div className="flex-1">
-                      {item.stopped ? (
+                      {item.isStopped ? (
                         <Badge variant="destructive" className="text-xs">
                           <StopCircle className="h-3 w-3 mr-1" /> {t("salesStopped") || "Sales Stopped"}
                         </Badge>
+                      ) : isEditing ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            value={editLimit}
+                            onChange={(e) => setEditLimit(e.target.value)}
+                            className="w-28 h-8 text-sm"
+                            autoFocus
+                          />
+                          <Button size="sm" className="h-8" onClick={() => handleEditSave(item)}>Save</Button>
+                          <Button size="sm" variant="ghost" className="h-8" onClick={() => setEditingId(null)}>Cancel</Button>
+                        </div>
                       ) : (
                         <>
-                          <p className="text-sm font-medium">Limit: {formatCurrency(item.limit, currency)}</p>
+                          <p className="text-sm font-medium">Limit: {formatCurrency(item.betLimit, currency)} | Bets: {formatCurrency(item.currentTotal, currency)}</p>
                           <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
                             <div
-                              className="bg-emerald-500 h-1.5 rounded-full transition-all"
+                              className={`h-1.5 rounded-full transition-all ${percentage >= 90 ? 'bg-red-500' : percentage >= 70 ? 'bg-amber-500' : 'bg-emerald-500'}`}
                               style={{ width: `${percentage}%` }}
                             />
                           </div>
@@ -262,16 +351,21 @@ export default function NumberLimitsScreen() {
                       )}
                     </div>
                     <div className="flex gap-1">
-                      {item.stopped ? (
-                        <Button size="sm" variant="ghost" className="text-emerald-600">
+                      {!item.isStopped && !isEditing && (
+                        <Button size="sm" variant="ghost" className="text-blue-600" onClick={() => { setEditingId(item.id); setEditLimit(String(item.betLimit)); }}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {item.isStopped ? (
+                        <Button size="sm" variant="ghost" className="text-emerald-600" onClick={() => handleToggleStop(item)}>
                           <PlayCircle className="h-4 w-4" />
                         </Button>
                       ) : (
-                        <Button size="sm" variant="ghost" className="text-red-600">
+                        <Button size="sm" variant="ghost" className="text-red-600" onClick={() => handleToggleStop(item)}>
                           <StopCircle className="h-4 w-4" />
                         </Button>
                       )}
-                      <Button size="sm" variant="ghost" className="text-red-400">
+                      <Button size="sm" variant="ghost" className="text-red-400" onClick={() => handleDelete(item)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
