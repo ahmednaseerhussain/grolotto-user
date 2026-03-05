@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as moncashService from '../services/moncashService';
+import * as paypalService from '../services/paypalService';
 import { query } from '../database/pool';
 
 /**
@@ -137,5 +138,99 @@ export async function moncashWebhook(req: Request, res: Response) {
     console.error('[MonCash Webhook] Error:', error.message);
     // Still respond 200 to prevent MonCash from retrying
     res.status(200).json({ status: 'received' });
+  }
+}
+
+// ═══════════════════════════════════════════
+// PayPal Endpoints
+// ═══════════════════════════════════════════
+
+/**
+ * Create a PayPal order. Returns approval URL for redirect.
+ */
+export async function createPayPalOrder(req: Request, res: Response, next: NextFunction) {
+  try {
+    const result = await paypalService.createOrder({
+      userId: req.user!.id,
+      amount: req.body.amount,
+      currency: req.body.currency || 'USD',
+    });
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Capture a PayPal order after user approval.
+ * Credits the user's USD wallet.
+ */
+export async function capturePayPalOrder(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { orderId } = req.body;
+    if (!orderId) {
+      res.status(400).json({ error: 'orderId required' });
+      return;
+    }
+    const result = await paypalService.captureOrder(req.user!.id, orderId);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * PayPal return URL — user lands here after approving payment.
+ * Shows a simple confirmation page and auto-captures.
+ */
+export async function paypalReturn(req: Request, res: Response) {
+  const orderId = req.query.token as string; // PayPal sends order ID as 'token'
+
+  if (!orderId) {
+    res.status(200).send(`
+      <html><body style="font-family:sans-serif;text-align:center;padding:40px">
+        <h2>Payment Processing</h2>
+        <p>No order ID received. Please return to the app and check your balance.</p>
+      </body></html>
+    `);
+    return;
+  }
+
+  try {
+    // Look up which user initiated this order
+    const txResult = await query(
+      `SELECT user_id FROM transactions WHERE idempotency_key = $1 LIMIT 1`,
+      [`paypal_${orderId}`]
+    );
+
+    if (txResult.rows.length > 0) {
+      const userId = txResult.rows[0].user_id;
+      const result = await paypalService.captureOrder(userId, orderId);
+
+      res.status(200).send(`
+        <html><body style="font-family:sans-serif;text-align:center;padding:40px">
+          <h2 style="color:#10b981">&#10004; Payment Successful!</h2>
+          <p><strong>Amount:</strong> $${result.amount.toFixed(2)} USD</p>
+          <p><strong>Status:</strong> ${result.status}</p>
+          <p>Return to GroLotto to see your updated balance.</p>
+          <p style="color:#6b7280;font-size:14px">You can close this page.</p>
+        </body></html>
+      `);
+    } else {
+      res.status(200).send(`
+        <html><body style="font-family:sans-serif;text-align:center;padding:40px">
+          <h2>Payment Received</h2>
+          <p>Please return to the GroLotto app and verify your payment.</p>
+        </body></html>
+      `);
+    }
+  } catch (error: any) {
+    console.error('[PayPal Return] Error:', error.message);
+    res.status(200).send(`
+      <html><body style="font-family:sans-serif;text-align:center;padding:40px">
+        <h2>Payment Processing</h2>
+        <p>Your payment is being processed. Please return to the app.</p>
+      </body></html>
+    `);
   }
 }

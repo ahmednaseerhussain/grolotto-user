@@ -23,4 +23,9 @@ router.get('/moncash/return', ctrl.moncashReturn);
 router.post('/moncash/notify', ctrl.moncashWebhook);
 router.get('/moncash/notify', ctrl.moncashWebhook); // MonCash may also GET
 
+// === PayPal Endpoints ===
+router.post('/paypal/create-order', authenticate, ctrl.createPayPalOrder);
+router.post('/paypal/capture-order', authenticate, ctrl.capturePayPalOrder);
+router.get('/paypal/return', ctrl.paypalReturn); // PayPal redirects user here
+
 export default router;

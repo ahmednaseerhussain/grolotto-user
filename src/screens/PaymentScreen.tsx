@@ -59,6 +59,61 @@ export default function PaymentScreen() {
     if (!canProceed || !user) return;
     setProcessing(true);
     try {
+      if (selectedMethod === 'paypal') {
+        // PayPal flow
+        const ppResult = await paymentAPI.createPayPalOrder(parseFloat(amount), 'USD');
+        const approveUrl = ppResult?.approveUrl || ppResult?.data?.approveUrl;
+        const orderId = ppResult?.orderId || ppResult?.data?.orderId;
+
+        if (approveUrl) {
+          await Linking.openURL(approveUrl);
+        }
+
+        // Wait for user to return from PayPal
+        const waitForReturn = () => new Promise<void>((resolve) => {
+          const sub = AppState.addEventListener('change', (state) => {
+            if (state === 'active') { sub.remove(); resolve(); }
+          });
+          setTimeout(() => { sub.remove(); resolve(); }, 8000);
+        });
+        await waitForReturn();
+
+        // Poll capture endpoint
+        let captured = false;
+        for (let attempt = 0; attempt < 12; attempt++) {
+          try {
+            const capRes = await paymentAPI.capturePayPalOrder(orderId);
+            const status = capRes?.status || capRes?.data?.status;
+            if (status === 'COMPLETED' || status === 'credited' || status === 'already_processed') {
+              captured = true;
+              break;
+            }
+          } catch { /* keep polling */ }
+          await new Promise(r => setTimeout(r, 5000));
+        }
+
+        if (captured) {
+          try {
+            const wallet = await walletAPI.getWallet();
+            const bal = currency === 'HTG' ? wallet.balanceHtg : wallet.balanceUsd;
+            useAppStore.getState().updateUser({ ...user, balance: bal || 0 });
+          } catch {}
+          setProcessing(false);
+          setShowSuccess(true);
+          setTimeout(() => {
+            setShowSuccess(false);
+            setAmount("");
+            setSelectedMethod(null);
+            navigation.goBack();
+          }, 2000);
+        } else {
+          setProcessing(false);
+          Alert.alert("Payment Pending", "Your PayPal payment is being processed. Pull down to refresh your balance.");
+        }
+        return;
+      }
+
+      // MonCash flow
       const paymentResult = await paymentAPI.createPaymentIntent(
         parseFloat(amount),
         currency

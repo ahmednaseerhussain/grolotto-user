@@ -28,6 +28,12 @@ const config = {
     clientSecret: process.env.MONCASH_CLIENT_SECRET || '',
     baseUrl: process.env.MONCASH_BASE_URL || 'https://sandbox.moncashbutton.digicelgroup.com',
   },
+
+  paypal: {
+    clientId: process.env.PAYPAL_CLIENT_ID || '',
+    clientSecret: process.env.PAYPAL_CLIENT_SECRET || '',
+    baseUrl: process.env.PAYPAL_BASE_URL || 'https://api-m.sandbox.paypal.com',
+  },
   
   rateLimit: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),

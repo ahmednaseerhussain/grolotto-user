@@ -19,4 +19,14 @@ export const paymentAPI = {
     const response = await apiClient.get(`/payments/status/${transactionId}`);
     return response.data.data || response.data;
   },
+
+  async createPayPalOrder(data: { amount: number; currency?: string }): Promise<{ orderId: string; approveUrl: string; amount: number; currency: string }> {
+    const response = await apiClient.post("/payments/paypal/create-order", data);
+    return response.data.data || response.data;
+  },
+
+  async capturePayPalOrder(orderId: string): Promise<{ status: string; amount: number; currency: string; transactionId?: string }> {
+    const response = await apiClient.post("/payments/paypal/capture-order", { orderId });
+    return response.data.data || response.data;
+  },
 };

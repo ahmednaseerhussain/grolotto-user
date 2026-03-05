@@ -47,8 +47,45 @@ export default function PaymentScreen() {
     setProcessing(true);
     try {
       if (selectedMethod === "paypal") {
-        // PayPal: open PayPal checkout (placeholder — integrate PayPal SDK when credentials are ready)
-        toast.error("PayPal integration is being configured. Please use MonCash for now.");
+        // PayPal: create order then redirect to PayPal approval page
+        const ppRes = await paymentAPI.createPayPalOrder({ amount: parseFloat(amount), currency: 'USD' });
+        if (ppRes?.approveUrl && ppRes?.orderId) {
+          // Open PayPal in new window
+          const ppWindow = window.open(ppRes.approveUrl, "_blank", "width=600,height=700");
+
+          toast("Complete payment on PayPal...", { duration: 5000 });
+
+          // Poll for capture / completion
+          let captured = false;
+          for (let attempt = 0; attempt < 24; attempt++) {
+            await new Promise((r) => setTimeout(r, 5000));
+            try {
+              const capRes = await paymentAPI.capturePayPalOrder(ppRes.orderId);
+              if (capRes?.status === 'COMPLETED' || capRes?.status === 'credited' || capRes?.status === 'already_processed') {
+                captured = true;
+                break;
+              }
+            } catch {
+              // Continue polling — order may not be approved yet
+            }
+          }
+
+          if (captured) {
+            try {
+              const walletRes = await walletAPI.getBalance();
+              setWallet(walletRes || null);
+            } catch {}
+            setShowSuccess(true);
+            setTimeout(() => {
+              setShowSuccess(false);
+              router.push("/player/dashboard");
+            }, 3000);
+          } else {
+            toast.error("PayPal payment verification timed out. Please check your balance.");
+          }
+        } else {
+          toast.error("Failed to create PayPal order. Please try again.");
+        }
         setProcessing(false);
         return;
       }

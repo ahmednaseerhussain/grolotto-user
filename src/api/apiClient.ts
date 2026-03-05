@@ -350,6 +350,16 @@ export const paymentAPI = {
     const res = await api.get(`/payments/status/${transactionId}`);
     return res.data;
   },
+
+  async createPayPalOrder(amount: number, currency = 'USD') {
+    const res = await api.post('/payments/paypal/create-order', { amount, currency });
+    return res.data;
+  },
+
+  async capturePayPalOrder(orderId: string) {
+    const res = await api.post('/payments/paypal/capture-order', { orderId });
+    return res.data;
+  },
 };
 
 // ═════════════════════════════════════════════════════════

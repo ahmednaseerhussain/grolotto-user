@@ -2602,7 +2602,7 @@ export const translations = {
   },
   drawManagementTips: {
     ht: "• Senp obligatwa e pi popilè\n• Aktive Maryaj pou ogmante revni ou\n• Jwèt Loto ofri pi gwo gen\n• Toujou previzualize anvan ou aktive",
-    en: "• Senp is mandatory and the most popular\n• Enable Maryaj to increase your revenue\n• Loto games offer higher winnings\n• Always preview before enabling",
+    en: "• Senp is mandatory and the most popular\n• Enable Maryaj to increase your revenue\n• Lotto games offer higher winnings\n• Always preview before enabling",
     fr: "• Senp est obligatoire et le plus populaire\n• Activez Maryaj pour augmenter vos revenus\n• Les jeux Loto offrent des gains plus élevés\n• Prévisualisez toujours avant d'activer",
     es: "• Senp es obligatorio y el más popular\n• Habilite Maryaj para aumentar sus ingresos\n• Los juegos Loto ofrecen ganancias más altas\n• Siempre previsualice antes de habilitar"
   },
