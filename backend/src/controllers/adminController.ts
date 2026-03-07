@@ -3,7 +3,8 @@ import * as adminService from '../services/adminService';
 
 export async function getSystemStats(req: Request, res: Response, next: NextFunction) {
   try {
-    const stats = await adminService.getSystemStats();
+    const date = req.query.date as string | undefined;
+    const stats = await adminService.getSystemStats(date);
     res.json(stats);
   } catch (error) {
     next(error);
@@ -60,7 +61,8 @@ export async function activateVendor(req: Request, res: Response, next: NextFunc
 
 export async function suspendUser(req: Request, res: Response, next: NextFunction) {
   try {
-    await adminService.suspendUser(req.params.userId);
+    const reason = req.body?.reason;
+    await adminService.suspendUser(req.params.userId, reason);
     res.json({ message: 'User suspended' });
   } catch (error) {
     next(error);

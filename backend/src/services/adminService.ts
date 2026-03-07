@@ -5,7 +5,7 @@ import { AppError } from '../middleware/errorHandler';
  * Admin service for system-wide operations.
  */
 
-export async function getSystemStats() {
+export async function getSystemStats(date?: string) {
   const usersResult = await query(
     `SELECT
        COUNT(*) FILTER (WHERE role = 'player') as total_players,
@@ -30,8 +30,23 @@ export async function getSystemStats() {
     `SELECT COALESCE(SUM(bet_amount), 0) as total_revenue FROM lottery_tickets`
   );
 
+  const filterDate = date || new Date().toISOString().split('T')[0];
+
   const todayResult = await query(
-    `SELECT COUNT(*) as today_plays FROM lottery_tickets WHERE created_at::date = CURRENT_DATE`
+    `SELECT COUNT(*) as today_plays FROM lottery_tickets WHERE created_at::date = $1::date`,
+    [filterDate]
+  );
+
+  // Players who placed bets on the given date
+  const playersPlayedResult = await query(
+    `SELECT COUNT(DISTINCT user_id) as players_played FROM lottery_tickets WHERE created_at::date = $1::date`,
+    [filterDate]
+  );
+
+  // Players who won on the given date
+  const playersWonResult = await query(
+    `SELECT COUNT(DISTINCT user_id) as players_won FROM lottery_tickets WHERE created_at::date = $1::date AND status = 'won'`,
+    [filterDate]
   );
 
   const u = usersResult.rows[0];
@@ -40,6 +55,8 @@ export async function getSystemStats() {
   const pp = pendingPayoutsResult.rows[0];
   const r = revenueResult.rows[0];
   const t = todayResult.rows[0];
+  const pp2 = playersPlayedResult.rows[0];
+  const pw = playersWonResult.rows[0];
 
   return {
     totalPlayers: parseInt(u.total_players),
@@ -50,6 +67,8 @@ export async function getSystemStats() {
     pendingPayouts: parseInt(pp.pending_payouts),
     totalRevenue: parseFloat(r.total_revenue),
     todayPlays: parseInt(t.today_plays),
+    playersPlayed: parseInt(pp2.players_played),
+    playersWon: parseInt(pw.players_won),
   };
 }
 
@@ -159,11 +178,20 @@ export async function activateVendor(vendorId: string) {
   );
 }
 
-export async function suspendUser(userId: string) {
+export async function suspendUser(userId: string, reason?: string) {
   await query(
     `UPDATE users SET is_active = FALSE WHERE id = $1`,
     [userId]
   );
+  // Store suspension reason in app_settings as a log entry
+  if (reason) {
+    try {
+      await query(
+        `INSERT INTO app_settings (key, value, description) VALUES ($1, $2, $3) ON CONFLICT (key) DO UPDATE SET value = $2`,
+        [`suspension_reason_${userId}`, JSON.stringify({ reason, date: new Date().toISOString() }), `Suspension reason for user ${userId}`]
+      );
+    } catch { /* non-critical, don't fail the suspension */ }
+  }
 }
 
 export async function activateUser(userId: string) {
