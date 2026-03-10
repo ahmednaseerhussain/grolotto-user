@@ -53,7 +53,7 @@ export default function VendorResultsScreen() {
 
   const [loading, setLoading] = useState(true);
   const [rounds, setRounds] = useState<Round[]>([]);
-  const [activeTab, setActiveTab] = useState<"open" | "completed">("open");
+  const [activeTab, setActiveTab] = useState<"open" | "completed">("completed");
   const [selectedRound, setSelectedRound] = useState<RoundDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
@@ -130,7 +130,7 @@ export default function VendorResultsScreen() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-xl font-bold">{DRAW_STATES[(d as any).drawState || (d as any).state] || (d as any).drawState || (d as any).state || "Round"} Draw</h1>
+            <h1 className="text-xl font-bold">{DRAW_STATES[(d as any).drawState || (d as any).state] || (d as any).drawState || (d as any).state || ""} Results</h1>
             <p className="text-sm text-gray-500">
               {(d as any).drawDate ? new Date((d as any).drawDate).toLocaleDateString() : ""}
             </p>
@@ -224,13 +224,13 @@ export default function VendorResultsScreen() {
         <Button variant="ghost" size="sm" onClick={() => router.back()}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-xl font-bold">{t("resultPublishing") || "Results & Rounds"}</h1>
+        <h1 className="text-xl font-bold">{t("winnerResults") || "Winner Results"}</h1>
       </div>
 
       {/* Summary */}
       <div className="grid grid-cols-2 gap-3">
-        <StatCard title={t("openRounds") || "Open Rounds"} value={openRounds.length} icon={<Clock className="h-5 w-5" />} />
-        <StatCard title={t("completedRounds") || "Completed"} value={completedRounds.length} icon={<CheckCircle className="h-5 w-5" />} />
+        <StatCard title={t("activeDraws") || "Active Draws"} value={openRounds.length} icon={<Clock className="h-5 w-5" />} />
+        <StatCard title={t("publishedResults") || "Published Results"} value={completedRounds.length} icon={<Trophy className="h-5 w-5" />} />
       </div>
 
       {/* Tabs */}
@@ -244,7 +244,7 @@ export default function VendorResultsScreen() {
               : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
           >
-            {tab === "open" ? (t("open") || "Open") : (t("completed") || "Completed")}
+            {tab === "open" ? (t("activeDraws") || "Active Draws") : (t("winnerResults") || "Winner Results")}
             <span className="ml-1 text-xs bg-gray-100 px-1.5 py-0.5 rounded-full">
               {tab === "open" ? openRounds.length : completedRounds.length}
             </span>
@@ -260,8 +260,8 @@ export default function VendorResultsScreen() {
       ) : displayed.length === 0 ? (
         <EmptyState
           icon={<Ticket className="h-10 w-10" />}
-          title={activeTab === "open" ? (t("noOpenRounds") || "No open rounds") : (t("noCompleted") || "No completed rounds")}
-          description={t("roundsAppearHere") || "Rounds will appear here as draws occur."}
+          title={activeTab === "open" ? (t("noActiveDraws") || "No active draws") : (t("noResults") || "No results published yet")}
+          description={activeTab === "open" ? "Active draws will appear when players place bets." : "Published winning numbers will appear here."}
         />
       ) : (
         <div className="space-y-2">

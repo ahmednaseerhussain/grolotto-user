@@ -14,7 +14,7 @@ import { StatCard } from "@/components/common/stat-card";
 import {
   Users, Ticket, TrendingUp, DollarSign, Gamepad2, Wallet, Settings, Clock,
   ArrowUpRight, BarChart3, Shield, History, LogOut, Banknote, ChevronRight,
-  Calendar, Layers, Loader2
+  Calendar, Layers, Loader2, Trophy
 } from "lucide-react";
 import { formatCurrency, GAME_LABELS } from "@/lib/utils";
 import type { VendorStats } from "@/types";
@@ -62,9 +62,10 @@ export default function VendorDashboard() {
 
   const stats = vendorStats || {} as Partial<VendorStats>;
   const vendorCurrency = (vendorProfile?.operatingCurrency || currency) as "HTG" | "USD";
-  const balance = stats.availableBalance || 0;
+  const balance = stats.availableBalance || (vendorProfile as any)?.availableBalance || 0;
 
   const quickActions = [
+    { label: t("results") || "Results", icon: Trophy, href: "/vendor/results", color: "bg-amber-50 text-amber-600" },
     { label: t("pricesAndStates") || "Prices & States", icon: Settings, href: "/vendor/draws", color: "bg-blue-50 text-blue-600" },
     { label: t("numberLimits") || "Number Limits", icon: Shield, href: "/vendor/number-limits", color: "bg-amber-50 text-amber-600" },
     { label: t("history") || "History", icon: History, href: "/vendor/history", color: "bg-emerald-50 text-emerald-600" },
