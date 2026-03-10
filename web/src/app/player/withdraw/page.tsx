@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store/app-store";
 import { useTranslation } from "@/hooks/use-translation";
@@ -20,6 +20,11 @@ export default function PlayerWithdrawPage() {
     const t = useTranslation();
     const currency = useAppStore((s) => s.currency);
     const wallet = useAppStore((s) => s.wallet);
+    const setWallet = useAppStore((s) => s.setWallet);
+
+    useEffect(() => {
+        walletAPI.getBalance().then((w) => setWallet(w)).catch(() => {});
+    }, []);
 
     const [amount, setAmount] = useState("");
     const [bankName, setBankName] = useState("");

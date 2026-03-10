@@ -23,6 +23,7 @@ interface Round {
   drawState?: string;
   drawDate: string;
   status: string;
+  winningNumbers?: Record<string, number[]>;
   totalBets?: number;
   totalAmount?: number;
   totalWinners?: number;
@@ -138,6 +139,33 @@ export default function VendorResultsScreen() {
             {(d as any).status}
           </Badge>
         </div>
+
+        {/* Winning Numbers */}
+        {(d as any).status === "completed" && (d as any).winningNumbers && (
+          <Card>
+            <CardContent className="p-5">
+              <h3 className="text-sm font-semibold text-gray-600 mb-3 text-center">Winning Numbers</h3>
+              {Object.entries((d as any).winningNumbers).map(([gameType, nums]: [string, any]) => {
+                const numsArr = Array.isArray(nums) ? nums : [];
+                if (numsArr.length === 0) return null;
+                return (
+                  <div key={gameType} className="mb-3 last:mb-0">
+                    <span className={`text-xs px-2 py-0.5 rounded font-medium ${gameColors[gameType] || "bg-gray-100 text-gray-700"}`}>
+                      {GAME_LABELS[gameType] || gameType}
+                    </span>
+                    <div className="flex items-center gap-2 mt-2 justify-center">
+                      {numsArr.map((n: number, i: number) => (
+                        <div key={i} className="w-10 h-10 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold shadow">
+                          {n}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Financial Summary */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -255,6 +283,20 @@ export default function VendorResultsScreen() {
                     <p className="text-sm text-gray-500 mt-0.5">
                       {round.drawDate ? new Date(round.drawDate).toLocaleDateString() : ""}
                     </p>
+                    {(round as any).winningNumbers && (round.status === "completed") && (() => {
+                      const wn = (round as any).winningNumbers;
+                      const allNums = Object.values(wn).flat() as number[];
+                      return allNums.length > 0 ? (
+                        <div className="flex gap-1.5 mt-2">
+                          {allNums.slice(0, 6).map((n: number, i: number) => (
+                            <div key={i} className="w-7 h-7 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">
+                              {n}
+                            </div>
+                          ))}
+                          {allNums.length > 6 && <span className="text-xs text-gray-400 self-center">+{allNums.length - 6}</span>}
+                        </div>
+                      ) : null;
+                    })()}
                     {(round.totalBets !== undefined || round.totalAmount !== undefined) && (
                       <div className="flex gap-4 mt-1 text-xs text-gray-500">
                         {round.totalBets !== undefined && <span>{round.totalBets} bets</span>}

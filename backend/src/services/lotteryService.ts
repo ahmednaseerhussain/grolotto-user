@@ -635,17 +635,17 @@ export async function getVendorRounds(
   filters?: { status?: string; date?: string; page?: number; limit?: number }
 ) {
   const conditions: string[] = [
-    `id IN (SELECT DISTINCT round_id FROM lottery_tickets WHERE vendor_id = $1)`
+    `lr.id IN (SELECT DISTINCT round_id FROM lottery_tickets WHERE vendor_id = $1)`
   ];
   const values: any[] = [vendorId];
   let paramIndex = 2;
 
   if (filters?.status) {
-    conditions.push(`status = $${paramIndex++}`);
+    conditions.push(`lr.status = $${paramIndex++}`);
     values.push(filters.status);
   }
   if (filters?.date) {
-    conditions.push(`draw_date = $${paramIndex++}`);
+    conditions.push(`lr.draw_date = $${paramIndex++}`);
     values.push(filters.date);
   }
 
