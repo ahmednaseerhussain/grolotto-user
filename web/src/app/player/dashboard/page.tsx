@@ -274,17 +274,17 @@ export default function PlayerDashboard() {
       </div>
 
       {/* Today's Results Banner */}
-      {todayResults.length > 0 && (
-        <div>
-          <h2 className="text-lg font-semibold mb-3">🏆 {t("todayResults") || "Today's Results"}</h2>
+      <div>
+        <h2 className="text-lg font-semibold mb-3">🏆 {t("todayResults") || "Today's Results"}</h2>
+        {todayResults.length > 0 ? (
           <div className="flex gap-3 overflow-x-auto pb-2">
             {todayResults.map((round: any) => (
               <Card key={round.id} className="min-w-[200px] hover:shadow-md transition-shadow cursor-pointer flex-shrink-0" onClick={() => router.push("/player/results")}>
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-bold text-gray-900">{round.drawState}</span>
-                    <Badge variant={round.drawTime === 'morning' ? 'warning' : round.drawTime === 'evening' ? 'secondary' : 'default'} className="text-[10px]">
-                      {round.drawTime === 'morning' ? '🌅 Maten' : round.drawTime === 'evening' ? '🌙 Aswè' : '☀️ Aprèmidi'}
+                    <Badge variant={round.drawTime === 'midday' ? 'warning' : round.drawTime === 'evening' ? 'secondary' : 'default'} className="text-[10px]">
+                      {round.drawTime === 'midday' ? '☀️ Midi' : round.drawTime === 'evening' ? '🌙 Aswè' : '📋 Results'}
                     </Badge>
                   </div>
                   {round.winningNumbers && Object.entries(round.winningNumbers).map(([game, nums]: [string, any]) => (
@@ -301,8 +301,18 @@ export default function PlayerDashboard() {
               </Card>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <Card className="bg-gray-50">
+            <CardContent className="p-4 text-center">
+              <Trophy className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+              <p className="text-sm text-gray-500">{t("noResultsYetToday") || "No results published yet today"}</p>
+              <Button variant="ghost" size="sm" className="mt-2" onClick={() => router.push("/player/results")}>
+                {t("viewAllResults") || "View All Results"}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Find Vendors */}
       <div>

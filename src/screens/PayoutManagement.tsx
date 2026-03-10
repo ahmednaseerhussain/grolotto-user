@@ -9,12 +9,12 @@ import { vendorAPI, getErrorMessage } from "../api/apiClient";
 
 const PAYOUT_METHODS_BASE = [
   { 
-    key: "moncash" as PayoutMethodType, 
-    name: "MonCash", 
-    icon: "wallet", 
-    color: "#ef4444",
-    descriptionKey: "instantTransferMonCash",
-    fee: "2%",
+    key: "bank_transfer" as PayoutMethodType, 
+    name: "Bank Transfer", 
+    icon: "business", 
+    color: "#3b82f6",
+    descriptionKey: "bankTransferDesc",
+    fee: "1%",
     minAmount: 10,
   },
 ];
@@ -32,13 +32,17 @@ export default function PayoutManagement() {
   
   const PAYOUT_METHODS = PAYOUT_METHODS_BASE.map(m => ({ ...m, description: t(m.descriptionKey) }));
   
-  const [selectedMethod, setSelectedMethod] = useState<PayoutMethodType | null>(null);
+  const [selectedMethod, setSelectedMethod] = useState<PayoutMethodType | null>("bank_transfer");
   const [amount, setAmount] = useState("");
   const [showRequestForm, setShowRequestForm] = useState(false);
-  const [withdrawalCurrency, setWithdrawalCurrency] = useState<"HTG" | "USD">(currency);
+  const [bankName, setBankName] = useState("");
+  const [bankAccountName, setBankAccountName] = useState("");
+  const [bankAccountNumber, setBankAccountNumber] = useState("");
+  const [bankRoutingNumber, setBankRoutingNumber] = useState("");
   
   const currentVendor = vendors.find(v => v.userId === user?.id);
   const vendorPayouts = payouts.filter(p => p.vendorId === currentVendor?.id);
+  const withdrawalCurrency = ((currentVendor as any)?.operatingCurrency || currency) as "HTG" | "USD";
   
   // Currency formatting and conversion
   const formatCurrency = (amount: number, targetCurrency: "HTG" | "USD" = withdrawalCurrency) => {
@@ -69,17 +73,16 @@ export default function PayoutManagement() {
     .reduce((sum, p) => sum + p.amount, 0);
 
   const handleRequestPayout = () => {
-    if (!selectedMethod || !amount) {
-      Alert.alert(t("error"), t("selectMethodAndAmount"));
+    if (!amount || !bankName.trim() || !bankAccountName.trim() || !bankAccountNumber.trim()) {
+      Alert.alert(t("error"), t("fillBankDetails") || "Please fill in bank details and amount");
       return;
     }
 
     const requestAmount = parseFloat(amount);
-    const method = PAYOUT_METHODS.find(m => m.key === selectedMethod)!;
     
     // Convert amount to USD for validation (since balance is stored in USD)
     const requestAmountUSD = withdrawalCurrency === "HTG" ? requestAmount / 150 : requestAmount;
-    const minAmountUSD = method.minAmount;
+    const minAmountUSD = 10;
     
     if (requestAmountUSD < minAmountUSD) {
       const minAmountDisplay = withdrawalCurrency === "HTG" ? `G${(minAmountUSD * 150).toFixed(2)}` : `$${minAmountUSD}`;
@@ -92,25 +95,32 @@ export default function PayoutManagement() {
       return;
     }
 
-    requestPayout(currentVendor.id, requestAmountUSD, selectedMethod);
+    requestPayout(currentVendor.id, requestAmountUSD, "bank_transfer" as PayoutMethodType);
     
     // Submit payout request to backend
     vendorAPI.requestPayout({
       amount: requestAmountUSD,
-      method: selectedMethod,
+      method: "bank_transfer",
       currency: withdrawalCurrency,
-    }).catch(err => {
+      bankName,
+      bankAccountName,
+      bankAccountNumber,
+      bankRoutingNumber,
+    } as any).catch(err => {
       Alert.alert(t("error"), getErrorMessage(err));
     });
 
     const amountDisplay = formatCurrency(requestAmount, withdrawalCurrency);
     Alert.alert(
       t("withdrawalSubmitted"), 
-      `${t("withdrawalSubmittedMsg").replace("{amount}", amountDisplay).replace("{method}", method.name)}`,
+      `${(t("withdrawalSubmittedMsg") || "Withdrawal of {amount} via {method} submitted").replace("{amount}", amountDisplay).replace("{method}", "Bank Transfer")}`,
       [{ text: "OK", onPress: () => {
         setShowRequestForm(false);
         setAmount("");
-        setSelectedMethod(null);
+        setBankName("");
+        setBankAccountName("");
+        setBankAccountNumber("");
+        setBankRoutingNumber("");
       }}]
     );
   };
@@ -156,32 +166,9 @@ export default function PayoutManagement() {
                 <Text style={styles.balanceTitle}>{t("availableBalance")}</Text>
               </View>
               
-              {/* Currency Toggle */}
-              <View style={styles.currencyToggleContainer}>
-                <Pressable 
-                  style={[
-                    styles.currencyToggleButton,
-                    withdrawalCurrency === "HTG" && styles.currencyToggleButtonActive
-                  ]}
-                  onPress={() => setWithdrawalCurrency("HTG")}
-                >
-                  <Text style={[
-                    styles.currencyToggleText,
-                    withdrawalCurrency === "HTG" && styles.currencyToggleTextActive
-                  ]}>HTG</Text>
-                </Pressable>
-                <Pressable 
-                  style={[
-                    styles.currencyToggleButton,
-                    withdrawalCurrency === "USD" && styles.currencyToggleButtonActive
-                  ]}
-                  onPress={() => setWithdrawalCurrency("USD")}
-                >
-                  <Text style={[
-                    styles.currencyToggleText,
-                    withdrawalCurrency === "USD" && styles.currencyToggleTextActive
-                  ]}>USD</Text>
-                </Pressable>
+              {/* Currency Badge */}
+              <View style={[styles.currencyToggleButton, styles.currencyToggleButtonActive]}>
+                <Text style={[styles.currencyToggleText, styles.currencyToggleTextActive]}>{withdrawalCurrency}</Text>
               </View>
             </View>
             
@@ -265,57 +252,72 @@ export default function PayoutManagement() {
               <View style={styles.methodsSection}>
                 <Text style={styles.methodsTitle}>{t("paymentMethod")}</Text>
                 
-                {PAYOUT_METHODS.map((method) => {
-                  const isSelected = selectedMethod === method.key;
-                  const requestAmount = parseFloat(amount) || 0;
-                  const requestAmountUSD = withdrawalCurrency === "HTG" ? requestAmount / 150 : requestAmount;
-                  const canSelect = requestAmountUSD >= method.minAmount;
-                  const minAmountDisplay = withdrawalCurrency === "HTG" ? 
-                    `G${(method.minAmount * 150).toFixed(0)}` : 
-                    `$${method.minAmount}`;
-                  
-                  return (
-                    <Pressable
-                      key={method.key}
-                      style={[
-                        styles.methodCard,
-                        isSelected && styles.methodCardSelected,
-                        !canSelect && requestAmount > 0 && styles.methodCardDisabled,
-                      ]}
-                      onPress={() => setSelectedMethod(method.key)}
-                      disabled={!canSelect && requestAmount > 0}
-                    >
-                      <View style={styles.methodInfo}>
-                        <View style={[styles.methodIcon, { backgroundColor: method.color }]}>
-                          <Ionicons name={method.icon as any} size={20} color="#ffffff" />
-                        </View>
-                        
-                        <View style={styles.methodDetails}>
-                          <Text style={styles.methodName}>{method.name}</Text>
-                          <Text style={styles.methodDescription}>{method.description}</Text>
-                          <View style={styles.methodStats}>
-                            <Text style={styles.methodFee}>{t("fees")}: {method.fee}</Text>
-                            <Text style={styles.methodMin}>{t("minimum")}: {minAmountDisplay}</Text>
-                          </View>
-                        </View>
+                {/* Bank Transfer - Always Selected */}
+                <View style={[styles.methodCard, styles.methodCardSelected]}>
+                  <View style={styles.methodInfo}>
+                    <View style={[styles.methodIcon, { backgroundColor: "#3b82f6" }]}>
+                      <Ionicons name="business" size={20} color="#ffffff" />
+                    </View>
+                    <View style={styles.methodDetails}>
+                      <Text style={styles.methodName}>Bank Transfer</Text>
+                      <Text style={styles.methodDescription}>{t("bankTransferDesc") || "Transfer to your bank account"}</Text>
+                      <View style={styles.methodStats}>
+                        <Text style={styles.methodFee}>{t("fees")}: 1%</Text>
+                        <Text style={styles.methodMin}>{t("minimum")}: {withdrawalCurrency === "HTG" ? "G1,500" : "$10"}</Text>
                       </View>
-                      
-                      <View style={[styles.methodRadio, isSelected && styles.methodRadioSelected]}>
-                        {isSelected && <View style={styles.methodRadioInner} />}
-                      </View>
-                    </Pressable>
-                  );
-                })}
+                    </View>
+                  </View>
+                </View>
+
+                {/* Bank Details */}
+                <View style={{ marginTop: 12, gap: 10 }}>
+                  <View>
+                    <Text style={styles.amountLabel}>{t("bankName") || "Bank Name"}</Text>
+                    <TextInput
+                      style={styles.amountInput}
+                      value={bankName}
+                      onChangeText={setBankName}
+                      placeholder="e.g. Sogebank, BNC, Unibank"
+                    />
+                  </View>
+                  <View>
+                    <Text style={styles.amountLabel}>{t("accountHolderName") || "Account Holder Name"}</Text>
+                    <TextInput
+                      style={styles.amountInput}
+                      value={bankAccountName}
+                      onChangeText={setBankAccountName}
+                      placeholder="Full name on account"
+                    />
+                  </View>
+                  <View>
+                    <Text style={styles.amountLabel}>{t("accountNumber") || "Account Number"}</Text>
+                    <TextInput
+                      style={styles.amountInput}
+                      value={bankAccountNumber}
+                      onChangeText={setBankAccountNumber}
+                      placeholder="Bank account number"
+                    />
+                  </View>
+                  <View>
+                    <Text style={styles.amountLabel}>{t("routingNumber") || "Routing Number (optional)"}</Text>
+                    <TextInput
+                      style={styles.amountInput}
+                      value={bankRoutingNumber}
+                      onChangeText={setBankRoutingNumber}
+                      placeholder="Routing/transit number"
+                    />
+                  </View>
+                </View>
               </View>
 
               {/* Submit Button */}
               <Pressable 
                 style={[
                   styles.submitButton, 
-                  (!selectedMethod || !amount) && styles.submitButtonDisabled
+                  (!amount || !bankName.trim() || !bankAccountName.trim() || !bankAccountNumber.trim()) && styles.submitButtonDisabled
                 ]}
                 onPress={handleRequestPayout}
-                disabled={!selectedMethod || !amount}
+                disabled={!amount || !bankName.trim() || !bankAccountName.trim() || !bankAccountNumber.trim()}
               >
                 <Ionicons name="send" size={16} color="#ffffff" />
                 <Text style={styles.submitButtonText}>{t("submitRequest")}</Text>

@@ -411,6 +411,15 @@ export default function PlayerDashboard() {
           </Pressable>
 
           <Pressable
+            style={[styles.actionCard, { backgroundColor: "#ef4444" }]}
+            onPress={() => (navigation as any).navigate("PlayerWithdrawalScreen")}
+          >
+            <Ionicons name="arrow-down-circle" size={32} color="#ffffff" />
+            <Text style={styles.actionTitle}>{t("withdrawal") || "Withdraw"}</Text>
+            <Text style={styles.actionSubtitle}>Bank Transfer</Text>
+          </Pressable>
+
+          <Pressable
             style={[styles.actionCard, { backgroundColor: "#f59e0b" }]}
             onPress={() => (navigation as any).navigate("Tchala")}
           >
@@ -457,9 +466,9 @@ export default function PlayerDashboard() {
         </View>
 
         {/* Today's Results Banner */}
-        {todayResults.length > 0 && (
-          <View style={{ marginHorizontal: 20, marginTop: 16, marginBottom: 8 }}>
-            <Text style={{ fontSize: 18, fontWeight: '700', color: '#1f2937', marginBottom: 10 }}>🏆 {t('todayResults') || "Today's Results"}</Text>
+        <View style={{ marginHorizontal: 20, marginTop: 16, marginBottom: 8 }}>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: '#1f2937', marginBottom: 10 }}>🏆 {t('todayResults') || "Today's Results"}</Text>
+          {todayResults.length > 0 ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ gap: 8 }}>
               {todayResults.map((round: any) => (
                 <Pressable
@@ -477,9 +486,9 @@ export default function PlayerDashboard() {
                 >
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                     <Text style={{ fontSize: 16, fontWeight: '700', color: '#1f2937' }}>{round.drawState}</Text>
-                    <View style={{ backgroundColor: round.drawTime === 'morning' ? '#fef3c7' : round.drawTime === 'evening' ? '#ede9fe' : '#dbeafe', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}>
-                      <Text style={{ fontSize: 10, fontWeight: '600', color: round.drawTime === 'morning' ? '#92400e' : round.drawTime === 'evening' ? '#5b21b6' : '#1e40af' }}>
-                        {round.drawTime === 'morning' ? '🌅 Maten' : round.drawTime === 'evening' ? '🌙 Aswè' : '☀️ Aprèmidi'}
+                    <View style={{ backgroundColor: round.drawTime === 'midday' ? '#fef3c7' : round.drawTime === 'evening' ? '#ede9fe' : '#dbeafe', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}>
+                      <Text style={{ fontSize: 10, fontWeight: '600', color: round.drawTime === 'midday' ? '#92400e' : round.drawTime === 'evening' ? '#5b21b6' : '#1e40af' }}>
+                        {round.drawTime === 'midday' ? '☀️ Midi' : round.drawTime === 'evening' ? '🌙 Aswè' : '📋 Results'}
                       </Text>
                     </View>
                   </View>
@@ -502,8 +511,16 @@ export default function PlayerDashboard() {
                 </Pressable>
               ))}
             </ScrollView>
-          </View>
-        )}
+          ) : (
+            <View style={{ backgroundColor: '#f9fafb', borderRadius: 14, padding: 20, alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb' }}>
+              <Ionicons name="trophy-outline" size={32} color="#d1d5db" />
+              <Text style={{ fontSize: 13, color: '#6b7280', marginTop: 8 }}>{t('noResultsYetToday') || "No results published yet today"}</Text>
+              <Pressable onPress={() => (navigation as any).navigate('ResultsScreen')} style={{ marginTop: 8 }}>
+                <Text style={{ fontSize: 13, color: '#3b82f6', fontWeight: '600' }}>{t('viewAllResults') || "View All Results"}</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
 
         {/* Dynamic Banner Ads */}
         {(() => {

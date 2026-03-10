@@ -76,19 +76,24 @@ export default function PlayScreen() {
   // Load vendor
   useEffect(() => {
     const loadVendor = async () => {
+      if (!vendorId) { setLoading(false); return; }
       setLoading(true);
       try {
-        const found = vendors.find((v: any) => v.id === vendorId || v.id === Number(vendorId));
-        if (found) {
-          setVendor(found);
-        } else if (vendorId) {
-          const res = await vendorAPI.getVendors();
-          const list = Array.isArray(res) ? res : (res as any)?.vendors || [];
-          const v = list.find((x: any) => x.id === vendorId || x.id === Number(vendorId));
-          if (v) setVendor(v);
-        }
+        // Use store vendor as immediate value, then always fetch full details for draws
+        const found = vendors.find((v: any) => String(v.id) === String(vendorId));
+        if (found) setVendor(found);
+        // Always fetch full vendor details to ensure draws are included
+        const fullVendor = await vendorAPI.getVendorById(vendorId);
+        if (fullVendor) setVendor(fullVendor);
       } catch (err) {
         console.error(err);
+        // Fallback: try fetching all vendors
+        try {
+          const res = await vendorAPI.getVendors();
+          const list = Array.isArray(res) ? res : (res as any)?.vendors || [];
+          const v = list.find((x: any) => String(x.id) === String(vendorId));
+          if (v) setVendor(v);
+        } catch {}
       } finally {
         setLoading(false);
       }

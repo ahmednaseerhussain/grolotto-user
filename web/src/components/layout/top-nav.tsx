@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAppStore } from "@/store/app-store";
 import { useTranslation } from "@/hooks/use-translation";
 import { authAPI } from "@/lib/api/auth";
@@ -25,6 +25,7 @@ const LANGUAGES: { value: Language; label: string; flag: string }[] = [
 
 export function TopNav() {
   const router = useRouter();
+  const pathname = usePathname();
   const t = useTranslation();
   const language = useAppStore((s) => s.language);
   const user = useAppStore((s) => s.user);
@@ -74,14 +75,16 @@ export function TopNav() {
 
         {/* Right side */}
         <div className="flex items-center gap-2">
-          {/* Currency toggle */}
-          <button
-            onClick={() => setCurrency(currency === "USD" ? "HTG" : "USD")}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
-          >
-            <DollarSign className="h-4 w-4" />
-            {currency}
-          </button>
+          {/* Currency toggle - only for player routes */}
+          {!pathname?.startsWith("/vendor") && (
+            <button
+              onClick={() => setCurrency(currency === "USD" ? "HTG" : "USD")}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              <DollarSign className="h-4 w-4" />
+              {currency}
+            </button>
+          )}
 
           {/* Language switcher */}
           <div ref={langRef} className="relative">

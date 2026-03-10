@@ -61,4 +61,8 @@ router.get('/transactions', ctrl.getTransactions);
 // Lottery rounds
 router.post('/rounds', ctrl.createLotteryRound);
 
+// Player Withdrawals
+router.get('/withdrawals/pending', ctrl.getPendingWithdrawals);
+router.post('/withdrawals/:withdrawalId/process', ctrl.processPlayerWithdrawal);
+
 export default router;

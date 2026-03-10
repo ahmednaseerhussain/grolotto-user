@@ -716,3 +716,83 @@ export async function createLotteryRound(drawState: string, drawDate: string, dr
   }
   return result.rows[0];
 }
+
+// ──────────────────────────────────────────────────────────
+// Player Withdrawal Management
+// ──────────────────────────────────────────────────────────
+
+export async function getPendingWithdrawals() {
+  const result = await query(
+    `SELECT t.id, t.user_id, t.amount, t.currency, t.payment_method, t.status,
+            t.description, t.metadata, t.created_at,
+            u.name as player_name, u.email as player_email
+     FROM transactions t
+     JOIN users u ON u.id = t.user_id
+     WHERE t.type = 'withdrawal' AND t.status = 'pending'
+     ORDER BY t.created_at ASC`
+  );
+  return result.rows.map((r) => ({
+    id: r.id,
+    userId: r.user_id,
+    playerName: r.player_name,
+    playerEmail: r.player_email,
+    amount: parseFloat(r.amount),
+    currency: r.currency,
+    method: r.payment_method,
+    status: r.status,
+    description: r.description,
+    bankName: r.metadata?.bankName || '',
+    accountHolderName: r.metadata?.accountHolderName || '',
+    accountNumber: r.metadata?.accountNumber || '',
+    routingNumber: r.metadata?.routingNumber || '',
+    notes: r.metadata?.notes || '',
+    requestDate: r.created_at,
+  }));
+}
+
+export async function processPlayerWithdrawal(
+  withdrawalId: string,
+  action: 'approved' | 'rejected',
+  processedBy: string,
+  adminNotes?: string,
+  transferReference?: string
+) {
+  const status = action === 'approved' ? 'completed' : 'failed';
+
+  const result = await query(
+    `UPDATE transactions SET
+       status = $2,
+       metadata = COALESCE(metadata, '{}'::jsonb) || $3::jsonb,
+       updated_at = NOW()
+     WHERE id = $1 AND type = 'withdrawal' AND status = 'pending'
+     RETURNING *`,
+    [
+      withdrawalId,
+      status,
+      JSON.stringify({
+        processedBy,
+        processedAt: new Date().toISOString(),
+        adminAction: action,
+        adminNotes: adminNotes || null,
+        transferReference: transferReference || null,
+      }),
+    ]
+  );
+
+  if (result.rows.length === 0) {
+    throw new AppError('Withdrawal not found or already processed', 404);
+  }
+
+  // If rejected, refund the amount back to wallet
+  if (action === 'rejected') {
+    const tx = result.rows[0];
+    const balanceField = tx.currency === 'USD' ? 'balance_usd' : 'balance_htg';
+    await query(
+      `UPDATE wallets SET ${balanceField} = ${balanceField} + $1, total_withdrawn = total_withdrawn - $1
+       WHERE user_id = $2`,
+      [tx.amount, tx.user_id]
+    );
+  }
+
+  return result.rows[0];
+}

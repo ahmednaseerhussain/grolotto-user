@@ -15,6 +15,7 @@ import {
   CreditCard,
   Wallet,
   BookOpen,
+  Banknote,
 } from "lucide-react";
 
 const navItems = [
@@ -25,6 +26,7 @@ const navItems = [
   { href: "/player/tchala", icon: BookOpen, labelKey: "tchala" },
   { href: "/player/transactions", icon: Wallet, labelKey: "transactions" },
   { href: "/player/payment", icon: CreditCard, labelKey: "deposit" },
+  { href: "/player/withdraw", icon: Banknote, labelKey: "withdrawal" },
   { href: "/player/notifications", icon: Bell, labelKey: "notifications" },
   { href: "/player/settings", icon: Settings, labelKey: "settings" },
 ];

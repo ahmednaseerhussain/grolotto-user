@@ -331,6 +331,11 @@ export const walletAPI = {
     });
     return res.data;
   },
+
+  async requestWithdrawal(data: { amount: number; currency: string; method: string; bankName: string; accountHolderName: string; accountNumber: string; routingNumber?: string; notes?: string }) {
+    const res = await api.post('/wallet/withdraw', data);
+    return res.data;
+  },
 };
 
 // ═════════════════════════════════════════════════════════

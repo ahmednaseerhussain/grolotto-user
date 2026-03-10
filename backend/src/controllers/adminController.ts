@@ -334,3 +334,28 @@ export async function createLotteryRound(req: Request, res: Response, next: Next
     next(error);
   }
 }
+
+// Player Withdrawal Management
+export async function getPendingWithdrawals(req: Request, res: Response, next: NextFunction) {
+  try {
+    const withdrawals = await adminService.getPendingWithdrawals();
+    res.json(withdrawals);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function processPlayerWithdrawal(req: Request, res: Response, next: NextFunction) {
+  try {
+    const result = await adminService.processPlayerWithdrawal(
+      req.params.withdrawalId,
+      req.body.action,
+      req.user!.id,
+      req.body.notes,
+      req.body.transferReference
+    );
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}

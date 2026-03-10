@@ -19,7 +19,8 @@ import toast from "react-hot-toast";
 
 interface Round {
   id: string;
-  state: string;
+  state?: string;
+  drawState?: string;
   drawDate: string;
   status: string;
   totalBets?: number;
@@ -45,7 +46,9 @@ interface RoundDetail {
 export default function VendorResultsScreen() {
   const router = useRouter();
   const t = useTranslation();
-  const currency = useAppStore((s) => s.currency);
+  const vendorProfile = useAppStore((s) => s.vendorProfile);
+  const storeCurrency = useAppStore((s) => s.currency);
+  const currency = (vendorProfile?.operatingCurrency || storeCurrency) as "HTG" | "USD";
 
   const [loading, setLoading] = useState(true);
   const [rounds, setRounds] = useState<Round[]>([]);
@@ -84,7 +87,11 @@ export default function VendorResultsScreen() {
     setLoadingDetail(true);
     try {
       const res = await vendorAPI.getMyRoundDetails(round.id);
-      setSelectedRound((res as any)?.data || res || { round, tickets: [] });
+      const detail = (res as any)?.data || res;
+      // Normalize: ensure we have a round object and tickets array
+      const normalizedRound = detail?.round || detail || round;
+      const normalizedTickets = detail?.tickets || [];
+      setSelectedRound({ round: normalizedRound, tickets: normalizedTickets });
     } catch {
       toast.error("Failed to load round details");
     } finally {
@@ -122,7 +129,7 @@ export default function VendorResultsScreen() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-xl font-bold">{DRAW_STATES[(d as any).state] || (d as any).state || "Round"} Draw</h1>
+            <h1 className="text-xl font-bold">{DRAW_STATES[(d as any).drawState || (d as any).state] || (d as any).drawState || (d as any).state || "Round"} Draw</h1>
             <p className="text-sm text-gray-500">
               {(d as any).drawDate ? new Date((d as any).drawDate).toLocaleDateString() : ""}
             </p>
@@ -241,7 +248,7 @@ export default function VendorResultsScreen() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">{DRAW_STATES[round.state] || round.state}</h3>
+                      <h3 className="font-semibold">{DRAW_STATES[round.drawState || round.state || ""] || round.drawState || round.state}</h3>
                       <Badge variant={round.status === "open" || round.status === "active" ? "success" : "secondary"}>
                         {round.status}
                       </Badge>

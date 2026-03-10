@@ -186,3 +186,24 @@ export async function getTransactions(
     limit,
   };
 }
+
+/**
+ * Store bank details metadata on a withdrawal transaction.
+ */
+export async function updateWithdrawalMetadata(
+  userId: string,
+  idempotencyKey: string,
+  metadata: {
+    bankName: string;
+    accountHolderName: string;
+    accountNumber: string;
+    routingNumber?: string | null;
+    notes?: string | null;
+  }
+) {
+  await query(
+    `UPDATE transactions SET metadata = $1
+     WHERE user_id = $2 AND idempotency_key = $3 AND type = 'withdrawal'`,
+    [JSON.stringify(metadata), userId, idempotencyKey]
+  );
+}

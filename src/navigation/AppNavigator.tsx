@@ -32,6 +32,7 @@ import VendorProfile from "../screens/VendorProfile";
 import VendorRating from "../screens/VendorRating";
 import VendorResultPublishing from "../screens/VendorResultPublishing";
 import PaymentScreen from "../screens/PaymentScreen";
+import PlayerWithdrawalScreen from "../screens/PlayerWithdrawalScreen";
 import PaymentProfileScreen from "../screens/PaymentProfileScreen";
 import TransactionHistory from "../screens/TransactionHistory";
 import GiftCardScreen from "../screens/GiftCardScreen";
@@ -90,6 +91,7 @@ export type RootStackParamList = {
   EditProfileScreen: undefined;
   HistoryScreen: undefined;
   PaymentScreen: undefined;
+  PlayerWithdrawalScreen: undefined;
   PaymentProfileScreen: undefined;
   TransactionHistory: undefined;
   GiftCardScreen: undefined;
@@ -163,6 +165,7 @@ export default function AppNavigator() {
               <Stack.Screen name="Tchala" component={TchalaScreen} />
               <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
               <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
+              <Stack.Screen name="PlayerWithdrawalScreen" component={PlayerWithdrawalScreen} />
               <Stack.Screen name="PaymentProfileScreen" component={PaymentProfileScreen} />
               <Stack.Screen name="TransactionHistory" component={TransactionHistory} />
               <Stack.Screen name="GiftCardScreen" component={GiftCardScreen} />

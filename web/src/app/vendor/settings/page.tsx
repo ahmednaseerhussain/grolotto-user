@@ -19,18 +19,11 @@ const LANGUAGES = [
   { code: "es", label: "Español", flag: "🇪🇸" },
 ];
 
-const CURRENCIES = [
-  { code: "HTG", label: "Gourde (HTG)", symbol: "G" },
-  { code: "USD", label: "US Dollar (USD)", symbol: "$" },
-];
-
 export default function VendorSettingsScreen() {
   const router = useRouter();
   const t = useTranslation();
   const language = useAppStore((s) => s.language);
   const setLanguage = useAppStore((s) => s.setLanguage);
-  const currency = useAppStore((s) => s.currency);
-  const setCurrency = useAppStore((s) => s.setCurrency);
   const logout = useAppStore((s) => s.logout);
 
   const [notifications, setNotifications] = useState(true);
@@ -82,35 +75,6 @@ export default function VendorSettingsScreen() {
               </button>
             ))}
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Currency (Display) */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <DollarSign className="h-5 w-5 text-emerald-600" />
-            <h3 className="font-semibold">{t("currency") || "Display Currency"}</h3>
-          </div>
-          <div className="flex gap-2">
-            {CURRENCIES.map((cur) => (
-              <button
-                key={cur.code}
-                onClick={() => setCurrency(cur.code as any)}
-                className={`flex-1 p-3 rounded-lg border-2 transition-colors text-center ${
-                  currency === cur.code
-                    ? "border-emerald-500 bg-emerald-50"
-                    : "border-gray-100 hover:border-gray-200"
-                }`}
-              >
-                <p className="text-lg font-bold">{cur.symbol}</p>
-                <p className="text-xs text-gray-500">{cur.label}</p>
-              </button>
-            ))}
-          </div>
-          <p className="text-xs text-gray-400 mt-2">
-            Display currency can be changed anytime. Your operating currency is locked at registration.
-          </p>
         </CardContent>
       </Card>
 
