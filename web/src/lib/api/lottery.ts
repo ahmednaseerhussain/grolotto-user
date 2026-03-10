@@ -9,6 +9,7 @@ export const lotteryAPI = {
     numbers: number[];
     betAmount: number;
     currency?: string;
+    drawTime?: 'midday' | 'evening';
   }): Promise<LotteryTicket> {
     const response = await apiClient.post("/lottery/bet", data);
     return response.data.data || response.data;

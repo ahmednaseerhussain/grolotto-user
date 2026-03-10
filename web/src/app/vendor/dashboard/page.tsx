@@ -61,7 +61,7 @@ export default function VendorDashboard() {
   };
 
   const stats = vendorStats || {} as Partial<VendorStats>;
-  const vendorCurrency = vendorProfile?.operatingCurrency || currency;
+  const vendorCurrency = (vendorProfile?.operatingCurrency || currency) as "HTG" | "USD";
   const balance = stats.availableBalance || 0;
 
   const quickActions = [
@@ -147,7 +147,7 @@ export default function VendorDashboard() {
         />
         <StatCard
           title={t("todayCommission") || "Today's Commission"}
-          value={formatCurrency(Number(stats.earningsToday || (stats.todayBets ? Number(stats.todayBets) * (stats.commissionRate || 0.1) : 0)), vendorCurrency)}
+          value={formatCurrency(Number(stats.earningsToday || (stats.todayBets ? Number(stats.todayBets) * Number(stats.commissionRate || 0.1) : 0)), vendorCurrency)}
           icon={<BarChart3 className="h-5 w-5 text-red-600" />}
           onClick={() => setActiveModal("todayEarnings")}
         />

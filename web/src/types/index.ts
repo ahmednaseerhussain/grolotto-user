@@ -75,6 +75,7 @@ export interface Vendor {
   documents?: VendorDocument[];
   profile?: VendorProfile;
   createdAt?: string;
+  operatingCurrency?: string;
 }
 
 export interface VendorProfile {
@@ -116,6 +117,7 @@ export interface NumberLimit {
   currentTotal: number;
   isStopped: boolean;
   drawDate?: string;
+  createdAt?: string;
 }
 
 export interface LotteryRound {

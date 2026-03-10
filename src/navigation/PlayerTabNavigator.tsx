@@ -349,7 +349,7 @@ const helpStyles = StyleSheet.create({
   faqQuestionText: { fontSize: 14, fontWeight: "600", color: "#f1f5f9", flex: 1, marginRight: 8 },
   faqAnswer: {
     fontSize: 13, color: "#94a3b8", lineHeight: 20,
-    paddingHorizontal: 14, paddingBottom: 14, paddingTop: 0,
+    paddingHorizontal: 14, paddingBottom: 14,
     borderTopWidth: 1, borderTopColor: "rgba(51,65,85,0.5)", paddingTop: 10,
   },
   contactSub: { fontSize: 13, color: "#94a3b8", marginBottom: 12 },

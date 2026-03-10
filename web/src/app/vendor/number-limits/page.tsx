@@ -33,7 +33,7 @@ interface NumberLimit {
   betLimit: number;
   currentTotal: number;
   isStopped: boolean;
-  createdAt: string;
+  createdAt?: string;
 }
 
 export default function NumberLimitsScreen() {
@@ -87,7 +87,7 @@ export default function NumberLimitsScreen() {
     setSaving(true);
     try {
       await vendorAPI.createNumberLimit({
-        drawState: selectedDraw,
+        drawState: selectedDraw as any,
         number: String(num).padStart(2, "0"),
         betLimit: limit,
       });

@@ -35,7 +35,7 @@ export type Currency = "USD" | "HTG";
 export type UserRole = "player" | "vendor" | "admin";
 
 // Payment system types
-export type PaymentMethodType = "moncash";
+export type PaymentMethodType = "moncash" | "paypal";
 export type PayoutMethodType = "moncash";
 export type PaymentStatus = "pending" | "completed" | "failed" | "refunded";
 export type TransactionType = "bet_payment" | "winning_payout" | "deposit" | "withdrawal";
@@ -238,6 +238,7 @@ export interface Vendor {
   
   // Admin notes
   notes?: string;
+  operatingCurrency?: string;
 }
 
 export interface GamePlay {

@@ -284,6 +284,7 @@ export const lotteryAPI = {
     numbers: number[];
     betAmount: number;
     currency?: string;
+    drawTime?: 'midday' | 'evening';
   }) {
     const res = await api.post('/lottery/bet', data);
     return res.data;
