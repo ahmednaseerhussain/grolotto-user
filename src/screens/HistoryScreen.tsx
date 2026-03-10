@@ -22,16 +22,16 @@ export default function HistoryScreen() {
   const [filter, setFilter] = useState<"all" | "won" | "lost" | "pending">("lost");
   const [stateFilter, setStateFilter] = useState<"all" | "FL" | "NY" | "GA" | "TX">("all");
   const [apiTickets, setApiTickets] = useState<any[]>([]);
-  
+
   // Date filtering states
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [datePickerMode, setDatePickerMode] = useState<'from' | 'to'>('from');
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
-  
+
   // PDF sharing state to prevent multiple simultaneous requests
   const [isSharing, setIsSharing] = useState(false);
-  
+
   const t = (key: string) => getTranslation(key as any, language);
 
   // Fetch ticket history from backend
@@ -50,10 +50,10 @@ export default function HistoryScreen() {
   const getCurrencySymbol = () => currency === "USD" ? "$" : "G";
 
   // Use API data if available, fall back to local store
-  const playerGames = apiTickets.length > 0 
-    ? apiTickets 
+  const playerGames = apiTickets.length > 0
+    ? apiTickets
     : (user ? gamePlays.filter(game => game.playerId === user.id) : []);
-  
+
   // Convert gamePlays to display format
   const gameHistory = playerGames.map(game => {
     // API tickets use drawState/createdAt/vendorName; local gamePlays use draw/timestamp/vendorId
@@ -63,11 +63,11 @@ export default function HistoryScreen() {
       : (() => { const v = vendors.find(v => v.id === game.vendorId); return v?.displayName || `${v?.firstName} ${v?.lastName}` || "Unknown Vendor"; })();
     const ts = isApiTicket ? new Date((game as any).createdAt) : new Date(game.timestamp);
     const state = isApiTicket ? (game as any).drawState : game.draw;
-    
+
     return {
       id: game.id,
       date: ts.toLocaleDateString(),
-      time: ts.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+      time: ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       timestamp: ts,
       vendor: vendorName,
       state: (state || '').toUpperCase(),
@@ -87,19 +87,19 @@ export default function HistoryScreen() {
     dateFilteredHistory = gameHistory.filter(game => {
       const gameDate = game.timestamp;
       let passesFilter = true;
-      
+
       if (fromDate) {
         const from = new Date(fromDate);
         from.setHours(0, 0, 0, 0);
         passesFilter = passesFilter && gameDate >= from;
       }
-      
+
       if (toDate) {
         const to = new Date(toDate);
         to.setHours(23, 59, 59, 999);
         passesFilter = passesFilter && gameDate <= to;
       }
-      
+
       return passesFilter;
     });
   }
@@ -109,7 +109,7 @@ export default function HistoryScreen() {
     acc[game.state] = (acc[game.state] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-  
+
   // Debug: Log available states
   console.log('Available states in data:', Object.keys(stateCounts));
   console.log('State counts:', stateCounts);
@@ -122,8 +122,8 @@ export default function HistoryScreen() {
     });
   }
 
-  const filteredHistory = filter === "all" 
-    ? stateFilteredHistory 
+  const filteredHistory = filter === "all"
+    ? stateFilteredHistory
     : stateFilteredHistory.filter(game => game.status === filter);
 
   const totalBet = filteredHistory.reduce((sum, game) => sum + game.betAmount, 0);
@@ -161,7 +161,7 @@ export default function HistoryScreen() {
     }
 
     setIsSharing(true);
-    
+
     try {
       const htmlContent = `
         <html>
@@ -304,10 +304,10 @@ export default function HistoryScreen() {
       `;
 
       const { uri } = await Print.printToFileAsync({ html: htmlContent });
-      
+
       // Add a small delay to ensure sharing system is ready
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri, {
           mimeType: 'application/pdf',
@@ -378,17 +378,16 @@ export default function HistoryScreen() {
             {item.date} at {item.time}
           </Text>
         </View>
-        
+
         <View className={`px-3 py-1 rounded-full flex-row items-center ${getStatusColor(item.status)}`}>
-          <Ionicons 
-            name={getStatusIcon(item.status) as any} 
-            size={16} 
-            color={item.status === "won" ? "#16a34a" : item.status === "lost" ? "#dc2626" : "#d97706"} 
+          <Ionicons
+            name={getStatusIcon(item.status) as any}
+            size={16}
+            color={item.status === "won" ? "#16a34a" : item.status === "lost" ? "#dc2626" : "#d97706"}
           />
-          <Text className={`ml-1 font-medium capitalize text-sm ${
-            item.status === "won" ? "text-green-600" : 
-            item.status === "lost" ? "text-red-600" : "text-yellow-600"
-          }`}>
+          <Text className={`ml-1 font-medium capitalize text-sm ${item.status === "won" ? "text-green-600" :
+              item.status === "lost" ? "text-red-600" : "text-yellow-600"
+            }`}>
             {item.status}
           </Text>
         </View>
@@ -403,7 +402,7 @@ export default function HistoryScreen() {
             Bet: {getCurrencySymbol()}{item.betAmount}
           </Text>
         </View>
-        
+
         {item.status === "won" && (
           <View className="bg-green-50 px-3 py-2 rounded-xl">
             <Text className="text-green-700 font-bold">
@@ -481,7 +480,7 @@ export default function HistoryScreen() {
             </Pressable>
           )}
         </View>
-        
+
         <View className="flex-row space-x-3">
           <Pressable
             onPress={() => showDatePickerHandler('from')}
@@ -495,7 +494,7 @@ export default function HistoryScreen() {
               <Ionicons name="calendar-outline" size={16} color="#9ca3af" />
             </View>
           </Pressable>
-          
+
           <Pressable
             onPress={() => showDatePickerHandler('to')}
             className="flex-1 border border-gray-300 rounded-xl px-4 py-3"
@@ -509,7 +508,7 @@ export default function HistoryScreen() {
             </View>
           </Pressable>
         </View>
-        
+
         {(fromDate || toDate) && (
           <View className="mt-3 bg-blue-50 p-3 rounded-lg">
             <Text className="text-blue-700 text-sm font-medium">
@@ -603,7 +602,7 @@ export default function HistoryScreen() {
         <Text className="text-lg font-semibold text-gray-800 mb-3">
           Recent Games ({filteredHistory.length})
         </Text>
-        
+
         {filteredHistory.length > 0 ? (
           <FlatList
             data={filteredHistory}
@@ -619,12 +618,12 @@ export default function HistoryScreen() {
               {gameHistory.length === 0 ? "No games played yet" : `No ${filter} games found`}
             </Text>
             <Text className="text-gray-400 text-center mt-2 max-w-64">
-              {gameHistory.length === 0 
-                ? "Place your first bet to see your game history here" 
+              {gameHistory.length === 0
+                ? "Place your first bet to see your game history here"
                 : "Your game history will appear here"}
             </Text>
             {gameHistory.length === 0 && (
-              <Pressable 
+              <Pressable
                 className="bg-purple-500 px-6 py-3 rounded-2xl mt-4"
                 onPress={() => navigation.navigate("PlayerDashboard" as never)}
               >
@@ -634,7 +633,7 @@ export default function HistoryScreen() {
           </View>
         )}
       </View>
-      
+
       {/* Date Picker */}
       {showDatePicker && (
         <DateTimePicker

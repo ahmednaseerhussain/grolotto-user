@@ -25,7 +25,7 @@ const AdvertisingSlideshow = () => {
   // Auto-slide functionality
   useEffect(() => {
     if (activeAds.length === 0) return;
-    
+
     const interval = setInterval(() => {
       setCurrentSlide(prevSlide => (prevSlide + 1) % activeAds.length);
     }, 5000); // Change slide every 5 seconds
@@ -45,7 +45,7 @@ const AdvertisingSlideshow = () => {
 
   // Record impression when slide appears (with debounce to prevent infinite loop)
   const recordedImpressions = useRef(new Set<string>());
-  
+
   useEffect(() => {
     if (activeAds[currentSlide] && !recordedImpressions.current.has(activeAds[currentSlide].id)) {
       recordedImpressions.current.add(activeAds[currentSlide].id);
@@ -99,9 +99,9 @@ const AdvertisingSlideshow = () => {
             key={ad.id}
             style={[
               styles.advertisingSlide,
-              { 
-                backgroundColor: ad.backgroundColor, 
-                width: screenWidth - 40 
+              {
+                backgroundColor: ad.backgroundColor,
+                width: screenWidth - 40
               }
             ]}
             onPress={() => handleAdPress(ad)}
@@ -116,9 +116,9 @@ const AdvertisingSlideshow = () => {
               <Text style={[styles.slideDescription, { color: ad.textColor }]}>
                 {ad.content}
               </Text>
-              
+
               {ad.linkUrl && ad.linkText && (
-                <View style={[styles.linkButton, { 
+                <View style={[styles.linkButton, {
                   backgroundColor: ad.textColor === "#ffffff" ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)"
                 }]}>
                   <Text style={[styles.linkText, { color: ad.textColor }]}>
@@ -131,7 +131,7 @@ const AdvertisingSlideshow = () => {
           </Pressable>
         ))}
       </ScrollView>
-      
+
       {/* Slide indicators */}
       <View style={styles.indicatorContainer}>
         {activeAds.map((_, index) => (
@@ -162,7 +162,7 @@ export default function PlayerDashboard() {
   const [showBalance, setShowBalance] = useState(true);
   const [walletData, setWalletData] = useState<{ balanceUsd: number; balanceHtg: number }>({ balanceUsd: 0, balanceHtg: 0 });
   const [todayResults, setTodayResults] = useState<any[]>([]);
-  
+
   const t = (key: string) => getTranslation(key as any, language);
 
   // Fetch real data from backend on mount
@@ -202,7 +202,7 @@ export default function PlayerDashboard() {
     };
     fetchData();
   }, []);
-  
+
   // Filter active vendors
   const activeVendors = vendors.filter(v => {
     if (v.status !== "approved" || !v.isActive) return false;
@@ -210,7 +210,7 @@ export default function PlayerDashboard() {
     if (v.operatingCurrency && v.operatingCurrency !== currency) return false;
     return true;
   });
-  
+
   // Filter vendors based on search
   const filteredVendors = activeVendors.filter(vendor => {
     const searchLower = searchQuery.toLowerCase();
@@ -219,7 +219,7 @@ export default function PlayerDashboard() {
       (vendor.firstName?.toLowerCase().includes(searchLower)) ||
       (vendor.lastName?.toLowerCase().includes(searchLower)) ||
       // Search by states - get enabled draws
-      Object.entries(vendor.draws).some(([state, settings]: [string, any]) => 
+      Object.entries(vendor.draws).some(([state, settings]: [string, any]) =>
         settings.enabled && state.toLowerCase().includes(searchLower)
       )
     );
@@ -271,7 +271,7 @@ export default function PlayerDashboard() {
   const getGameTypeColor = (gameType: string) => {
     const colors: Record<string, string> = {
       SENP: "#3b82f6",
-      MARYAJ: "#10b981", 
+      MARYAJ: "#10b981",
       LOTO3: "#f59e0b",
       LOTO4: "#8b5cf6",
       LOTO5: "#ef4444",
@@ -293,7 +293,7 @@ export default function PlayerDashboard() {
   const getVendorPriceRange = (vendor: any) => {
     let minPrice = Infinity;
     let maxPrice = 0;
-    
+
     Object.entries(vendor.draws).forEach(([, settings]: [string, any]) => {
       if (settings.enabled) {
         Object.entries(settings.games).forEach(([, gameSettings]: [string, any]) => {
@@ -304,7 +304,7 @@ export default function PlayerDashboard() {
         });
       }
     });
-    
+
     return minPrice === Infinity ? "G0-0" : `G${minPrice}-${maxPrice}`;
   };
 
@@ -318,7 +318,7 @@ export default function PlayerDashboard() {
           <Text style={styles.subText}>{t("readyToPlay")}</Text>
         </View>
         <View style={styles.headerActions}>
-          <Pressable 
+          <Pressable
             style={styles.headerButton}
             onPress={() => (navigation as any).navigate("EditProfileScreen")}
           >
@@ -391,7 +391,7 @@ export default function PlayerDashboard() {
         </View>
 
         {/* View Transactions */}
-        <Pressable 
+        <Pressable
           style={[styles.viewTransactionsButton, { marginHorizontal: 20, backgroundColor: '#fff', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#e5e7eb' }]}
           onPress={() => (navigation as any).navigate("TransactionHistory")}
         >
@@ -401,7 +401,7 @@ export default function PlayerDashboard() {
 
         {/* Quick Actions */}
         <View style={styles.quickActions}>
-          <Pressable 
+          <Pressable
             style={[styles.actionCard, { backgroundColor: "#3b82f6" }]}
             onPress={() => (navigation as any).navigate("PaymentScreen")}
           >
@@ -410,7 +410,7 @@ export default function PlayerDashboard() {
             <Text style={styles.actionSubtitle}>Add Funds</Text>
           </Pressable>
 
-          <Pressable 
+          <Pressable
             style={[styles.actionCard, { backgroundColor: "#f59e0b" }]}
             onPress={() => (navigation as any).navigate("Tchala")}
           >
@@ -419,7 +419,7 @@ export default function PlayerDashboard() {
             <Text style={styles.actionSubtitle}>{t("dreamNumbers")}</Text>
           </Pressable>
 
-          <Pressable 
+          <Pressable
             style={[styles.actionCard, { backgroundColor: "#10b981" }]}
             onPress={() => (navigation as any).navigate("ResultsScreen")}
           >
@@ -428,7 +428,7 @@ export default function PlayerDashboard() {
             <Text style={styles.actionSubtitle}>{t("offers")}</Text>
           </Pressable>
 
-          <Pressable 
+          <Pressable
             style={[styles.actionCard, { backgroundColor: "#8b5cf6" }]}
             onPress={() => (navigation as any).navigate("HistoryScreen")}
           >
@@ -437,7 +437,7 @@ export default function PlayerDashboard() {
             <Text style={styles.actionSubtitle}>{t("pastPlays")}</Text>
           </Pressable>
 
-          <Pressable 
+          <Pressable
             style={[styles.actionCard, { backgroundColor: "#ec4899" }]}
             onPress={() => (navigation as any).navigate("GiftCardScreen")}
           >
@@ -446,7 +446,7 @@ export default function PlayerDashboard() {
             <Text style={styles.actionSubtitle}>Buy & Redeem</Text>
           </Pressable>
 
-          <Pressable 
+          <Pressable
             style={[styles.actionCard, { backgroundColor: "#f97316" }]}
             onPress={() => (navigation as any).navigate("PaymentProfileScreen")}
           >
@@ -510,7 +510,7 @@ export default function PlayerDashboard() {
           const bannerAds = advertisements
             .filter((ad: any) => ad.type === "banner")
             .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
-          
+
           if (bannerAds.length > 0) {
             const bannerAd = bannerAds[0];
             return (
@@ -524,7 +524,7 @@ export default function PlayerDashboard() {
                     <Text style={styles.bannerSubtitle}>{bannerAd.content}</Text>
                   </View>
                 </View>
-                <Pressable 
+                <Pressable
                   style={styles.bannerButton}
                   onPress={() => {
                     recordAdClick(bannerAd.id);
@@ -544,7 +544,7 @@ export default function PlayerDashboard() {
         {/* Find Vendors Section */}
         <View style={styles.vendorsSection}>
           <Text style={styles.sectionTitle}>{t("findVendors")}</Text>
-          
+
           {/* Search Bar */}
           <View style={styles.searchContainer}>
             <TextInput
@@ -559,11 +559,11 @@ export default function PlayerDashboard() {
 
           {/* Vendors List */}
           <Text style={styles.vendorsCount}>{t("availableVendors")} ({filteredVendors.length})</Text>
-          
+
           {filteredVendors.map((vendor) => {
             const enabledGames = getEnabledGames(vendor);
             const states = getVendorStates(vendor);
-            
+
             return (
               <Pressable
                 key={vendor.id}
@@ -608,7 +608,7 @@ export default function PlayerDashboard() {
 
                 {/* Vendor Actions */}
                 <View style={styles.vendorActions}>
-                  <Pressable 
+                  <Pressable
                     style={styles.viewProfileButton}
                     onPress={() => (navigation as any).navigate("VendorRating", { vendor })}
                   >
@@ -636,9 +636,9 @@ export default function PlayerDashboard() {
       </ScrollView>
 
       {/* Payment Modal */}
-      <PaymentModal 
-        visible={showPaymentModal} 
-        onClose={() => setShowPaymentModal(false)} 
+      <PaymentModal
+        visible={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
       />
     </SafeAreaView>
   );

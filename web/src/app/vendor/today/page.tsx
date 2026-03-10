@@ -179,11 +179,10 @@ export default function TodayPlayersWinnersScreen() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
-              activeTab === tab
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${activeTab === tab
                 ? "border-emerald-600 text-emerald-600"
                 : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
+              }`}
           >
             {tab === "players" ? (t("players") || "Players") : (t("winners") || "Winners")}
             <span className="ml-1 text-xs bg-gray-100 px-1.5 py-0.5 rounded-full">
@@ -197,9 +196,8 @@ export default function TodayPlayersWinnersScreen() {
       <div className="flex gap-2 flex-wrap">
         <button
           onClick={() => setFilterState("all")}
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
-            filterState === "all" ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600"
-          }`}
+          className={`px-3 py-1 rounded-full text-xs font-medium ${filterState === "all" ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600"
+            }`}
         >
           {t("allStates") || "All States"}
         </button>
@@ -207,9 +205,8 @@ export default function TodayPlayersWinnersScreen() {
           <button
             key={k}
             onClick={() => setFilterState(k)}
-            className={`px-3 py-1 rounded-full text-xs font-medium ${
-              filterState === k ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600"
-            }`}
+            className={`px-3 py-1 rounded-full text-xs font-medium ${filterState === k ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600"
+              }`}
           >
             {v}
           </button>

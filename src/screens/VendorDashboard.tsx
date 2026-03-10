@@ -14,12 +14,12 @@ export default function VendorDashboard() {
   const vendors = useAppStore(s => s.vendors);
   const logout = useAppStore(s => s.logout);
   const language = useAppStore(s => s.language);
-  
+
   const t = (key: string) => getTranslation(key as any, language);
-  
+
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [vendorStats, setVendorStats] = useState<any>(null);
-  
+
   // Fetch vendor profile and stats from API
   useEffect(() => {
     const fetchVendorData = async () => {
@@ -39,26 +39,26 @@ export default function VendorDashboard() {
     };
     fetchVendorData();
   }, []);
-  
+
   // Find current vendor data — match by userId, not email
   const currentVendor = vendors.find(v => v.userId === user?.id);
-  
+
   // Use vendor's operatingCurrency (set at registration), no toggle
   const vendorCurrency = (currentVendor as any)?.operatingCurrency || 'HTG';
-  
+
   // Currency formatting function
   const formatCurrency = (amount: number) => {
     const symbol = vendorCurrency === "HTG" ? "G" : "$";
     return `${symbol}${amount.toFixed(2)}`;
   };
-  
+
   // Calculate vendor stats
   const vendorGamePlays = gamePlays.filter(game => game.vendorId === currentVendor?.id);
   const today = new Date().toDateString();
-  const todayGamePlays = vendorGamePlays.filter(game => 
+  const todayGamePlays = vendorGamePlays.filter(game =>
     new Date(game.timestamp).toDateString() === today
   );
-  
+
   // Prefer real API stats when available, fall back to store/local data
   // Vendor gets 100% of bets in the new model
   const stats = {
@@ -127,7 +127,7 @@ export default function VendorDashboard() {
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      const dayGames = vendorGamePlays.filter(game => 
+      const dayGames = vendorGamePlays.filter(game =>
         new Date(game.timestamp).toDateString() === date.toDateString()
       );
       const earnings = dayGames.reduce((sum, game) => sum + game.betAmount, 0);
@@ -157,7 +157,7 @@ export default function VendorDashboard() {
           <View style={[styles.currencyContainer, styles.currencyActive]}>
             <Text style={[styles.currencyOptionText, styles.currencyActiveText]}>{vendorCurrency}</Text>
           </View>
-          
+
           <Pressable style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={24} color="#ef4444" />
           </Pressable>
@@ -188,7 +188,7 @@ export default function VendorDashboard() {
         {/* Stats Overview */}
         <View style={styles.statsContainer}>
           <Text style={styles.sectionTitle}>{t("dashboard")}</Text>
-          
+
           <View style={styles.statsGrid}>
             <Pressable style={styles.statCard} onPress={() => handleStatCardPress('players')}>
               <View style={styles.statHeader}>
@@ -253,7 +253,7 @@ export default function VendorDashboard() {
               <Text style={styles.balanceLabel}>{t("availableBalance")}</Text>
               <Text style={styles.balanceValue}>{formatCurrency(stats.availableBalance)}</Text>
             </View>
-            <Pressable 
+            <Pressable
               style={styles.withdrawButton}
               onPress={() => handleQuickAction("PayoutManagement")}
             >
@@ -274,7 +274,7 @@ export default function VendorDashboard() {
               <Text style={styles.priceConfigSubtitle}>{t("setYourBetLimits")}</Text>
             </View>
           </View>
-          <Pressable 
+          <Pressable
             style={styles.priceConfigButton}
             onPress={() => handleQuickAction("DrawManagement")}
           >
@@ -286,11 +286,11 @@ export default function VendorDashboard() {
         {/* Quick Actions */}
         <View style={styles.actionsContainer}>
           <Text style={styles.sectionTitle}>{t("quickActions")}</Text>
-          
+
           <View style={styles.actionsGrid}>
             {quickActions.map((action) => (
-              <Pressable 
-                key={action.id} 
+              <Pressable
+                key={action.id}
                 style={styles.actionCard}
                 onPress={() => handleQuickAction(action.screen)}
               >
@@ -307,7 +307,7 @@ export default function VendorDashboard() {
         {/* Latest Announcements */}
         <View style={styles.announcementsContainer}>
           <Text style={styles.sectionTitle}>{t("latestAnnouncements")}</Text>
-          
+
           <View style={styles.announcementCard}>
             <View style={styles.announcementHeader}>
               <Ionicons name="megaphone" size={16} color="#3b82f6" />
@@ -334,7 +334,7 @@ export default function VendorDashboard() {
         {/* Recent Activity */}
         <View style={styles.activityContainer}>
           <Text style={styles.sectionTitle}>{t("recentActivity")}</Text>
-          
+
           {todayGamePlays.slice(0, 5).map((game) => (
             <View key={game.id} style={styles.activityItem}>
               <View style={styles.activityIcon}>
@@ -349,9 +349,9 @@ export default function VendorDashboard() {
                 </Text>
               </View>
               <Text style={styles.activityTime}>
-                {new Date(game.timestamp).toLocaleTimeString(language === "en" ? "en-US" : language === "es" ? "es-ES" : "fr-FR", { 
-                  hour: "2-digit", 
-                  minute: "2-digit" 
+                {new Date(game.timestamp).toLocaleTimeString(language === "en" ? "en-US" : language === "es" ? "es-ES" : "fr-FR", {
+                  hour: "2-digit",
+                  minute: "2-digit"
                 })}
               </Text>
             </View>
@@ -521,7 +521,7 @@ export default function VendorDashboard() {
                   </View>
                 );
               })}
-              <Pressable 
+              <Pressable
                 style={styles.configureGamesButton}
                 onPress={() => {
                   closeModal();
@@ -559,7 +559,7 @@ export default function VendorDashboard() {
                   <Text style={styles.totalEarningsLabel}>{t("availableBalance")}:</Text>
                   <Text style={styles.totalEarningsValue}>{formatCurrency(stats.availableBalance)}</Text>
                 </View>
-                <Pressable 
+                <Pressable
                   style={styles.viewHistoryButton}
                   onPress={() => {
                     closeModal();

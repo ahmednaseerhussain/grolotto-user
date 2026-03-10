@@ -132,8 +132,8 @@ export default function AppNavigator() {
   };
 
   return (
-    <Stack.Navigator 
-      screenOptions={{ 
+    <Stack.Navigator
+      screenOptions={{
         headerShown: false,
         gestureEnabled: true,
       }}
@@ -170,7 +170,7 @@ export default function AppNavigator() {
               <Stack.Screen name="HistoryScreen" component={HistoryScreen} />
               <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
             </>
-           ) : user?.role === "vendor" ? (
+          ) : user?.role === "vendor" ? (
             <>
               <Stack.Screen name="VendorTabs" component={VendorTabNavigator} />
               <Stack.Screen name="DrawManagement" component={DrawManagement} />
@@ -204,7 +204,7 @@ export default function AppNavigator() {
               <Stack.Screen name="ResultPublishing" component={ResultPublishing} />
               <Stack.Screen name="ReportsAnalytics" component={ReportsAnalytics} />
               <Stack.Screen name="TchalaManager" component={TchalaManager} />
-              
+
               {/* Shared screens accessible to admin */}
               <Stack.Screen name="NumberSelection" component={NumberSelection} />
               <Stack.Screen name="VendorRating" component={VendorRating} />
@@ -212,7 +212,7 @@ export default function AppNavigator() {
               <Stack.Screen name="AdvertisementSlides" component={AdvertisementSlides} />
               <Stack.Screen name="ResultsScreen" component={ResultsScreen} />
               <Stack.Screen name="HistoryScreen" component={HistoryScreen} />
-              
+
               {/* Shared screens */}
               <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
               <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />

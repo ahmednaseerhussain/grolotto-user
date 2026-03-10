@@ -160,9 +160,8 @@ export default function PayoutsScreen() {
               {withdrawalCurrency === "HTG" ? (
                 <button
                   onClick={() => setSelectedMethod("moncash")}
-                  className={`w-full mt-1 p-3 rounded-lg border-2 flex items-center gap-3 ${
-                    selectedMethod === "moncash" ? "border-red-500 bg-red-50" : "border-gray-200"
-                  }`}
+                  className={`w-full mt-1 p-3 rounded-lg border-2 flex items-center gap-3 ${selectedMethod === "moncash" ? "border-red-500 bg-red-50" : "border-gray-200"
+                    }`}
                 >
                   <div className="bg-red-500 p-1.5 rounded">
                     <Smartphone className="h-4 w-4 text-white" />
@@ -175,9 +174,8 @@ export default function PayoutsScreen() {
               ) : (
                 <button
                   onClick={() => setSelectedMethod("bank_transfer")}
-                  className={`w-full mt-1 p-3 rounded-lg border-2 flex items-center gap-3 ${
-                    selectedMethod === "bank_transfer" ? "border-blue-500 bg-blue-50" : "border-gray-200"
-                  }`}
+                  className={`w-full mt-1 p-3 rounded-lg border-2 flex items-center gap-3 ${selectedMethod === "bank_transfer" ? "border-blue-500 bg-blue-50" : "border-gray-200"
+                    }`}
                 >
                   <div className="bg-blue-500 p-1.5 rounded">
                     <Smartphone className="h-4 w-4 text-white" />

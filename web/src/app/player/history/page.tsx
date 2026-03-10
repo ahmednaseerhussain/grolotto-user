@@ -64,31 +64,31 @@ export default function HistoryScreen() {
   // Normalize data
   const allTickets = apiTickets.length > 0
     ? apiTickets.map((t: any) => ({
-        id: t.id,
-        gameType: t.gameType,
-        drawState: t.drawState || t.draw,
-        numbers: t.numbers || [],
-        betAmount: t.betAmount || t.amount,
-        status: t.status,
-        winAmount: t.winAmount || 0,
-        vendorName: t.vendorName || t.vendor?.businessName || "Unknown",
-        date: t.createdAt || t.timestamp,
-        currency: t.currency,
-        drawTime: t.drawTime || t.session || null,
-      }))
+      id: t.id,
+      gameType: t.gameType,
+      drawState: t.drawState || t.draw,
+      numbers: t.numbers || [],
+      betAmount: t.betAmount || t.amount,
+      status: t.status,
+      winAmount: t.winAmount || 0,
+      vendorName: t.vendorName || t.vendor?.businessName || "Unknown",
+      date: t.createdAt || t.timestamp,
+      currency: t.currency,
+      drawTime: t.drawTime || t.session || null,
+    }))
     : (tickets || []).map((t: any) => ({
-        id: t.id,
-        gameType: t.gameType,
-        drawState: t.drawState || t.draw,
-        numbers: t.numbers || [],
-        betAmount: t.betAmount || t.amount,
-        status: t.status || "pending",
-        winAmount: t.winAmount || 0,
-        vendorName: t.vendorName || "Unknown",
-        date: t.createdAt || t.timestamp,
-        currency: t.currency,
-        drawTime: t.drawTime || t.session || null,
-      }));
+      id: t.id,
+      gameType: t.gameType,
+      drawState: t.drawState || t.draw,
+      numbers: t.numbers || [],
+      betAmount: t.betAmount || t.amount,
+      status: t.status || "pending",
+      winAmount: t.winAmount || 0,
+      vendorName: t.vendorName || "Unknown",
+      date: t.createdAt || t.timestamp,
+      currency: t.currency,
+      drawTime: t.drawTime || t.session || null,
+    }));
 
   // Apply filters
   let filtered = allTickets;
@@ -227,11 +227,10 @@ export default function HistoryScreen() {
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-              filter === f
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${filter === f
                 ? "bg-emerald-600 text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
+              }`}
           >
             {f === "all" ? (t("allGames") || "All Games") : t(f) || f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
@@ -242,9 +241,8 @@ export default function HistoryScreen() {
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setStateFilter("all")}
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
-            stateFilter === "all" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"
-          }`}
+          className={`px-3 py-1 rounded-full text-xs font-medium ${stateFilter === "all" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"
+            }`}
         >
           All
         </button>
@@ -252,9 +250,8 @@ export default function HistoryScreen() {
           <button
             key={st}
             onClick={() => setStateFilter(st)}
-            className={`px-3 py-1 rounded-full text-xs font-medium ${
-              stateFilter === st ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"
-            }`}
+            className={`px-3 py-1 rounded-full text-xs font-medium ${stateFilter === st ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"
+              }`}
           >
             {st} {stateCounts[st] ? `(${stateCounts[st]})` : ""}
           </button>

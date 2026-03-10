@@ -165,9 +165,8 @@ export default function PlayerDashboard() {
           {advertisements.map((ad: any, i: number) => (
             <div
               key={ad.id || i}
-              className={`absolute inset-0 transition-opacity duration-500 flex items-center justify-center p-6 ${
-                i === currentSlide ? "opacity-100" : "opacity-0 pointer-events-none"
-              }`}
+              className={`absolute inset-0 transition-opacity duration-500 flex items-center justify-center p-6 ${i === currentSlide ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}
               onClick={() => ad.linkUrl && window.open(ad.linkUrl, "_blank")}
               style={{ cursor: ad.linkUrl ? "pointer" : "default" }}
             >
@@ -187,9 +186,8 @@ export default function PlayerDashboard() {
                 <button
                   key={i}
                   onClick={() => setCurrentSlide(i)}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    i === currentSlide ? "bg-white w-6" : "bg-white/50"
-                  }`}
+                  className={`w-2 h-2 rounded-full transition-all ${i === currentSlide ? "bg-white w-6" : "bg-white/50"
+                    }`}
                 />
               ))}
             </div>

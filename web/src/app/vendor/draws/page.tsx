@@ -68,7 +68,7 @@ export default function DrawManagementScreen() {
       }
       await vendorAPI.updateDrawSettings(drawCode, updatedDraw);
       // Refresh vendor profile to update draws in store
-      try { const p = await vendorAPI.getMyProfile(); setVendorProfile(p); } catch {}
+      try { const p = await vendorAPI.getMyProfile(); setVendorProfile(p); } catch { }
       toast.success(`${drawCode} ${enabled ? "enabled" : "disabled"}`);
     } catch (err) {
       toast.error("Failed to update");
@@ -90,7 +90,7 @@ export default function DrawManagementScreen() {
         games: { ...draw.games, [gameKey]: { ...draw.games?.[gameKey], enabled } },
       };
       await vendorAPI.updateDrawSettings(drawCode, updatedDraw);
-      try { const p = await vendorAPI.getMyProfile(); setVendorProfile(p); } catch {}
+      try { const p = await vendorAPI.getMyProfile(); setVendorProfile(p); } catch { }
       toast.success(`${GAME_LABELS[gameKey]} ${enabled ? "enabled" : "disabled"}`);
     } catch (err) {
       toast.error("Failed to update");
@@ -117,7 +117,7 @@ export default function DrawManagementScreen() {
         },
       };
       await vendorAPI.updateDrawSettings(drawCode, updatedDraw);
-      try { const p = await vendorAPI.getMyProfile(); setVendorProfile(p); } catch {}
+      try { const p = await vendorAPI.getMyProfile(); setVendorProfile(p); } catch { }
       toast.success("Limits saved");
       setEditingLimits(null);
     } catch (err) {
@@ -203,13 +203,11 @@ export default function DrawManagementScreen() {
                     </Badge>
                     <button
                       onClick={() => handleToggleDraw(draw.code, !isEnabled)}
-                      className={`relative w-11 h-6 rounded-full transition-colors ${
-                        isEnabled ? "bg-emerald-500" : "bg-gray-300"
-                      }`}
+                      className={`relative w-11 h-6 rounded-full transition-colors ${isEnabled ? "bg-emerald-500" : "bg-gray-300"
+                        }`}
                     >
-                      <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                        isEnabled ? "translate-x-5" : ""
-                      }`} />
+                      <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${isEnabled ? "translate-x-5" : ""
+                        }`} />
                     </button>
                     {isEnabled && (
                       <button onClick={() => setExpandedDraw(isExpanded ? null : draw.code)}>
@@ -277,13 +275,11 @@ export default function DrawManagementScreen() {
                           {!isMandatory && (
                             <button
                               onClick={() => handleToggleGame(draw.code, game, !gameEnabled)}
-                              className={`relative w-9 h-5 rounded-full transition-colors ${
-                                gameEnabled ? "bg-emerald-500" : "bg-gray-300"
-                              }`}
+                              className={`relative w-9 h-5 rounded-full transition-colors ${gameEnabled ? "bg-emerald-500" : "bg-gray-300"
+                                }`}
                             >
-                              <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                                gameEnabled ? "translate-x-4" : ""
-                              }`} />
+                              <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${gameEnabled ? "translate-x-4" : ""
+                                }`} />
                             </button>
                           )}
                         </div>

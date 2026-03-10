@@ -14,7 +14,7 @@ import { StatCard } from "@/components/common/stat-card";
 import {
   Users, Ticket, TrendingUp, DollarSign, Gamepad2, Wallet, Settings, Clock,
   ArrowUpRight, BarChart3, Shield, History, LogOut, Banknote, ChevronRight,
-  Calendar, Layers,Loader2
+  Calendar, Layers, Loader2
 } from "lucide-react";
 import { formatCurrency, GAME_LABELS } from "@/lib/utils";
 import type { VendorStats } from "@/types";
@@ -54,7 +54,7 @@ export default function VendorDashboard() {
 
   const handleLogout = async () => {
     if (!confirm(t("areYouSureLogout") || "Are you sure you want to logout?")) return;
-    try { await authAPI.logout(); } catch {} finally {
+    try { await authAPI.logout(); } catch { } finally {
       logout();
       router.replace("/login");
     }
