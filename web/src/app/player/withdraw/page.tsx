@@ -23,7 +23,7 @@ export default function PlayerWithdrawPage() {
     const setWallet = useAppStore((s) => s.setWallet);
 
     useEffect(() => {
-        walletAPI.getBalance().then((w) => setWallet(w)).catch(() => {});
+        walletAPI.getBalance().then((w) => setWallet(w)).catch(() => { });
     }, []);
 
     const [amount, setAmount] = useState("");
