@@ -33,7 +33,7 @@ export function TopNav() {
   const setLanguage = useAppStore((s) => s.setLanguage);
   const setCurrency = useAppStore((s) => s.setCurrency);
   const logout = useAppStore((s) => s.logout);
-  
+
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);

@@ -211,11 +211,10 @@ export default function VendorResultsScreen() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
-              activeTab === tab
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${activeTab === tab
                 ? "border-emerald-600 text-emerald-600"
                 : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
+              }`}
           >
             {tab === "open" ? (t("open") || "Open") : (t("completed") || "Completed")}
             <span className="ml-1 text-xs bg-gray-100 px-1.5 py-0.5 rounded-full">

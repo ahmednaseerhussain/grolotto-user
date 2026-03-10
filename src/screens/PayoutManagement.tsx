@@ -8,10 +8,10 @@ import { getTranslation } from "../utils/translations";
 import { vendorAPI, getErrorMessage } from "../api/apiClient";
 
 const PAYOUT_METHODS_BASE = [
-  { 
-    key: "bank_transfer" as PayoutMethodType, 
-    name: "Bank Transfer", 
-    icon: "business", 
+  {
+    key: "bank_transfer" as PayoutMethodType,
+    name: "Bank Transfer",
+    icon: "business",
     color: "#3b82f6",
     descriptionKey: "bankTransferDesc",
     fee: "1%",
@@ -29,9 +29,9 @@ export default function PayoutManagement() {
   const setCurrency = useAppStore(s => s.setCurrency);
   const language = useAppStore(s => s.language);
   const t = (key: string) => getTranslation(key as any, language);
-  
+
   const PAYOUT_METHODS = PAYOUT_METHODS_BASE.map(m => ({ ...m, description: t(m.descriptionKey) }));
-  
+
   const [selectedMethod, setSelectedMethod] = useState<PayoutMethodType | null>("bank_transfer");
   const [amount, setAmount] = useState("");
   const [showRequestForm, setShowRequestForm] = useState(false);
@@ -39,11 +39,11 @@ export default function PayoutManagement() {
   const [bankAccountName, setBankAccountName] = useState("");
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [bankRoutingNumber, setBankRoutingNumber] = useState("");
-  
+
   const currentVendor = vendors.find(v => v.userId === user?.id);
   const vendorPayouts = payouts.filter(p => p.vendorId === currentVendor?.id);
   const withdrawalCurrency = ((currentVendor as any)?.operatingCurrency || currency) as "HTG" | "USD";
-  
+
   // Currency formatting and conversion
   const formatCurrency = (amount: number, targetCurrency: "HTG" | "USD" = withdrawalCurrency) => {
     const symbol = targetCurrency === "HTG" ? "G" : "$";
@@ -51,14 +51,14 @@ export default function PayoutManagement() {
     const convertedAmount = amount * rate;
     return `${symbol}${convertedAmount.toFixed(2)}`;
   };
-  
+
   const convertAmount = (amount: number, from: "HTG" | "USD", to: "HTG" | "USD") => {
     if (from === to) return amount;
     if (from === "USD" && to === "HTG") return amount * 150;
     if (from === "HTG" && to === "USD") return amount / 150;
     return amount;
   };
-  
+
   if (!currentVendor) {
     return (
       <SafeAreaView style={styles.container}>
@@ -79,11 +79,11 @@ export default function PayoutManagement() {
     }
 
     const requestAmount = parseFloat(amount);
-    
+
     // Convert amount to USD for validation (since balance is stored in USD)
     const requestAmountUSD = withdrawalCurrency === "HTG" ? requestAmount / 150 : requestAmount;
     const minAmountUSD = 10;
-    
+
     if (requestAmountUSD < minAmountUSD) {
       const minAmountDisplay = withdrawalCurrency === "HTG" ? `G${(minAmountUSD * 150).toFixed(2)}` : `$${minAmountUSD}`;
       Alert.alert(t("error"), `${t("minimumAmount")}: ${minAmountDisplay}`);
@@ -96,7 +96,7 @@ export default function PayoutManagement() {
     }
 
     requestPayout(currentVendor.id, requestAmountUSD, "bank_transfer" as PayoutMethodType);
-    
+
     // Submit payout request to backend
     vendorAPI.requestPayout({
       amount: requestAmountUSD,
@@ -112,16 +112,18 @@ export default function PayoutManagement() {
 
     const amountDisplay = formatCurrency(requestAmount, withdrawalCurrency);
     Alert.alert(
-      t("withdrawalSubmitted"), 
+      t("withdrawalSubmitted"),
       `${(t("withdrawalSubmittedMsg") || "Withdrawal of {amount} via {method} submitted").replace("{amount}", amountDisplay).replace("{method}", "Bank Transfer")}`,
-      [{ text: "OK", onPress: () => {
-        setShowRequestForm(false);
-        setAmount("");
-        setBankName("");
-        setBankAccountName("");
-        setBankAccountNumber("");
-        setBankRoutingNumber("");
-      }}]
+      [{
+        text: "OK", onPress: () => {
+          setShowRequestForm(false);
+          setAmount("");
+          setBankName("");
+          setBankAccountName("");
+          setBankAccountNumber("");
+          setBankRoutingNumber("");
+        }
+      }]
     );
   };
 
@@ -165,28 +167,28 @@ export default function PayoutManagement() {
                 <Ionicons name="wallet" size={24} color="#10b981" />
                 <Text style={styles.balanceTitle}>{t("availableBalance")}</Text>
               </View>
-              
+
               {/* Currency Badge */}
               <View style={[styles.currencyToggleButton, styles.currencyToggleButtonActive]}>
                 <Text style={[styles.currencyToggleText, styles.currencyToggleTextActive]}>{withdrawalCurrency}</Text>
               </View>
             </View>
-            
+
             <Text style={styles.balanceAmount}>{formatCurrency(availableBalance)}</Text>
-            
+
             <View style={styles.balanceDetails}>
               <View style={styles.balanceItem}>
                 <Text style={styles.balanceLabel}>{t("pendingAmount")}</Text>
                 <Text style={styles.balancePending}>{formatCurrency(pendingAmount)}</Text>
               </View>
-              
+
               <View style={styles.balanceItem}>
                 <Text style={styles.balanceLabel}>{t("totalEarned")}</Text>
                 <Text style={styles.balanceTotal}>{formatCurrency(currentVendor.totalRevenue)}</Text>
               </View>
             </View>
 
-            <Pressable 
+            <Pressable
               style={[styles.requestButton, availableBalance <= 0 && styles.requestButtonDisabled]}
               onPress={() => setShowRequestForm(true)}
               disabled={availableBalance <= 0}
@@ -201,7 +203,7 @@ export default function PayoutManagement() {
             <View style={styles.requestForm}>
               <View style={styles.formHeader}>
                 <Text style={styles.formTitle}>{t("newWithdrawal")}</Text>
-                <Pressable 
+                <Pressable
                   style={styles.closeButton}
                   onPress={() => setShowRequestForm(false)}
                 >
@@ -251,7 +253,7 @@ export default function PayoutManagement() {
               {/* Payment Methods */}
               <View style={styles.methodsSection}>
                 <Text style={styles.methodsTitle}>{t("paymentMethod")}</Text>
-                
+
                 {/* Bank Transfer - Always Selected */}
                 <View style={[styles.methodCard, styles.methodCardSelected]}>
                   <View style={styles.methodInfo}>
@@ -311,9 +313,9 @@ export default function PayoutManagement() {
               </View>
 
               {/* Submit Button */}
-              <Pressable 
+              <Pressable
                 style={[
-                  styles.submitButton, 
+                  styles.submitButton,
                   (!amount || !bankName.trim() || !bankAccountName.trim() || !bankAccountNumber.trim()) && styles.submitButtonDisabled
                 ]}
                 onPress={handleRequestPayout}
@@ -328,7 +330,7 @@ export default function PayoutManagement() {
           {/* Payout History */}
           <View style={styles.historySection}>
             <Text style={styles.historyTitle}>{t("withdrawalHistory")}</Text>
-            
+
             {vendorPayouts.length === 0 ? (
               <View style={styles.emptyState}>
                 <Ionicons name="receipt-outline" size={48} color="#d1d5db" />
@@ -343,7 +345,7 @@ export default function PayoutManagement() {
                   .sort((a, b) => b.requestDate - a.requestDate)
                   .map((payout) => {
                     const method = PAYOUT_METHODS.find(m => m.key === payout.method)!;
-                    
+
                     return (
                       <View key={payout.id} style={styles.payoutCard}>
                         <View style={styles.payoutHeader}>
@@ -353,7 +355,7 @@ export default function PayoutManagement() {
                             </View>
                             <Text style={styles.payoutMethodName}>{method.name}</Text>
                           </View>
-                          
+
                           <View style={styles.payoutAmount}>
                             <Text style={styles.payoutAmountText}>
                               {formatCurrency(payout.amount)}
@@ -363,7 +365,7 @@ export default function PayoutManagement() {
                             </View>
                           </View>
                         </View>
-                        
+
                         <View style={styles.payoutDetails}>
                           <Text style={styles.payoutDate}>
                             {t("requested")}: {new Date(payout.requestDate).toLocaleDateString()}

@@ -74,7 +74,7 @@ export default function PaymentScreen() {
             try {
               const walletRes = await walletAPI.getBalance();
               setWallet(walletRes || null);
-            } catch {}
+            } catch { }
             setShowSuccess(true);
             setTimeout(() => {
               setShowSuccess(false);
@@ -100,7 +100,7 @@ export default function PaymentScreen() {
 
         // Poll for completion
         toast("Completing payment in MonCash...", { duration: 5000 });
-        
+
         let verified = false;
         for (let attempt = 0; attempt < 12; attempt++) {
           await new Promise((r) => setTimeout(r, 5000));
@@ -121,7 +121,7 @@ export default function PaymentScreen() {
           try {
             const walletRes = await walletAPI.getBalance();
             setWallet(walletRes || null);
-          } catch {}
+          } catch { }
           setShowSuccess(true);
           setTimeout(() => {
             setShowSuccess(false);
@@ -191,11 +191,10 @@ export default function PaymentScreen() {
           <button
             key={qa}
             onClick={() => setAmount(String(qa))}
-            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-              amount === String(qa)
+            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${amount === String(qa)
                 ? "bg-blue-600 border-blue-500 text-white"
                 : "bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300"
-            }`}
+              }`}
           >
             {formatCurrency(qa, currency)}
           </button>
@@ -209,11 +208,10 @@ export default function PaymentScreen() {
           {/* MonCash */}
           <button
             onClick={() => setSelectedMethod("moncash")}
-            className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${
-              selectedMethod === "moncash"
+            className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${selectedMethod === "moncash"
                 ? "border-blue-500 bg-blue-50"
                 : "border-gray-200 hover:border-gray-300 bg-white"
-            }`}
+              }`}
           >
             <div className="bg-red-500 w-12 h-12 rounded-full flex items-center justify-center">
               <Smartphone className="h-6 w-6 text-white" />
@@ -222,9 +220,8 @@ export default function PaymentScreen() {
               <p className="font-semibold text-gray-900">MonCash</p>
               <p className="text-sm text-gray-500">Digicel mobile money</p>
             </div>
-            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-              selectedMethod === "moncash" ? "border-blue-500" : "border-gray-300"
-            }`}>
+            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "moncash" ? "border-blue-500" : "border-gray-300"
+              }`}>
               {selectedMethod === "moncash" && <div className="w-3 h-3 rounded-full bg-blue-500" />}
             </div>
           </button>
@@ -232,11 +229,10 @@ export default function PaymentScreen() {
           {/* PayPal */}
           <button
             onClick={() => setSelectedMethod("paypal")}
-            className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${
-              selectedMethod === "paypal"
+            className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${selectedMethod === "paypal"
                 ? "border-blue-500 bg-blue-50"
                 : "border-gray-200 hover:border-gray-300 bg-white"
-            }`}
+              }`}
           >
             <div className="bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center">
               <Globe className="h-6 w-6 text-white" />
@@ -245,9 +241,8 @@ export default function PaymentScreen() {
               <p className="font-semibold text-gray-900">{t("paypal") || "PayPal"}</p>
               <p className="text-sm text-gray-500">Pay with PayPal account</p>
             </div>
-            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-              selectedMethod === "paypal" ? "border-blue-500" : "border-gray-300"
-            }`}>
+            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "paypal" ? "border-blue-500" : "border-gray-300"
+              }`}>
               {selectedMethod === "paypal" && <div className="w-3 h-3 rounded-full bg-blue-500" />}
             </div>
           </button>
@@ -338,9 +333,8 @@ export default function PaymentScreen() {
       <button
         onClick={handlePayment}
         disabled={!canProceed || processing}
-        className={`w-full rounded-xl py-4 flex items-center justify-center gap-2 font-bold text-lg text-white transition-colors ${
-          canProceed && !processing ? "bg-green-600 hover:bg-green-700" : "bg-gray-300 cursor-not-allowed"
-        }`}
+        className={`w-full rounded-xl py-4 flex items-center justify-center gap-2 font-bold text-lg text-white transition-colors ${canProceed && !processing ? "bg-green-600 hover:bg-green-700" : "bg-gray-300 cursor-not-allowed"
+          }`}
       >
         {processing ? "Processing..." : `🔒 Pay ${amount ? formatCurrency(parseFloat(amount), currency) : ""}`}
       </button>

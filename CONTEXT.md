@@ -10,22 +10,24 @@ Grolotto is a Haitian lottery platform (borlette) where **vendors accept bets an
 
 ## Architecture
 
-| Layer | Technology | Location |
-|-------|-----------|----------|
-| Mobile App | React Native (Expo) + NativeWind | `src/` |
-| Backend API | Express.js + TypeScript | `backend/src/` |
-| Database | PostgreSQL (Neon) | Hosted on Neon |
-| Hosting | Render | `grolotto-user.onrender.com` |
-| Payments | MonCash | `backend/src/services/moncashService.ts` |
-| State | Zustand + AsyncStorage | `src/state/appStore.ts` |
-| Auth | JWT (access + refresh tokens) | `backend/src/middleware/auth.ts` |
+| Layer       | Technology                       | Location                                 |
+| ----------- | -------------------------------- | ---------------------------------------- |
+| Mobile App  | React Native (Expo) + NativeWind | `src/`                                   |
+| Backend API | Express.js + TypeScript          | `backend/src/`                           |
+| Database    | PostgreSQL (Neon)                | Hosted on Neon                           |
+| Hosting     | Render                           | `grolotto-user.onrender.com`             |
+| Payments    | MonCash                          | `backend/src/services/moncashService.ts` |
+| State       | Zustand + AsyncStorage           | `src/state/appStore.ts`                  |
+| Auth        | JWT (access + refresh tokens)    | `backend/src/middleware/auth.ts`         |
 
 ### API Base URL
+
 ```
 https://grolotto-user-wk3b.onrender.com/api
 ```
 
 ### Database Connection
+
 ```
 postgresql://neondb_owner:npg_WNM7muvkX4Eb@ep-nameless-brook-ait2d4uq-pooler.c-4.us-east-1.aws.neon.tech/neondb
 ```
@@ -48,13 +50,13 @@ postgresql://neondb_owner:npg_WNM7muvkX4Eb@ep-nameless-brook-ait2d4uq-pooler.c-4
 
 ### Win Multipliers (from `app_settings.win_multipliers`)
 
-| Game Type | Numbers | Range | Multiplier | Example ($1 bet) |
-|-----------|---------|-------|------------|-------------------|
-| Senp | 1 number | 00-99 | 50x | Win $50 |
-| Maryaj | 2 numbers | 00-99 each | 100x | Win $100 |
-| Loto 3 | 3 digits | 0-9 each | 500x | Win $500 |
-| Loto 4 | 4 digits | 0-9 each | 5,000x | Win $5,000 |
-| Loto 5 | 5 digits | 0-9 each | 50,000x | Win $50,000 |
+| Game Type | Numbers   | Range      | Multiplier | Example ($1 bet) |
+| --------- | --------- | ---------- | ---------- | ---------------- |
+| Senp      | 1 number  | 00-99      | 50x        | Win $50          |
+| Maryaj    | 2 numbers | 00-99 each | 100x       | Win $100         |
+| Loto 3    | 3 digits  | 0-9 each   | 500x       | Win $500         |
+| Loto 4    | 4 digits  | 0-9 each   | 5,000x     | Win $5,000       |
+| Loto 5    | 5 digits  | 0-9 each   | 50,000x    | Win $50,000      |
 
 ### Financial Flow
 
@@ -74,11 +76,11 @@ Admin publishes winning numbers for NY:
 
 ### Who Bears Risk?
 
-| Entity | Risk |
-|--------|------|
-| **Vendor** | Bears ALL payout risk. If many players win, vendor's balance can go negative (debt). |
-| **Admin/Platform** | No risk. Gets 10% commission from vendor's bet total regardless of outcomes. |
-| **Player** | Only risks bet amount. Wins are guaranteed and credited to wallet. |
+| Entity             | Risk                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------ |
+| **Vendor**         | Bears ALL payout risk. If many players win, vendor's balance can go negative (debt). |
+| **Admin/Platform** | No risk. Gets 10% commission from vendor's bet total regardless of outcomes.         |
+| **Player**         | Only risks bet amount. Wins are guaranteed and credited to wallet.                   |
 
 ### Vendor Balance Rules
 
@@ -100,30 +102,31 @@ Admin publishes winning numbers for NY:
 
 ### Backend
 
-| File | Purpose |
-|------|---------|
-| `backend/src/services/lotteryService.ts` | Core logic: `placeBet()`, `publishResults()`, `getVendorRounds()`, `getVendorRoundDetails()` |
-| `backend/src/controllers/lotteryController.ts` | REST handlers for lottery endpoints |
-| `backend/src/controllers/vendorController.ts` | Vendor endpoints (read-only rounds, no publish) |
-| `backend/src/routes/lotteryRoutes.ts` | `POST /lottery/bet`, `POST /lottery/results` (admin-only), `GET /lottery/rounds` |
-| `backend/src/routes/vendorRoutes.ts` | `GET /vendors/me/rounds` (read-only), no publish endpoint |
-| `backend/src/validators/schemas.ts` | Zod schemas — `publishResultsSchema` uses `drawState` not `roundId` |
-| `backend/src/database/migration-004.sql` | Global rounds migration (reversed per-vendor rounds from migration-003) |
+| File                                           | Purpose                                                                                      |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `backend/src/services/lotteryService.ts`       | Core logic: `placeBet()`, `publishResults()`, `getVendorRounds()`, `getVendorRoundDetails()` |
+| `backend/src/controllers/lotteryController.ts` | REST handlers for lottery endpoints                                                          |
+| `backend/src/controllers/vendorController.ts`  | Vendor endpoints (read-only rounds, no publish)                                              |
+| `backend/src/routes/lotteryRoutes.ts`          | `POST /lottery/bet`, `POST /lottery/results` (admin-only), `GET /lottery/rounds`             |
+| `backend/src/routes/vendorRoutes.ts`           | `GET /vendors/me/rounds` (read-only), no publish endpoint                                    |
+| `backend/src/validators/schemas.ts`            | Zod schemas — `publishResultsSchema` uses `drawState` not `roundId`                          |
+| `backend/src/database/migration-004.sql`       | Global rounds migration (reversed per-vendor rounds from migration-003)                      |
 
 ### Frontend
 
-| File | Purpose |
-|------|---------|
-| `src/api/apiClient.ts` | API client — `lotteryAPI.publishResults(drawState, winningNumbers, drawDate?)` |
-| `src/screens/ResultPublishing.tsx` | Admin screen — publish winning numbers per state |
-| `src/screens/VendorResultPublishing.tsx` | Vendor screen — read-only round/ticket viewer |
-| `src/screens/VendorDashboard.tsx` | Vendor home — "View Rounds" quick action |
+| File                                     | Purpose                                                                        |
+| ---------------------------------------- | ------------------------------------------------------------------------------ |
+| `src/api/apiClient.ts`                   | API client — `lotteryAPI.publishResults(drawState, winningNumbers, drawDate?)` |
+| `src/screens/ResultPublishing.tsx`       | Admin screen — publish winning numbers per state                               |
+| `src/screens/VendorResultPublishing.tsx` | Vendor screen — read-only round/ticket viewer                                  |
+| `src/screens/VendorDashboard.tsx`        | Vendor home — "View Rounds" quick action                                       |
 
 ---
 
 ## Database Schema (Key Tables)
 
 ### lottery_rounds
+
 - `id` UUID PK
 - `draw_state` VARCHAR (NY, FL, GA, TX, PA, CT, TN, NJ)
 - `draw_date` DATE
@@ -140,6 +143,7 @@ Admin publishes winning numbers for NY:
 - UNIQUE: `(draw_state, draw_date, draw_time)` — one round per state+date+time
 
 ### lottery_tickets
+
 - `id` UUID PK
 - `player_id` UUID FK → users
 - `vendor_id` UUID FK → vendors
@@ -153,6 +157,7 @@ Admin publishes winning numbers for NY:
 - `win_amount` DECIMAL
 
 ### app_settings
+
 - `key = 'win_multipliers'` → `{"senp": 50, "maryaj": 100, "loto3": 500, "loto4": 5000, "loto5": 50000}`
 - `key = 'system_commission'` → `0.10` (10% admin commission rate)
 
@@ -161,6 +166,7 @@ Admin publishes winning numbers for NY:
 ## API Endpoints
 
 ### Admin Publish (POST /api/lottery/results)
+
 ```json
 {
   "drawState": "NY",
@@ -171,11 +177,12 @@ Admin publishes winning numbers for NY:
     "loto4": [8, 2, 5, 9],
     "loto5": [1, 4, 7, 2, 6]
   },
-  "drawDate": "2026-02-20"  // optional, defaults to today
+  "drawDate": "2026-02-20" // optional, defaults to today
 }
 ```
 
 ### Place Bet (POST /api/lottery/bet)
+
 ```json
 {
   "vendorId": "uuid",
@@ -202,28 +209,28 @@ Admin publishes winning numbers for NY:
 
 ### Web App (`web/src/`)
 
-| Change | File | Details |
-|--------|------|---------|
-| Payment page light theme | `web/src/app/player/payment/page.tsx` | Converted dark theme (bg-slate-900) to light (bg-white, bg-gray-50). Auto-selects payment method based on currency: moncash for HTG, paypal for USD. |
-| Play page vendor loading | `web/src/app/player/play/page.tsx` | Uses `vendorAPI.getVendorById(vendorId)` for full vendor details with draws config. Uses `String()` comparison for IDs. |
-| Results banner always visible | `web/src/app/player/dashboard/page.tsx` | Banner always shows (empty state: "No results yet today" with "View All Results" link). Fixed drawTime label: 'morning' → 'midday' (☀️ Midi). |
-| Player withdrawal page (NEW) | `web/src/app/player/withdraw/page.tsx` | Bank-only withdrawal form (bankName, accountHolderName, accountNumber, routingNumber, notes). Calls `walletAPI.requestWithdrawal()`. |
-| Wallet API withdrawal method | `web/src/lib/api/wallet.ts` | Added `requestWithdrawal(data)` → POST `/wallet/withdraw`. |
-| Player sidebar nav | `web/src/components/layout/player-sidebar.tsx` | Added Banknote icon + `/player/withdraw` nav item. |
-| Vendor currency toggle hidden | `web/src/components/layout/top-nav.tsx` | Currency toggle hidden when `pathname?.startsWith("/vendor")`. |
-| Vendor settings cleaned | `web/src/app/vendor/settings/page.tsx` | Removed CURRENCIES constant and currency picker Card section. |
-| Vendor payouts bank-only | `web/src/app/vendor/payouts/page.tsx` | Removed moncash option, selectedMethod state, moncashPhone. Always uses `method: "bank_transfer"`. Bank detail fields added. |
-| Vendor results fix | `web/src/app/vendor/results/page.tsx` | Uses `vendorProfile?.operatingCurrency` instead of store currency. Round interface has both `state?` and `drawState?`. DRAW_STATES lookups use `drawState \|\| state`. |
+| Change                        | File                                           | Details                                                                                                                                                                |
+| ----------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Payment page light theme      | `web/src/app/player/payment/page.tsx`          | Converted dark theme (bg-slate-900) to light (bg-white, bg-gray-50). Auto-selects payment method based on currency: moncash for HTG, paypal for USD.                   |
+| Play page vendor loading      | `web/src/app/player/play/page.tsx`             | Uses `vendorAPI.getVendorById(vendorId)` for full vendor details with draws config. Uses `String()` comparison for IDs.                                                |
+| Results banner always visible | `web/src/app/player/dashboard/page.tsx`        | Banner always shows (empty state: "No results yet today" with "View All Results" link). Fixed drawTime label: 'morning' → 'midday' (☀️ Midi).                          |
+| Player withdrawal page (NEW)  | `web/src/app/player/withdraw/page.tsx`         | Bank-only withdrawal form (bankName, accountHolderName, accountNumber, routingNumber, notes). Calls `walletAPI.requestWithdrawal()`.                                   |
+| Wallet API withdrawal method  | `web/src/lib/api/wallet.ts`                    | Added `requestWithdrawal(data)` → POST `/wallet/withdraw`.                                                                                                             |
+| Player sidebar nav            | `web/src/components/layout/player-sidebar.tsx` | Added Banknote icon + `/player/withdraw` nav item.                                                                                                                     |
+| Vendor currency toggle hidden | `web/src/components/layout/top-nav.tsx`        | Currency toggle hidden when `pathname?.startsWith("/vendor")`.                                                                                                         |
+| Vendor settings cleaned       | `web/src/app/vendor/settings/page.tsx`         | Removed CURRENCIES constant and currency picker Card section.                                                                                                          |
+| Vendor payouts bank-only      | `web/src/app/vendor/payouts/page.tsx`          | Removed moncash option, selectedMethod state, moncashPhone. Always uses `method: "bank_transfer"`. Bank detail fields added.                                           |
+| Vendor results fix            | `web/src/app/vendor/results/page.tsx`          | Uses `vendorProfile?.operatingCurrency` instead of store currency. Round interface has both `state?` and `drawState?`. DRAW_STATES lookups use `drawState \|\| state`. |
 
 ### Mobile App (`src/`)
 
-| Change | File | Details |
-|--------|------|---------|
-| Results banner always visible | `src/screens/PlayerDashboard.tsx` | Banner always shows with empty state fallback. Fixed drawTime: 'morning' → 'midday'. Added "Withdraw" quick action button navigating to PlayerWithdrawalScreen. |
-| Player withdrawal screen (NEW) | `src/screens/PlayerWithdrawalScreen.tsx` | Bank-only withdrawal form matching web version. Balance card, bank detail fields, info section, success screen. |
-| Navigation registration | `src/navigation/AppNavigator.tsx` | Added PlayerWithdrawalScreen import, type, and Stack.Screen in player group. |
-| Wallet API withdrawal method | `src/api/apiClient.ts` | Added `walletAPI.requestWithdrawal(data)` → POST `/wallet/withdraw`. |
-| Vendor payouts bank-only | `src/screens/PayoutManagement.tsx` | Removed moncash/currency toggle. Bank-only with detail fields (bankName, bankAccountName, bankAccountNumber, bankRoutingNumber). Uses vendor's operatingCurrency. |
+| Change                         | File                                     | Details                                                                                                                                                           |
+| ------------------------------ | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Results banner always visible  | `src/screens/PlayerDashboard.tsx`        | Banner always shows with empty state fallback. Fixed drawTime: 'morning' → 'midday'. Added "Withdraw" quick action button navigating to PlayerWithdrawalScreen.   |
+| Player withdrawal screen (NEW) | `src/screens/PlayerWithdrawalScreen.tsx` | Bank-only withdrawal form matching web version. Balance card, bank detail fields, info section, success screen.                                                   |
+| Navigation registration        | `src/navigation/AppNavigator.tsx`        | Added PlayerWithdrawalScreen import, type, and Stack.Screen in player group.                                                                                      |
+| Wallet API withdrawal method   | `src/api/apiClient.ts`                   | Added `walletAPI.requestWithdrawal(data)` → POST `/wallet/withdraw`.                                                                                              |
+| Vendor payouts bank-only       | `src/screens/PayoutManagement.tsx`       | Removed moncash/currency toggle. Bank-only with detail fields (bankName, bankAccountName, bankAccountNumber, bankRoutingNumber). Uses vendor's operatingCurrency. |
 
 ### Key Business Rules
 
@@ -239,29 +246,29 @@ Admin publishes winning numbers for NY:
 
 ### Backend (`backend/src/`)
 
-| Change | File | Details |
-|--------|------|---------|
-| Player withdrawal endpoint (NEW) | `backend/src/routes/walletRoutes.ts` | Added `POST /wallet/withdraw` route with `authenticate` middleware |
-| Withdrawal controller (NEW) | `backend/src/controllers/walletController.ts` | `requestWithdrawal()` — validates input (amount > 0, valid currency, bank details required, min $5/$50G), generates idempotency key, calls `debitWallet()`, stores bank metadata in transaction JSONB |
-| Withdrawal metadata storage (NEW) | `backend/src/services/walletService.ts` | `updateWithdrawalMetadata()` — stores bank details (bankName, accountHolderName, accountNumber, routingNumber, notes) in `transactions.metadata` JSONB column |
-| Admin withdrawal list endpoint (NEW) | `backend/src/routes/adminRoutes.ts` | `GET /admin/withdrawals/pending` — lists all pending player withdrawals |
-| Admin withdrawal process endpoint (NEW) | `backend/src/routes/adminRoutes.ts` | `POST /admin/withdrawals/:withdrawalId/process` — approve/reject a player withdrawal |
-| Admin withdrawal controller (NEW) | `backend/src/controllers/adminController.ts` | `getPendingWithdrawals()` and `processPlayerWithdrawal()` handlers |
-| Admin withdrawal service (NEW) | `backend/src/services/adminService.ts` | `getPendingWithdrawals()` — queries transactions WHERE type='withdrawal' AND status='pending', JOINs users, extracts bank details from metadata JSONB. `processPlayerWithdrawal()` — updates status to completed/failed, stores admin action in metadata, refunds wallet on rejection |
+| Change                                  | File                                          | Details                                                                                                                                                                                                                                                                               |
+| --------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Player withdrawal endpoint (NEW)        | `backend/src/routes/walletRoutes.ts`          | Added `POST /wallet/withdraw` route with `authenticate` middleware                                                                                                                                                                                                                    |
+| Withdrawal controller (NEW)             | `backend/src/controllers/walletController.ts` | `requestWithdrawal()` — validates input (amount > 0, valid currency, bank details required, min $5/$50G), generates idempotency key, calls `debitWallet()`, stores bank metadata in transaction JSONB                                                                                 |
+| Withdrawal metadata storage (NEW)       | `backend/src/services/walletService.ts`       | `updateWithdrawalMetadata()` — stores bank details (bankName, accountHolderName, accountNumber, routingNumber, notes) in `transactions.metadata` JSONB column                                                                                                                         |
+| Admin withdrawal list endpoint (NEW)    | `backend/src/routes/adminRoutes.ts`           | `GET /admin/withdrawals/pending` — lists all pending player withdrawals                                                                                                                                                                                                               |
+| Admin withdrawal process endpoint (NEW) | `backend/src/routes/adminRoutes.ts`           | `POST /admin/withdrawals/:withdrawalId/process` — approve/reject a player withdrawal                                                                                                                                                                                                  |
+| Admin withdrawal controller (NEW)       | `backend/src/controllers/adminController.ts`  | `getPendingWithdrawals()` and `processPlayerWithdrawal()` handlers                                                                                                                                                                                                                    |
+| Admin withdrawal service (NEW)          | `backend/src/services/adminService.ts`        | `getPendingWithdrawals()` — queries transactions WHERE type='withdrawal' AND status='pending', JOINs users, extracts bank details from metadata JSONB. `processPlayerWithdrawal()` — updates status to completed/failed, stores admin action in metadata, refunds wallet on rejection |
 
 ### Admin App (`grolotto-admin/src/`)
 
-| Change | File | Details |
-|--------|------|---------|
-| Payout action fix | `grolotto-admin/src/api/adminAPI.ts` | Fixed `processPayout()` to convert 'approve'→'approved', 'reject'→'rejected' (backend expects past tense) |
-| Player withdrawal API (NEW) | `grolotto-admin/src/api/adminAPI.ts` | Added `PlayerWithdrawal` interface, `getPlayerWithdrawals()` → `GET /admin/withdrawals/pending`, `processPlayerWithdrawal()` → `POST /admin/withdrawals/:id/process` |
-| PayoutManagement routing number | `grolotto-admin/src/screens/PayoutManagement.tsx` | Added `bankRoutingNumber` to Payout interface, mapping, and details modal |
-| AdminPaymentManagement rewrite | `grolotto-admin/src/screens/AdminPaymentManagement.tsx` | Replaced local-only mock logic with real API calls. Player Withdrawals tab now fetches from backend via `getPlayerWithdrawals()`. Approve/reject call `processPlayerWithdrawal()`. Review modal shows flat PlayerWithdrawal fields (playerName, playerEmail, bankName, accountHolderName, accountNumber, routingNumber) |
+| Change                          | File                                                    | Details                                                                                                                                                                                                                                                                                                                 |
+| ------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Payout action fix               | `grolotto-admin/src/api/adminAPI.ts`                    | Fixed `processPayout()` to convert 'approve'→'approved', 'reject'→'rejected' (backend expects past tense)                                                                                                                                                                                                               |
+| Player withdrawal API (NEW)     | `grolotto-admin/src/api/adminAPI.ts`                    | Added `PlayerWithdrawal` interface, `getPlayerWithdrawals()` → `GET /admin/withdrawals/pending`, `processPlayerWithdrawal()` → `POST /admin/withdrawals/:id/process`                                                                                                                                                    |
+| PayoutManagement routing number | `grolotto-admin/src/screens/PayoutManagement.tsx`       | Added `bankRoutingNumber` to Payout interface, mapping, and details modal                                                                                                                                                                                                                                               |
+| AdminPaymentManagement rewrite  | `grolotto-admin/src/screens/AdminPaymentManagement.tsx` | Replaced local-only mock logic with real API calls. Player Withdrawals tab now fetches from backend via `getPlayerWithdrawals()`. Approve/reject call `processPlayerWithdrawal()`. Review modal shows flat PlayerWithdrawal fields (playerName, playerEmail, bankName, accountHolderName, accountNumber, routingNumber) |
 
 ### Mobile App (`src/`)
 
-| Change | File | Details |
-|--------|------|---------|
+| Change                        | File                                     | Details                                                                                                                                                                 |
+| ----------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | PlayerWithdrawalScreen TS fix | `src/screens/PlayerWithdrawalScreen.tsx` | Fixed: replaced `useAppStore(s => s.wallet)` with `walletAPI.getWallet()` + local state. Replaced `useAppStore(s => s.t)` with `getTranslation(key, language)` pattern. |
 
 ### Key Architecture Decisions
