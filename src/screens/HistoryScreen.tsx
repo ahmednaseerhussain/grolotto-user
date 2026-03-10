@@ -77,6 +77,7 @@ export default function HistoryScreen() {
       currency: game.currency || currency,
       status: game.status,
       winAmount: game.winAmount || 0,
+      drawTime: (game as any).drawTime || (game as any).session || null,
     };
   }).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
@@ -352,9 +353,24 @@ export default function HistoryScreen() {
     <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-200">
       <View className="flex-row items-start justify-between mb-3">
         <View className="flex-1">
-          <Text className="text-lg font-bold text-gray-800 mb-1">
-            {item.gameType} - {item.state}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+            <Text className="text-lg font-bold text-gray-800">
+              {item.gameType} - {item.state}
+            </Text>
+            {item.drawTime && (
+              <View style={{
+                backgroundColor: item.drawTime === 'morning' ? '#fef3c7' : item.drawTime === 'evening' ? '#ede9fe' : '#dbeafe',
+                paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6,
+              }}>
+                <Text style={{
+                  fontSize: 10, fontWeight: '600',
+                  color: item.drawTime === 'morning' ? '#92400e' : item.drawTime === 'evening' ? '#5b21b6' : '#1e40af',
+                }}>
+                  {item.drawTime === 'morning' ? '🕐 Maten' : item.drawTime === 'evening' ? '🌙 Aswè' : '☀️ Aprèmidi'}
+                </Text>
+              </View>
+            )}
+          </View>
           <Text className="text-gray-600 text-sm">
             {item.vendor}
           </Text>

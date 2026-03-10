@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
-  ArrowLeft, ChevronDown, ChevronUp, Check, X, Save, BarChart3, Loader2
+  ArrowLeft, ChevronDown, ChevronUp, Check, X, Save, BarChart3, Loader2, Pencil
 } from "lucide-react";
 import { formatCurrency, GAME_LABELS } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -242,9 +242,10 @@ export default function DrawManagementScreen() {
                                     setEditingLimits({ drawCode: draw.code, gameKey: game });
                                     setTempLimits({ min: String(gameData.minAmount || ""), max: String(gameData.maxAmount || "") });
                                   }}
-                                  className="text-xs text-gray-500 hover:text-blue-600"
+                                  className="text-xs text-gray-500 hover:text-blue-600 flex items-center gap-1"
                                 >
-                                  {t("min") || "Min"}: {formatCurrency(gameData.minAmount || 0, currency)} | {t("max") || "Max"}: {formatCurrency(gameData.maxAmount || 0, currency)}
+                                  <span>{t("min") || "Min"}: {formatCurrency(gameData.minAmount || 0, currency)} | {t("max") || "Max"}: {formatCurrency(gameData.maxAmount || 0, currency)}</span>
+                                  <Pencil className="h-3 w-3 text-gray-400" />
                                 </button>
                               ) : (
                                 <div className="flex items-center gap-2 mt-1">

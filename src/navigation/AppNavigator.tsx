@@ -34,7 +34,6 @@ import VendorResultPublishing from "../screens/VendorResultPublishing";
 import PaymentScreen from "../screens/PaymentScreen";
 import PaymentProfileScreen from "../screens/PaymentProfileScreen";
 import TransactionHistory from "../screens/TransactionHistory";
-import RewardsScreen from "../screens/RewardsScreen";
 import GiftCardScreen from "../screens/GiftCardScreen";
 import AdminDashboard from "../screens/AdminDashboard";
 import AdminPayoutManagement from "../screens/AdminPayoutManagement";
@@ -93,7 +92,6 @@ export type RootStackParamList = {
   PaymentScreen: undefined;
   PaymentProfileScreen: undefined;
   TransactionHistory: undefined;
-  RewardsScreen: undefined;
   GiftCardScreen: undefined;
 };
 
@@ -167,7 +165,6 @@ export default function AppNavigator() {
               <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
               <Stack.Screen name="PaymentProfileScreen" component={PaymentProfileScreen} />
               <Stack.Screen name="TransactionHistory" component={TransactionHistory} />
-              <Stack.Screen name="RewardsScreen" component={RewardsScreen} />
               <Stack.Screen name="GiftCardScreen" component={GiftCardScreen} />
               <Stack.Screen name="ResultsScreen" component={ResultsScreen} />
               <Stack.Screen name="HistoryScreen" component={HistoryScreen} />

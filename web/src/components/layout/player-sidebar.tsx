@@ -23,7 +23,6 @@ const navItems = [
   { href: "/player/history", icon: History, labelKey: "history" },
   { href: "/player/results", icon: BookOpen, labelKey: "results" },
   { href: "/player/tchala", icon: BookOpen, labelKey: "tchala" },
-  { href: "/player/rewards", icon: Gift, labelKey: "rewards" },
   { href: "/player/transactions", icon: Wallet, labelKey: "transactions" },
   { href: "/player/payment", icon: CreditCard, labelKey: "deposit" },
   { href: "/player/notifications", icon: Bell, labelKey: "notifications" },

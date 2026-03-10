@@ -61,13 +61,11 @@ export default function VendorDashboard() {
   };
 
   const stats = vendorStats || {} as Partial<VendorStats>;
-  const balance = currency === "HTG"
-    ? (stats.availableBalance || 0)
-    : (stats.availableBalance || 0);
+  const vendorCurrency = vendorProfile?.operatingCurrency || currency;
+  const balance = stats.availableBalance || 0;
 
   const quickActions = [
     { label: t("pricesAndStates") || "Prices & States", icon: Settings, href: "/vendor/draws", color: "bg-blue-50 text-blue-600" },
-    { label: t("viewRounds") || "View Rounds", icon: Layers, href: "/vendor/results", color: "bg-purple-50 text-purple-600" },
     { label: t("numberLimits") || "Number Limits", icon: Shield, href: "/vendor/number-limits", color: "bg-amber-50 text-amber-600" },
     { label: t("history") || "History", icon: History, href: "/vendor/history", color: "bg-emerald-50 text-emerald-600" },
     { label: t("withdrawal") || "Withdrawal", icon: Banknote, href: "/vendor/payouts", color: "bg-red-50 text-red-600" },
@@ -99,13 +97,7 @@ export default function VendorDashboard() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrency(currency === "HTG" ? "USD" : "HTG")}
-          >
-            {currency}
-          </Button>
+          <Badge variant="outline" className="text-xs">{vendorCurrency}</Badge>
           <Button variant="ghost" size="sm" onClick={handleLogout}>
             <LogOut className="h-5 w-5" />
           </Button>
@@ -143,19 +135,19 @@ export default function VendorDashboard() {
         />
         <StatCard
           title={t("totalEarnings") || "Total Earnings"}
-          value={formatCurrency(stats.totalRevenue || stats.totalEarnings || 0, currency)}
+          value={formatCurrency(stats.totalRevenue || stats.totalEarnings || 0, vendorCurrency)}
           icon={<TrendingUp className="h-5 w-5 text-purple-600" />}
           onClick={() => setActiveModal("weekly")}
         />
         <StatCard
           title={t("todayBets") || "Today's Bets"}
-          value={formatCurrency(Number(stats.todayBets || 0), currency)}
+          value={formatCurrency(Number(stats.todayBets || 0), vendorCurrency)}
           icon={<DollarSign className="h-5 w-5 text-amber-600" />}
           onClick={() => setActiveModal("earnings")}
         />
         <StatCard
           title={t("todayCommission") || "Today's Commission"}
-          value={formatCurrency(Number(stats.earningsToday || (stats.todayBets ? Number(stats.todayBets) * (stats.commissionRate || 0.1) : 0)), currency)}
+          value={formatCurrency(Number(stats.earningsToday || (stats.todayBets ? Number(stats.todayBets) * (stats.commissionRate || 0.1) : 0)), vendorCurrency)}
           icon={<BarChart3 className="h-5 w-5 text-red-600" />}
           onClick={() => setActiveModal("todayEarnings")}
         />
@@ -173,7 +165,7 @@ export default function VendorDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm opacity-80">{t("availableBalance") || "Available Balance"}</p>
-              <p className="text-3xl font-bold mt-1">{formatCurrency(balance, currency)}</p>
+              <p className="text-3xl font-bold mt-1">{formatCurrency(balance, vendorCurrency)}</p>
             </div>
             <Button
               variant="secondary"

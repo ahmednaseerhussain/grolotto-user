@@ -48,7 +48,20 @@ export default function TodayPlayersWinnersScreen() {
     setLoading(true);
     try {
       const res = await vendorAPI.getPlayHistory(1, 500);
-      const all = res.data?.tickets || res.data || [];
+      // Backend returns { plays: [...], total: N } — res is the raw Axios response
+      const rawData = res.data?.plays || res.data?.data?.plays || res.data?.tickets || res.data?.data?.tickets || [];
+      const all = (Array.isArray(rawData) ? rawData : []).map((e: any) => ({
+        id: e.id,
+        playerName: e.playerName || e.player_name,
+        playerPhone: e.playerPhone || e.player_phone,
+        gameType: e.gameType || e.game_type,
+        numbers: Array.isArray(e.numbers) ? e.numbers.join('-') : (e.numbers || ''),
+        betAmount: e.betAmount || e.bet_amount || 0,
+        won: e.status === 'won',
+        winAmount: e.winAmount || e.win_amount || 0,
+        state: e.drawState || e.draw_state || e.state,
+        createdAt: e.createdAt || e.created_at,
+      }));
       const today = new Date().toISOString().split("T")[0];
       const todayEntries = all.filter((e: PlayEntry) => {
         const d = e.createdAt;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store/app-store";
 import { useTranslation } from "@/hooks/use-translation";
@@ -26,14 +26,22 @@ export default function PayoutsScreen() {
 
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [amount, setAmount] = useState("");
-  const [selectedMethod, setSelectedMethod] = useState<string | null>("moncash");
-  const [withdrawalCurrency, setWithdrawalCurrency] = useState<"HTG" | "USD">(currency as any);
+  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [moncashPhone, setMoncashPhone] = useState("");
   const [bankName, setBankName] = useState("");
   const [bankAccountName, setBankAccountName] = useState("");
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [bankRoutingNumber, setBankRoutingNumber] = useState("");
+
+  // Use vendor's operating currency — no toggle
+  const vendorProfile = useAppStore((s) => s.vendorProfile);
+  const withdrawalCurrency = (vendorProfile?.operatingCurrency || currency) as "HTG" | "USD";
+
+  // Auto-select payment method based on currency
+  React.useEffect(() => {
+    setSelectedMethod(withdrawalCurrency === "HTG" ? "moncash" : "bank_transfer");
+  }, [withdrawalCurrency]);
 
   const balance = vendorStats?.balance || 0;
   const displayBalance = withdrawalCurrency === "HTG" ? balance * 150 : balance;
@@ -102,19 +110,7 @@ export default function PayoutsScreen() {
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm opacity-80">{t("availableBalance") || "Available Balance"}</p>
-            <div className="flex gap-1">
-              {(["HTG", "USD"] as const).map((cur) => (
-                <button
-                  key={cur}
-                  onClick={() => setWithdrawalCurrency(cur)}
-                  className={`px-2 py-0.5 rounded text-xs font-medium ${
-                    withdrawalCurrency === cur ? "bg-white/30" : "bg-white/10"
-                  }`}
-                >
-                  {cur}
-                </button>
-              ))}
-            </div>
+            <Badge variant="outline" className="text-white border-white/30 text-xs">{withdrawalCurrency}</Badge>
           </div>
           <p className="text-3xl font-bold">{formatCurrency(displayBalance, withdrawalCurrency)}</p>
           <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-white/20">
@@ -231,6 +227,9 @@ export default function PayoutsScreen() {
               </Button>
               <Button variant="outline" onClick={() => setShowRequestForm(false)}>Cancel</Button>
             </div>
+            <p className="text-xs text-gray-500 mt-2 text-center">
+              ℹ️ Withdrawal requests are reviewed by the admin. Once approved, the admin will process the transfer to your account.
+            </p>
           </CardContent>
         </Card>
       )}

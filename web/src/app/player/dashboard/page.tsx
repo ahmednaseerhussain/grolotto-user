@@ -7,6 +7,7 @@ import { useTranslation } from "@/hooks/use-translation";
 import { vendorAPI } from "@/lib/api/vendor";
 import { walletAPI } from "@/lib/api/wallet";
 import { publicAPI } from "@/lib/api/public";
+import { lotteryAPI } from "@/lib/api/lottery";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +46,7 @@ export default function PlayerDashboard() {
   const [showBalance, setShowBalance] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [todayResults, setTodayResults] = useState<any[]>([]);
   const slideInterval = useRef<NodeJS.Timeout | null>(null);
 
   const loadData = useCallback(async () => {
@@ -58,6 +60,15 @@ export default function PlayerDashboard() {
       if (vendorRes.status === "fulfilled") setVendors(vendorRes.value as any || []);
       if (walletRes.status === "fulfilled") setWallet(walletRes.value as any || null);
       if (adsRes.status === "fulfilled") setAdvertisements(adsRes.value as any || []);
+      // Fetch today's results
+      try {
+        const rounds = await lotteryAPI.getRounds();
+        const today = new Date().toISOString().split('T')[0];
+        const completed = (Array.isArray(rounds) ? rounds : []).filter(
+          (r: any) => r.status === 'completed' && r.drawDate && r.drawDate.startsWith(today)
+        );
+        setTodayResults(completed);
+      } catch { /* results optional */ }
     } catch (err) {
       console.error("Failed to load dashboard data", err);
     } finally {
@@ -186,46 +197,63 @@ export default function PlayerDashboard() {
         </div>
       )}
 
-      {/* Balance Card */}
-      <Card className="bg-white shadow-md border-0">
-        <CardContent className="p-5">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <p className="text-sm text-gray-500">{t("availableBalance") || "Available Balance"}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <p className="text-3xl font-bold text-gray-900">
-                  {showBalance ? formatCurrency(balance, currency) : "••••••"}
-                </p>
-                <button
-                  onClick={() => setShowBalance(!showBalance)}
-                  className="p-1 text-gray-400 hover:text-gray-600"
-                >
-                  {showBalance ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-                </button>
+      {/* Dual Currency Wallets */}
+      <div className="grid grid-cols-2 gap-3">
+        {/* HTG Wallet - MonCash */}
+        <Card className="bg-red-50 border border-red-200 hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push("/player/payment")}>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="bg-red-500 p-1.5 rounded-lg">
+                <DollarSign className="h-4 w-4 text-white" />
               </div>
-              <p className="text-xs text-gray-400 mt-1 italic">
-                {showBalance ? "Tap eye to hide balance" : "Tap eye to show balance"}
-              </p>
+              <span className="text-xs font-semibold text-red-800">MonCash</span>
             </div>
-            <Button
-              size="sm"
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-              onClick={() => router.push("/player/payment")}
-            >
-              <Plus className="h-4 w-4 mr-1" /> {t("addFunds") || "Add Funds"}
-            </Button>
-          </div>
-          <div className="flex items-center justify-center mt-3 pt-3 border-t border-gray-200">
-            <button
-              onClick={() => router.push("/player/transactions")}
-              className="flex items-center gap-1 text-sm text-blue-500 font-medium hover:text-blue-600"
-            >
-              {t("viewTransactionHistory") || "View Transaction History"}
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+            <p className="text-xs text-gray-500">HTG Balance</p>
+            <div className="flex items-center gap-1 mt-1">
+              <p className="text-xl font-bold text-gray-900">
+                {showBalance ? formatCurrency(balanceHtg, "HTG") : "••••••"}
+              </p>
+              <button onClick={(e) => { e.stopPropagation(); setShowBalance(!showBalance); }} className="p-0.5 text-gray-400 hover:text-gray-600">
+                {showBalance ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              </button>
+            </div>
+            <p className="text-[10px] text-red-600 font-medium mt-2">+ Add HTG</p>
+          </CardContent>
+        </Card>
+
+        {/* USD Wallet - PayPal */}
+        <Card className="bg-blue-50 border border-blue-200 hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push("/player/payment")}>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="bg-blue-500 p-1.5 rounded-lg">
+                <DollarSign className="h-4 w-4 text-white" />
+              </div>
+              <span className="text-xs font-semibold text-blue-800">PayPal</span>
+            </div>
+            <p className="text-xs text-gray-500">USD Balance</p>
+            <div className="flex items-center gap-1 mt-1">
+              <p className="text-xl font-bold text-gray-900">
+                {showBalance ? formatCurrency(balanceUsd, "USD") : "••••••"}
+              </p>
+              <button onClick={(e) => { e.stopPropagation(); setShowBalance(!showBalance); }} className="p-0.5 text-gray-400 hover:text-gray-600">
+                {showBalance ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              </button>
+            </div>
+            <p className="text-[10px] text-blue-600 font-medium mt-2">+ Add USD</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* View Transactions */}
+      <div className="flex items-center justify-center">
+        <button
+          onClick={() => router.push("/player/transactions")}
+          className="flex items-center gap-1 text-sm text-blue-500 font-medium hover:text-blue-600"
+        >
+          {t("viewTransactionHistory") || "View Transaction History"}
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -247,24 +275,36 @@ export default function PlayerDashboard() {
         ))}
       </div>
 
-      {/* Rewards Banner */}
-      <div
-        onClick={() => router.push("/player/rewards")}
-        className="w-full bg-amber-100 border-2 border-amber-400 rounded-2xl p-4 cursor-pointer hover:bg-amber-50 transition-colors"
-      >
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center">
-            <Gift className="h-8 w-8 text-amber-500" />
-          </div>
-          <div className="flex-1">
-            <p className="font-bold text-amber-900 text-lg">🎁 {t("rewards") || "Rewards"}</p>
-            <p className="text-sm text-amber-800">{t("checkRewards") || "Check your rewards & bonuses"}</p>
+      {/* Today's Results Banner */}
+      {todayResults.length > 0 && (
+        <div>
+          <h2 className="text-lg font-semibold mb-3">🏆 {t("todayResults") || "Today's Results"}</h2>
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {todayResults.map((round: any) => (
+              <Card key={round.id} className="min-w-[200px] hover:shadow-md transition-shadow cursor-pointer flex-shrink-0" onClick={() => router.push("/player/results")}>
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold text-gray-900">{round.drawState}</span>
+                    <Badge variant={round.drawTime === 'morning' ? 'warning' : round.drawTime === 'evening' ? 'secondary' : 'default'} className="text-[10px]">
+                      {round.drawTime === 'morning' ? '🌅 Maten' : round.drawTime === 'evening' ? '🌙 Aswè' : '☀️ Aprèmidi'}
+                    </Badge>
+                  </div>
+                  {round.winningNumbers && Object.entries(round.winningNumbers).map(([game, nums]: [string, any]) => (
+                    <div key={game} className="mb-1">
+                      <span className="text-[10px] text-gray-500 font-semibold uppercase">{game}</span>
+                      <div className="flex gap-1 mt-0.5">
+                        {(Array.isArray(nums) ? nums : []).map((n: number, i: number) => (
+                          <span key={i} className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold">{n}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
-        <button className="w-full bg-amber-500 text-white py-3 rounded-xl font-bold text-base hover:bg-amber-600 transition-colors">
-          {t("viewRewards") || "View Rewards"}
-        </button>
-      </div>
+      )}
 
       {/* Find Vendors */}
       <div>

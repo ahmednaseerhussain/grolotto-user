@@ -6,7 +6,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useAppStore } from "../state/appStore";
 import { getTranslation } from "../utils/translations";
 import PaymentModal from "./PaymentModal";
-import { vendorAPI, walletAPI, advertisementAPI, getErrorMessage } from "../api/apiClient";
+import { vendorAPI, walletAPI, advertisementAPI, lotteryAPI, getErrorMessage } from "../api/apiClient";
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -159,7 +159,9 @@ export default function PlayerDashboard() {
   const recordAdClick = useAppStore(s => s.recordAdClick);
   const [searchQuery, setSearchQuery] = useState("");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showBalance, setShowBalance] = useState(true); // Hide/Show balance functionality
+  const [showBalance, setShowBalance] = useState(true);
+  const [walletData, setWalletData] = useState<{ balanceUsd: number; balanceHtg: number }>({ balanceUsd: 0, balanceHtg: 0 });
+  const [todayResults, setTodayResults] = useState<any[]>([]);
   
   const t = (key: string) => getTranslation(key as any, language);
 
@@ -167,18 +169,19 @@ export default function PlayerDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [vendorData, walletData] = await Promise.all([
+        const [vendorData, walletRes] = await Promise.all([
           vendorAPI.getActiveVendors(),
           walletAPI.getWallet(),
         ]);
         if (vendorData) useAppStore.getState().setVendors(vendorData);
-        if (walletData && user) {
-          // Use balanceHtg or balanceUsd from the wallet API based on selected currency
-          const balance = currency === 'HTG' ? walletData.balanceHtg : walletData.balanceUsd;
-          useAppStore.getState().updateUser({ ...user, balance: balance || 0 });
+        if (walletRes) {
+          setWalletData({ balanceUsd: walletRes.balanceUsd || 0, balanceHtg: walletRes.balanceHtg || 0 });
+          if (user) {
+            const balance = currency === 'HTG' ? walletRes.balanceHtg : walletRes.balanceUsd;
+            useAppStore.getState().updateUser({ ...user, balance: balance || 0 });
+          }
         }
       } catch (e) {
-        // silently fail; user can pull-to-refresh
         console.warn('PlayerDashboard fetch error:', getErrorMessage(e));
       }
       try {
@@ -188,6 +191,14 @@ export default function PlayerDashboard() {
           adsData.forEach((ad: any) => useAppStore.getState().addAdvertisement(ad));
         }
       } catch { /* ads are optional */ }
+      try {
+        const rounds = await lotteryAPI.getLotteryRounds();
+        const today = new Date().toISOString().split('T')[0];
+        const completed = (Array.isArray(rounds) ? rounds : []).filter(
+          (r: any) => r.status === 'completed' && r.drawDate && r.drawDate.startsWith(today)
+        );
+        setTodayResults(completed);
+      } catch { /* results are optional */ }
     };
     fetchData();
   }, []);
@@ -324,49 +335,69 @@ export default function PlayerDashboard() {
         {/* Advertising Slideshow */}
         <AdvertisingSlideshow />
 
-        {/* Balance Card */}
-        <View style={styles.balanceCard}>
-          <View style={styles.balanceContent}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.balanceLabel}>Available Balance</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                <Text style={styles.balanceAmount}>
-                  {showBalance 
-                    ? `${currency === "USD" ? "$" : "G"}${(user?.balance || 0).toFixed(2)}`
-                    : "••••••"
-                  }
-                </Text>
-                <Pressable 
-                  onPress={() => setShowBalance(!showBalance)}
-                  style={{ padding: 8, marginLeft: 8 }}
-                >
-                  <Ionicons 
-                    name={showBalance ? "eye" : "eye-off"} 
-                    size={20} 
-                    color="#6b7280" 
-                  />
-                </Pressable>
-              </View>
-              <Text style={{ fontSize: 11, color: '#6b7280', marginTop: 2, fontStyle: 'italic' }}>
-                {showBalance ? "Tap eye to hide balance" : "Tap eye to show balance"}
-              </Text>
-            </View>
-            <Pressable 
-              style={styles.addFundsButton}
-              onPress={() => setShowPaymentModal(true)}
-            >
-              <Ionicons name="add-circle" size={20} color="#ffffff" />
-              <Text style={styles.addFundsText}>Add Funds</Text>
-            </Pressable>
-          </View>
-          <Pressable 
-            style={styles.viewTransactionsButton}
-            onPress={() => (navigation as any).navigate("TransactionHistory")}
+        {/* Dual Currency Wallets */}
+        <View style={{ flexDirection: 'row', paddingHorizontal: 20, marginTop: 16, marginBottom: 8, gap: 12 }}>
+          {/* HTG Wallet (MonCash) */}
+          <Pressable
+            style={[styles.balanceCard, { flex: 1, marginHorizontal: 0, marginTop: 0, marginBottom: 0, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca' }]}
+            onPress={() => {
+              useAppStore.getState().setCurrency('HTG');
+              setShowPaymentModal(true);
+            }}
           >
-            <Text style={styles.viewTransactionsText}>View Transaction History</Text>
-            <Ionicons name="chevron-forward" size={16} color="#3b82f6" />
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <View style={{ backgroundColor: '#ef4444', width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+                <Ionicons name="phone-portrait" size={14} color="#fff" />
+              </View>
+              <Text style={{ fontSize: 12, fontWeight: '600', color: '#991b1b' }}>MonCash</Text>
+            </View>
+            <Text style={{ fontSize: 11, color: '#6b7280' }}>HTG Balance</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+              <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#1f2937' }}>
+                {showBalance ? `G${walletData.balanceHtg.toFixed(2)}` : '••••••'}
+              </Text>
+              <Pressable onPress={() => setShowBalance(!showBalance)} style={{ padding: 4, marginLeft: 4 }}>
+                <Ionicons name={showBalance ? 'eye' : 'eye-off'} size={16} color="#6b7280" />
+              </Pressable>
+            </View>
+            <Text style={{ fontSize: 10, color: '#ef4444', marginTop: 4, fontWeight: '500' }}>+ Add HTG</Text>
+          </Pressable>
+
+          {/* USD Wallet (PayPal) */}
+          <Pressable
+            style={[styles.balanceCard, { flex: 1, marginHorizontal: 0, marginTop: 0, marginBottom: 0, backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe' }]}
+            onPress={() => {
+              useAppStore.getState().setCurrency('USD');
+              setShowPaymentModal(true);
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <View style={{ backgroundColor: '#3b82f6', width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+                <Ionicons name="logo-paypal" size={14} color="#fff" />
+              </View>
+              <Text style={{ fontSize: 12, fontWeight: '600', color: '#1e40af' }}>PayPal</Text>
+            </View>
+            <Text style={{ fontSize: 11, color: '#6b7280' }}>USD Balance</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+              <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#1f2937' }}>
+                {showBalance ? `$${walletData.balanceUsd.toFixed(2)}` : '••••••'}
+              </Text>
+              <Pressable onPress={() => setShowBalance(!showBalance)} style={{ padding: 4, marginLeft: 4 }}>
+                <Ionicons name={showBalance ? 'eye' : 'eye-off'} size={16} color="#6b7280" />
+              </Pressable>
+            </View>
+            <Text style={{ fontSize: 10, color: '#3b82f6', marginTop: 4, fontWeight: '500' }}>+ Add USD</Text>
           </Pressable>
         </View>
+
+        {/* View Transactions */}
+        <Pressable 
+          style={[styles.viewTransactionsButton, { marginHorizontal: 20, backgroundColor: '#fff', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#e5e7eb' }]}
+          onPress={() => (navigation as any).navigate("TransactionHistory")}
+        >
+          <Text style={styles.viewTransactionsText}>View Transaction History</Text>
+          <Ionicons name="chevron-forward" size={16} color="#3b82f6" />
+        </Pressable>
 
         {/* Quick Actions */}
         <View style={styles.quickActions}>
@@ -417,22 +448,71 @@ export default function PlayerDashboard() {
 
           <Pressable 
             style={[styles.actionCard, { backgroundColor: "#f97316" }]}
-            onPress={() => (navigation as any).navigate("RewardsScreen")}
+            onPress={() => (navigation as any).navigate("PaymentProfileScreen")}
           >
-            <Ionicons name="trophy" size={32} color="#ffffff" />
-            <Text style={styles.actionTitle}>{t("rewards")}</Text>
-            <Text style={styles.actionSubtitle}>Earn & Claim</Text>
+            <Ionicons name="card" size={32} color="#ffffff" />
+            <Text style={styles.actionTitle}>{t("payments") || "Payments"}</Text>
+            <Text style={styles.actionSubtitle}>Manage</Text>
           </Pressable>
         </View>
 
-        {/* Dynamic Banner Ads from Firebase */}
+        {/* Today's Results Banner */}
+        {todayResults.length > 0 && (
+          <View style={{ marginHorizontal: 20, marginTop: 16, marginBottom: 8 }}>
+            <Text style={{ fontSize: 18, fontWeight: '700', color: '#1f2937', marginBottom: 10 }}>🏆 {t('todayResults') || "Today's Results"}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ gap: 8 }}>
+              {todayResults.map((round: any) => (
+                <Pressable
+                  key={round.id}
+                  style={{
+                    backgroundColor: '#ffffff',
+                    borderRadius: 14,
+                    padding: 14,
+                    marginRight: 12,
+                    borderWidth: 1,
+                    borderColor: '#e5e7eb',
+                    minWidth: 180,
+                  }}
+                  onPress={() => (navigation as any).navigate('ResultsScreen')}
+                >
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: '#1f2937' }}>{round.drawState}</Text>
+                    <View style={{ backgroundColor: round.drawTime === 'morning' ? '#fef3c7' : round.drawTime === 'evening' ? '#ede9fe' : '#dbeafe', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}>
+                      <Text style={{ fontSize: 10, fontWeight: '600', color: round.drawTime === 'morning' ? '#92400e' : round.drawTime === 'evening' ? '#5b21b6' : '#1e40af' }}>
+                        {round.drawTime === 'morning' ? '🌅 Maten' : round.drawTime === 'evening' ? '🌙 Aswè' : '☀️ Aprèmidi'}
+                      </Text>
+                    </View>
+                  </View>
+                  {round.winningNumbers && (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                      {Object.entries(round.winningNumbers).map(([game, nums]: [string, any]) => (
+                        <View key={game} style={{ marginBottom: 4 }}>
+                          <Text style={{ fontSize: 9, color: '#6b7280', fontWeight: '600', textTransform: 'uppercase' }}>{game}</Text>
+                          <View style={{ flexDirection: 'row', gap: 3 }}>
+                            {(Array.isArray(nums) ? nums : []).map((n: number, i: number) => (
+                              <View key={i} style={{ backgroundColor: '#f59e0b', width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
+                                <Text style={{ fontSize: 11, fontWeight: '700', color: '#fff' }}>{n}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Dynamic Banner Ads */}
         {(() => {
           const bannerAds = advertisements
             .filter((ad: any) => ad.type === "banner")
             .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
           
           if (bannerAds.length > 0) {
-            const bannerAd = bannerAds[0]; // Show first active banner
+            const bannerAd = bannerAds[0];
             return (
               <View style={styles.bannerCard}>
                 <View style={styles.bannerContent}>
@@ -458,27 +538,7 @@ export default function PlayerDashboard() {
               </View>
             );
           }
-          
-          // Fallback: Rewards banner if no Firebase banner ads
-          return (
-            <View style={styles.bannerCard}>
-              <View style={styles.bannerContent}>
-                <View style={styles.bannerIcon}>
-                  <Ionicons name="gift" size={32} color="#f59e0b" />
-                </View>
-                <View style={styles.bannerTextContainer}>
-                  <Text style={styles.bannerTitle}>🎁 {t("rewards")}</Text>
-                  <Text style={styles.bannerSubtitle}>{t("checkRewards") || "Check your available rewards and bonuses"}</Text>
-                </View>
-              </View>
-              <Pressable 
-                style={styles.bannerButton}
-                onPress={() => (navigation as any).navigate("RewardsScreen")}
-              >
-                <Text style={styles.bannerButtonText}>{t("viewRewards") || "View Rewards"}</Text>
-              </Pressable>
-            </View>
-          );
+          return null;
         })()}
 
         {/* Find Vendors Section */}

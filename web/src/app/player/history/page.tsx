@@ -74,6 +74,7 @@ export default function HistoryScreen() {
         vendorName: t.vendorName || t.vendor?.businessName || "Unknown",
         date: t.createdAt || t.timestamp,
         currency: t.currency,
+        drawTime: t.drawTime || t.session || null,
       }))
     : (tickets || []).map((t: any) => ({
         id: t.id,
@@ -86,6 +87,7 @@ export default function HistoryScreen() {
         vendorName: t.vendorName || "Unknown",
         date: t.createdAt || t.timestamp,
         currency: t.currency,
+        drawTime: t.drawTime || t.session || null,
       }));
 
   // Apply filters
@@ -283,6 +285,11 @@ export default function HistoryScreen() {
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-sm">{GAME_LABELS[ticket.gameType] || ticket.gameType}</span>
                         <Badge variant="outline" className="text-xs">{ticket.drawState}</Badge>
+                        {ticket.drawTime && (
+                          <Badge variant={ticket.drawTime === 'morning' ? 'warning' : 'secondary'} className="text-[10px]">
+                            {ticket.drawTime === 'morning' ? '🌅 Maten' : ticket.drawTime === 'evening' ? '🌙 Aswè' : '☀️ Aprèmidi'}
+                          </Badge>
+                        )}
                       </div>
                       <p className="text-xs text-gray-500">{ticket.vendorName}</p>
                       <p className="text-xs text-gray-400 mt-0.5">

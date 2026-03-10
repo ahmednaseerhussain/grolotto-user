@@ -14,18 +14,8 @@ export default function VendorDashboard() {
   const vendors = useAppStore(s => s.vendors);
   const logout = useAppStore(s => s.logout);
   const language = useAppStore(s => s.language);
-  const currency = useAppStore(s => s.currency);
-  const setCurrency = useAppStore(s => s.setCurrency);
   
   const t = (key: string) => getTranslation(key as any, language);
-  
-  // Currency formatting function
-  const formatCurrency = (amount: number) => {
-    const symbol = currency === "HTG" ? "G" : "$";
-    const rate = currency === "HTG" ? 150 : 1;
-    const convertedAmount = amount * rate;
-    return `${symbol}${convertedAmount.toFixed(2)}`;
-  };
   
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [vendorStats, setVendorStats] = useState<any>(null);
@@ -53,6 +43,15 @@ export default function VendorDashboard() {
   // Find current vendor data — match by userId, not email
   const currentVendor = vendors.find(v => v.userId === user?.id);
   
+  // Use vendor's operatingCurrency (set at registration), no toggle
+  const vendorCurrency = (currentVendor as any)?.operatingCurrency || 'HTG';
+  
+  // Currency formatting function
+  const formatCurrency = (amount: number) => {
+    const symbol = vendorCurrency === "HTG" ? "G" : "$";
+    return `${symbol}${amount.toFixed(2)}`;
+  };
+  
   // Calculate vendor stats
   const vendorGamePlays = gamePlays.filter(game => game.vendorId === currentVendor?.id);
   const today = new Date().toDateString();
@@ -76,7 +75,6 @@ export default function VendorDashboard() {
 
   const quickActions = [
     { id: "draws", title: t("pricesAndStates"), icon: "pricetag", color: "#3b82f6", screen: "DrawManagement", subtitle: t("configurePriceLimits") },
-    { id: "rounds", title: t("viewRounds"), icon: "list", color: "#ef4444", screen: "VendorResultPublishing", subtitle: t("seeRoundResults") },
     { id: "limits", title: t("numberLimits"), icon: "ban", color: "#ef4444", screen: "NumberLimits", subtitle: t("controlBets") },
     { id: "history", title: t("history"), icon: "analytics", color: "#f59e0b", screen: "VendorPlayHistory", subtitle: t("reportsAndSales") },
     { id: "payout", title: t("withdrawal"), icon: "wallet", color: "#10b981", screen: "PayoutManagement", subtitle: "MonCash" },
@@ -155,20 +153,9 @@ export default function VendorDashboard() {
           </Text>
         </View>
         <View style={styles.headerActions}>
-          {/* Currency Toggle */}
-          <View style={styles.currencyContainer}>
-            <Pressable 
-              style={[styles.currencyOption, currency === "USD" && styles.currencyActive]}
-              onPress={() => setCurrency("USD")}
-            >
-              <Text style={[styles.currencyOptionText, currency === "USD" && styles.currencyActiveText]}>USD</Text>
-            </Pressable>
-            <Pressable 
-              style={[styles.currencyOption, currency === "HTG" && styles.currencyActive]}
-              onPress={() => setCurrency("HTG")}
-            >
-              <Text style={[styles.currencyOptionText, currency === "HTG" && styles.currencyActiveText]}>HTG</Text>
-            </Pressable>
+          {/* Vendor Currency Badge */}
+          <View style={[styles.currencyContainer, styles.currencyActive]}>
+            <Text style={[styles.currencyOptionText, styles.currencyActiveText]}>{vendorCurrency}</Text>
           </View>
           
           <Pressable style={styles.logoutButton} onPress={handleLogout}>
