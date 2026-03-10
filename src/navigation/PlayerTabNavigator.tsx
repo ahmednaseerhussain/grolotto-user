@@ -369,7 +369,7 @@ export default function PlayerTabNavigator() {
   const insets = useSafeAreaInsets();
   const language = useAppStore(s => s.language);
   const t = (key: string) => getTranslation(key as any, language);
-  
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
