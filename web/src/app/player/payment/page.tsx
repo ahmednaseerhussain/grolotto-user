@@ -66,7 +66,7 @@ export default function PaymentScreen() {
                 if (capRes?.status === 'COMPLETED' || capRes?.status === 'credited' || capRes?.status === 'already_processed') {
                   captured = true;
                 }
-              } catch {}
+              } catch { }
               break;
             }
             try {
@@ -122,7 +122,7 @@ export default function PaymentScreen() {
               if (status === "credited" || status === "already_processed" || status === "completed") {
                 verified = true;
               }
-            } catch {}
+            } catch { }
             break;
           }
           try {
@@ -213,8 +213,8 @@ export default function PaymentScreen() {
             key={qa}
             onClick={() => setAmount(String(qa))}
             className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${amount === String(qa)
-                ? "bg-blue-600 border-blue-500 text-white"
-                : "bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300"
+              ? "bg-blue-600 border-blue-500 text-white"
+              : "bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300"
               }`}
           >
             {formatCurrency(qa, currency)}
@@ -230,8 +230,8 @@ export default function PaymentScreen() {
           <button
             onClick={() => setSelectedMethod("moncash")}
             className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${selectedMethod === "moncash"
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-200 hover:border-gray-300 bg-white"
+              ? "border-blue-500 bg-blue-50"
+              : "border-gray-200 hover:border-gray-300 bg-white"
               }`}
           >
             <div className="bg-red-500 w-12 h-12 rounded-full flex items-center justify-center">
@@ -251,8 +251,8 @@ export default function PaymentScreen() {
           <button
             onClick={() => setSelectedMethod("paypal")}
             className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${selectedMethod === "paypal"
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-200 hover:border-gray-300 bg-white"
+              ? "border-blue-500 bg-blue-50"
+              : "border-gray-200 hover:border-gray-300 bg-white"
               }`}
           >
             <div className="bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center">

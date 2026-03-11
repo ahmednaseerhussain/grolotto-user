@@ -184,8 +184,8 @@ export default function NumberLimitsScreen() {
             key={draw.code}
             onClick={() => setSelectedDraw(draw.code as DrawState)}
             className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${selectedDraw === draw.code
-                ? "bg-emerald-600 text-white border-emerald-600"
-                : "bg-white text-gray-700 border-gray-200 hover:border-emerald-300"
+              ? "bg-emerald-600 text-white border-emerald-600"
+              : "bg-white text-gray-700 border-gray-200 hover:border-emerald-300"
               }`}
           >
             {draw.flag} {draw.code}
