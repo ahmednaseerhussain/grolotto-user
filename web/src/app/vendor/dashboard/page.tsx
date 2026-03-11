@@ -9,14 +9,12 @@ import { authAPI } from "@/lib/api/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { StatCard } from "@/components/common/stat-card";
 import {
-  Users, Ticket, TrendingUp, DollarSign, Gamepad2, Wallet, Settings, Clock,
-  ArrowUpRight, BarChart3, Shield, History, LogOut, Banknote, ChevronRight,
-  Calendar, Layers, Loader2, Trophy
+  Users, Ticket, Wallet, Settings, Shield, History, LogOut, Banknote,
+  ChevronRight, ChevronDown, Calendar, Loader2, Trophy, Gamepad2,
+  DollarSign, TrendingUp, TrendingDown, Award
 } from "lucide-react";
-import { formatCurrency, GAME_LABELS } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import type { VendorStats } from "@/types";
 import toast from "react-hot-toast";
 
@@ -25,7 +23,6 @@ export default function VendorDashboard() {
   const t = useTranslation();
   const user = useAppStore((s) => s.user);
   const currency = useAppStore((s) => s.currency);
-  const setCurrency = useAppStore((s) => s.setCurrency);
   const vendorProfile = useAppStore((s) => s.vendorProfile);
   const vendorStats = useAppStore((s) => s.vendorStats);
   const setVendorProfile = useAppStore((s) => s.setVendorProfile);
@@ -33,13 +30,13 @@ export default function VendorDashboard() {
   const logout = useAppStore((s) => s.logout);
 
   const [loading, setLoading] = useState(true);
-  const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [estimatePeriod, setEstimatePeriod] = useState("today");
 
-  const loadDashboard = useCallback(async () => {
+  const loadDashboard = useCallback(async (period?: string) => {
     try {
       const [profileRes, statsRes] = await Promise.allSettled([
         vendorAPI.getMyProfile(),
-        vendorAPI.getMyStats(),
+        vendorAPI.getMyStats(period || estimatePeriod),
       ]);
       if (profileRes.status === "fulfilled") setVendorProfile(profileRes.value || null);
       if (statsRes.status === "fulfilled") setVendorStats(statsRes.value || null);
@@ -48,9 +45,14 @@ export default function VendorDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [setVendorProfile, setVendorStats]);
+  }, [setVendorProfile, setVendorStats, estimatePeriod]);
 
   useEffect(() => { loadDashboard(); }, [loadDashboard]);
+
+  const handlePeriodChange = (newPeriod: string) => {
+    setEstimatePeriod(newPeriod);
+    loadDashboard(newPeriod);
+  };
 
   const handleLogout = async () => {
     if (!confirm(t("areYouSureLogout") || "Are you sure you want to logout?")) return;
@@ -63,6 +65,15 @@ export default function VendorDashboard() {
   const stats = vendorStats || {} as Partial<VendorStats>;
   const vendorCurrency = (vendorProfile?.operatingCurrency || currency) as "HTG" | "USD";
   const balance = stats.availableBalance || (vendorProfile as any)?.availableBalance || 0;
+
+  // Vendor Estimates — use server-calculated values
+  const totalSales = Number(stats.totalSales ?? stats.todayBets ?? 0);
+  const commissionRate = Number(stats.commissionRate ?? 0.1);
+  const commission = Number(stats.totalCommission ?? 0);
+  const netIncome = Number(stats.netIncome ?? 0);
+  const totalPlayerWin = Number(stats.totalPlayerWins ?? 0);
+  const totalProfit = Number(stats.totalProfit ?? 0);
+  const totalLoss = Number(stats.totalLoss ?? 0);
 
   const quickActions = [
     { label: t("results") || "Results", icon: Trophy, href: "/vendor/results", color: "bg-amber-50 text-amber-600" },
@@ -105,61 +116,6 @@ export default function VendorDashboard() {
         </div>
       </div>
 
-      {/* Profile Card */}
-      <Card className="cursor-pointer hover:shadow-sm transition-shadow" onClick={() => router.push("/vendor/profile")}>
-        <CardContent className="p-4 flex items-center gap-4">
-          <div className="bg-emerald-100 p-3 rounded-full">
-            <Users className="h-6 w-6 text-emerald-600" />
-          </div>
-          <div className="flex-1">
-            <p className="font-semibold">{vendorProfile?.businessName || user?.firstName || user?.name}</p>
-            <p className="text-sm text-gray-500">{user?.email}</p>
-            {user?.phone && <p className="text-xs text-gray-400">{user?.phone}</p>}
-          </div>
-          <ChevronRight className="h-5 w-5 text-gray-400" />
-        </CardContent>
-      </Card>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <StatCard
-          title={t("activePlayers") || "Active Players"}
-          value={stats.totalPlayers || stats.activePlayers || stats.activePlayersCount || 0}
-          icon={<Users className="h-5 w-5 text-blue-600" />}
-          onClick={() => setActiveModal("players")}
-        />
-        <StatCard
-          title={t("ticketsToday") || "Tickets Today"}
-          value={stats.ticketsToday || 0}
-          icon={<Ticket className="h-5 w-5 text-emerald-600" />}
-          onClick={() => setActiveModal("tickets")}
-        />
-        <StatCard
-          title={t("totalEarnings") || "Total Earnings"}
-          value={formatCurrency(stats.totalRevenue || stats.totalEarnings || 0, vendorCurrency)}
-          icon={<TrendingUp className="h-5 w-5 text-purple-600" />}
-          onClick={() => setActiveModal("weekly")}
-        />
-        <StatCard
-          title={t("todayBets") || "Today's Bets"}
-          value={formatCurrency(Number(stats.todayBets || 0), vendorCurrency)}
-          icon={<DollarSign className="h-5 w-5 text-amber-600" />}
-          onClick={() => setActiveModal("earnings")}
-        />
-        <StatCard
-          title={t("todayCommission") || "Today's Commission"}
-          value={formatCurrency(Number(stats.earningsToday || (stats.todayBets ? Number(stats.todayBets) * Number(stats.commissionRate || 0.1) : 0)), vendorCurrency)}
-          icon={<BarChart3 className="h-5 w-5 text-red-600" />}
-          onClick={() => setActiveModal("todayEarnings")}
-        />
-        <StatCard
-          title={t("totalTickets") || "Total Tickets"}
-          value={stats.totalTicketsSold || stats.totalPlays || 0}
-          icon={<Gamepad2 className="h-5 w-5 text-indigo-600" />}
-          onClick={() => setActiveModal("games")}
-        />
-      </div>
-
       {/* Balance Card */}
       <Card className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white border-0">
         <CardContent className="p-6">
@@ -174,24 +130,141 @@ export default function VendorDashboard() {
               className="bg-white/20 hover:bg-white/30 text-white border-0"
               onClick={() => router.push("/vendor/payouts")}
             >
-              <Wallet className="h-4 w-4 mr-1" /> {t("withdrawal") || "Withdraw"}
+              <Wallet className="h-4 w-4 mr-1" /> {t("withdrawal") || "Withdrawal"}
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Price Config Banner */}
-      <Card className="bg-blue-50 border-blue-200 cursor-pointer hover:shadow-sm" onClick={() => router.push("/vendor/draws")}>
-        <CardContent className="p-4 flex items-center justify-between">
-          <div>
-            <p className="font-semibold text-blue-800">{t("priceConfiguration") || "Price Configuration"}</p>
-            <p className="text-sm text-blue-600">{t("setYourBetLimits") || "Set your bet limits and game states"}</p>
+      {/* Vendor Estimates */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold">{t("vendorEstimates") || "Vendor Estimates"}</h2>
+          <div className="relative">
+            <select
+              value={estimatePeriod}
+              onChange={(e) => handlePeriodChange(e.target.value)}
+              className="appearance-none bg-white border border-gray-200 rounded-lg px-3 py-1.5 pr-8 text-sm font-medium text-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="today">{t("today") || "Today"}</option>
+              <option value="week">{t("thisWeek") || "This Week"}</option>
+              <option value="month">{t("thisMonth") || "This Month"}</option>
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
           </div>
-          <Button size="sm" variant="outline" className="border-blue-300 text-blue-700">
-            {t("configure") || "Configure"} <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
-        </CardContent>
-      </Card>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {/* Total Sales */}
+          <Card className="border-blue-100">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="bg-blue-100 p-1.5 rounded-lg">
+                  <DollarSign className="h-4 w-4 text-blue-600" />
+                </div>
+                <span className="text-xs text-gray-500">{t("totalSales") || "Total Sales"}</span>
+              </div>
+              <p className="text-xl font-bold text-gray-900">{formatCurrency(totalSales, vendorCurrency)}</p>
+            </CardContent>
+          </Card>
+
+          {/* Commission */}
+          <Card className="border-amber-100">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="bg-amber-100 p-1.5 rounded-lg">
+                  <TrendingUp className="h-4 w-4 text-amber-600" />
+                </div>
+                <span className="text-xs text-gray-500">{t("commission") || "Commission"}</span>
+              </div>
+              <p className="text-xl font-bold text-gray-900">{formatCurrency(commission, vendorCurrency)}</p>
+            </CardContent>
+          </Card>
+
+          {/* Net Income */}
+          <Card className="border-emerald-100">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="bg-emerald-100 p-1.5 rounded-lg">
+                  <TrendingUp className="h-4 w-4 text-emerald-600" />
+                </div>
+                <span className="text-xs text-gray-500">{t("netIncome") || "Net Income"}</span>
+              </div>
+              <p className="text-xl font-bold text-gray-900">{formatCurrency(netIncome, vendorCurrency)}</p>
+            </CardContent>
+          </Card>
+
+          {/* Total Profit */}
+          <Card className="border-green-100">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="bg-green-100 p-1.5 rounded-lg">
+                  <Award className="h-4 w-4 text-green-600" />
+                </div>
+                <span className="text-xs text-gray-500">{t("totalProfit") || "Total Profit"}</span>
+              </div>
+              <p className="text-xl font-bold text-gray-900">
+                {totalSales > 0 ? formatCurrency(totalProfit, vendorCurrency) : t("pending") || "Pending"}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Total Loss */}
+          <Card className="border-red-100">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="bg-red-100 p-1.5 rounded-lg">
+                  <TrendingDown className="h-4 w-4 text-red-600" />
+                </div>
+                <span className="text-xs text-gray-500">{t("totalLoss") || "Total Loss"}</span>
+              </div>
+              <p className="text-xl font-bold text-gray-900">
+                {totalSales > 0 ? formatCurrency(totalLoss, vendorCurrency) : t("pending") || "Pending"}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Total Player Win */}
+          <Card className="border-purple-100">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="bg-purple-100 p-1.5 rounded-lg">
+                  <Trophy className="h-4 w-4 text-purple-600" />
+                </div>
+                <span className="text-xs text-gray-500">{t("totalPlayerWin") || "Total Player Win"}</span>
+              </div>
+              <p className="text-xl font-bold text-gray-900">
+                {totalSales > 0 ? formatCurrency(totalPlayerWin, vendorCurrency) : t("pending") || "Pending"}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Bottom Stats Row */}
+      <div className="grid grid-cols-3 gap-3">
+        <Card>
+          <CardContent className="p-4 text-center">
+            <Users className="h-6 w-6 text-blue-600 mx-auto mb-2" />
+            <p className="text-2xl font-bold">{stats.totalPlayers || stats.activePlayers || 0}</p>
+            <p className="text-xs text-gray-500 mt-1">{t("activePlayers") || "Active Players"}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <Ticket className="h-6 w-6 text-emerald-600 mx-auto mb-2" />
+            <p className="text-2xl font-bold">{stats.ticketsToday || 0}</p>
+            <p className="text-xs text-gray-500 mt-1">{t("ticketsToday") || "Tickets Today"}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <Gamepad2 className="h-6 w-6 text-indigo-600 mx-auto mb-2" />
+            <p className="text-2xl font-bold">{stats.totalTicketsSold || 0}</p>
+            <p className="text-xs text-gray-500 mt-1">{t("totalTickets") || "Total Tickets"}</p>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Quick Actions */}
       <div>
@@ -211,26 +284,6 @@ export default function VendorDashboard() {
           ))}
         </div>
       </div>
-
-      {/* Detail Modal */}
-      <Dialog open={!!activeModal} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {activeModal === "players" && (t("activePlayers") || "Active Players")}
-              {activeModal === "tickets" && (t("ticketsToday") || "Tickets Today")}
-              {activeModal === "weekly" && (t("thisWeek") || "This Week")}
-              {activeModal === "earnings" && (t("totalEarnings") || "Total Earnings")}
-              {activeModal === "todayEarnings" && "Today's Earnings"}
-              {activeModal === "games" && (t("enabledGames") || "Enabled Games")}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-4 text-center text-gray-500">
-            <p>Detailed analytics coming soon.</p>
-            <p className="text-sm mt-2">View full reports in History & Reports.</p>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

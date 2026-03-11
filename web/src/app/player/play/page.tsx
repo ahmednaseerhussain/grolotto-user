@@ -235,6 +235,7 @@ export default function PlayScreen() {
     setProcessing(true);
     try {
       let allSuccess = true;
+      const successfulBets: string[] = [];
       for (const sel of gameSelections) {
         try {
           await lotteryAPI.placeBet({
@@ -246,11 +247,17 @@ export default function PlayScreen() {
             currency,
             drawTime,
           });
+          successfulBets.push(sel.id);
         } catch (err: any) {
           allSuccess = false;
           const msg = err?.response?.data?.error || err?.response?.data?.message || "Bet failed";
           if (msg.includes("INSUFFICIENT") || msg.includes("insufficient")) {
             toast.error("Insufficient balance. Please add funds.");
+            // Remove successful bets from cart, keep failed ones
+            if (successfulBets.length > 0) {
+              setGameSelections((prev) => prev.filter((s) => !successfulBets.includes(s.id)));
+              toast.success(`${successfulBets.length} bet(s) placed successfully before running out of funds.`);
+            }
             router.push(`/player/payment?amount=${totalAmount}`);
             return;
           }
@@ -260,6 +267,10 @@ export default function PlayScreen() {
       if (allSuccess) {
         setShowSuccessDialog(true);
         setGameSelections([]);
+      } else if (successfulBets.length > 0) {
+        // Partial success: remove placed bets from cart
+        setGameSelections((prev) => prev.filter((s) => !successfulBets.includes(s.id)));
+        toast.success(`${successfulBets.length} of ${gameSelections.length} bets placed. Check remaining items.`);
       }
     } catch (err) {
       toast.error("An error occurred");

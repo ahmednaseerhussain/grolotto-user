@@ -50,10 +50,14 @@ export async function placeBet(input: PlaceBetInput) {
   // Before 3 PM ET = midday, after 3 PM ET = evening
   let drawTime = input.drawTime || 'midday';
   if (!input.drawTime) {
+    // DST-aware ET detection: US Eastern is UTC-5 (EST) or UTC-4 (EDT)
     const now = new Date();
-    // Approximate ET offset (UTC-5 or -4 DST)
-    const utcHour = now.getUTCHours();
-    const etHour = (utcHour - 5 + 24) % 24;
+    const etFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      hour: 'numeric',
+      hour12: false,
+    });
+    const etHour = parseInt(etFormatter.format(now), 10);
     drawTime = etHour >= 15 ? 'evening' : 'midday';
   }
 
@@ -173,23 +177,42 @@ export async function placeBet(input: PlaceBetInput) {
 
     const roundId = roundResult.rows[0].id;
 
-    // 9. Create idempotency key from unique bet details
+    // 8. Get system commission rate (admin takes this % from every bet immediately)
+    let systemCommissionRate = 0.10;
+    try {
+      const commRateResult = await client.query(
+        `SELECT value FROM app_settings WHERE key = 'system_commission'`
+      );
+      if (commRateResult.rows.length > 0) {
+        const val = commRateResult.rows[0].value;
+        const parsed = parseFloat(typeof val === 'string' ? val : JSON.stringify(val));
+        if (!isNaN(parsed) && parsed >= 0 && parsed <= 1) {
+          systemCommissionRate = parsed;
+        }
+      }
+    } catch { /* use default 10% */ }
+
+    // 9. Calculate commission split — admin commission deducted IMMEDIATELY at bet time
+    const adminCommission = Math.round(betAmount * systemCommissionRate * 100) / 100;
+    const vendorNetAmount = Math.round((betAmount - adminCommission) * 100) / 100;
+
+    // 10. Create idempotency key from unique bet details (no Date.now to prevent duplicates)
     const idempotencyKey = crypto
       .createHash('sha256')
-      .update(`${playerId}-${vendorId}-${drawState}-${gameType}-${numbers.join(',')}-${Date.now()}`)
+      .update(`${playerId}-${vendorId}-${drawState}-${gameType}-${numbers.join(',')}-${drawTime}-${betAmount}`)
       .digest('hex');
 
-    // 9. Create lottery ticket
+    // 11. Create lottery ticket with commission amounts
     const ticketResult = await client.query(
-      `INSERT INTO lottery_tickets (player_id, vendor_id, round_id, draw_state, game_type, numbers, bet_amount, currency)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO lottery_tickets (player_id, vendor_id, round_id, draw_state, game_type, numbers, bet_amount, currency, platform_commission_amount, vendor_commission_amount)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING id, created_at`,
-      [playerId, vendorId, roundId, drawState, gameType, numbers, betAmount, currency]
+      [playerId, vendorId, roundId, drawState, gameType, numbers, betAmount, currency, adminCommission, vendorNetAmount]
     );
 
     const ticket = ticketResult.rows[0];
 
-    // 10. Create bet_payment transaction
+    // 12. Create bet_payment transaction for player
     await client.query(
       `INSERT INTO transactions (user_id, type, amount, currency, payment_method, status, description, ticket_id, vendor_id, idempotency_key)
        VALUES ($1, 'bet_payment', $2, $3, 'wallet', 'completed', $4, $5, $6, $7)`,
@@ -204,45 +227,62 @@ export async function placeBet(input: PlaceBetInput) {
       ]
     );
 
-    // 11. Credit vendor with FULL bet amount (100% goes to vendor)
+    // 13. Credit vendor with NET amount (betAmount minus admin commission)
     await client.query(
       `UPDATE vendors SET
          total_tickets_sold = total_tickets_sold + 1,
          total_revenue = total_revenue + $1,
-         available_balance = available_balance + $1
-       WHERE id = $2`,
-      [betAmount, vendorId]
+         available_balance = available_balance + $2
+       WHERE id = $3`,
+      [betAmount, vendorNetAmount, vendorId]
     );
 
-    // 12. Create bet_received transaction for vendor
+    // 14. Create bet_received transaction for vendor (net amount)
     const vendorUserResult = await client.query(
       `SELECT user_id FROM vendors WHERE id = $1`,
       [vendorId]
     );
     if (vendorUserResult.rows.length > 0) {
-      const commIdempotencyKey = `bet_recv_${ticket.id}`;
+      const betRecvKey = `bet_recv_${ticket.id}`;
       await client.query(
         `INSERT INTO transactions (user_id, type, amount, currency, payment_method, status, description, ticket_id, vendor_id, idempotency_key)
          VALUES ($1, 'commission', $2, $3, 'system', 'completed', $4, $5, $6, $7)`,
         [
           vendorUserResult.rows[0].user_id,
-          betAmount,
+          vendorNetAmount,
           currency,
-          `Bet received: ${gameType.toUpperCase()} ticket on ${drawState}`,
+          `Bet received (net after ${systemCommissionRate * 100}% commission): ${gameType.toUpperCase()} on ${drawState}`,
           ticket.id,
           vendorId,
-          commIdempotencyKey,
+          betRecvKey,
+        ]
+      );
+
+      // 15. Create admin_commission transaction immediately (commission secured at bet time)
+      const commKey = `admin_comm_${ticket.id}`;
+      await client.query(
+        `INSERT INTO transactions (user_id, type, amount, currency, payment_method, status, description, ticket_id, vendor_id, idempotency_key)
+         VALUES ($1, 'admin_commission', $2, $3, 'system', 'completed', $4, $5, $6, $7)`,
+        [
+          vendorUserResult.rows[0].user_id,
+          adminCommission,
+          currency,
+          `Admin commission (${systemCommissionRate * 100}%) on ${gameType.toUpperCase()} bet of ${betAmount} ${currency}`,
+          ticket.id,
+          vendorId,
+          commKey,
         ]
       );
     }
 
-    // 13. Update round stats
+    // 16. Update round stats (track admin commission incrementally)
     await client.query(
       `UPDATE lottery_rounds SET
          total_bets = total_bets + $1,
-         total_tickets = total_tickets + 1
-       WHERE id = $2`,
-      [betAmount, roundId]
+         total_tickets = total_tickets + 1,
+         admin_commission_total = COALESCE(admin_commission_total, 0) + $2
+       WHERE id = $3`,
+      [betAmount, adminCommission, roundId]
     );
 
     // 15. Update number limit totals (scoped to today)
@@ -280,7 +320,7 @@ export async function placeBet(input: PlaceBetInput) {
       console.error('[AutoStop] Error checking threshold:', autoStopErr);
     }
 
-    // 15. Send notifications (non-blocking)
+    // Send notifications (non-blocking)
     notificationService.createPlayerNotification(
       playerId,
       'bet_placed',
@@ -292,7 +332,7 @@ export async function placeBet(input: PlaceBetInput) {
       vendorId,
       'new_ticket',
       'New Ticket Sold',
-      `A ${gameType.toUpperCase()} ticket (${betAmount} ${currency}) was purchased. Full amount credited to your balance.`
+      `A ${gameType.toUpperCase()} ticket (${betAmount} ${currency}) was purchased. Net ${vendorNetAmount} ${currency} credited (${systemCommissionRate * 100}% commission deducted).`
     );
 
     return {
@@ -366,7 +406,7 @@ export async function getPlayerTickets(
  * - winAmount = betAmount × multiplier
  * - Vendor PAYS the winner payouts (deducted from vendor's available_balance)
  * - Vendor can go into negative balance (debt)
- * - Admin takes 10% commission from each vendor's total bets after each round
+ * - Admin commission is already deducted at bet placement time (not here)
  * - Admin distributes winnings to player wallets
  * - Winners get notified with amounts
  */
@@ -409,19 +449,7 @@ export async function publishResults(
       }
     } catch { /* use defaults */ }
 
-    // 3. Get system commission rate from app_settings
-    let systemCommissionRate = 0.10;
-    try {
-      const sysCommResult = await client.query(
-        `SELECT value FROM app_settings WHERE key = 'system_commission'`
-      );
-      if (sysCommResult.rows.length > 0) {
-        const val = sysCommResult.rows[0].value;
-        systemCommissionRate = parseFloat(typeof val === 'string' ? val : JSON.stringify(val));
-      }
-    } catch { /* use default 10% */ }
-
-    // 4. Store winning numbers and mark completed
+    // 3. Store winning numbers and mark completed
     await client.query(
       `UPDATE lottery_rounds SET
          winning_numbers = $1,
@@ -471,13 +499,7 @@ export async function publishResults(
     // 8. Process winners — group payouts by vendor for balance deductions
     let totalPayouts = 0;
     const vendorPayouts: Record<string, number> = {}; // vendorId → total payout amount
-    const vendorBets: Record<string, number> = {}; // vendorId → total bet amount
-
-    // Calculate total bets per vendor (for admin commission)
-    for (const ticket of tickets.rows) {
-      const vid = ticket.vendor_id;
-      vendorBets[vid] = (vendorBets[vid] || 0) + parseFloat(ticket.bet_amount);
-    }
+    const vendorCurrencies: Record<string, string> = {}; // vendorId → currency
 
     for (const winner of winners) {
       const { winAmount } = winner;
@@ -513,6 +535,7 @@ export async function publishResults(
 
       // Track vendor payout totals
       vendorPayouts[winner.vendor_id] = (vendorPayouts[winner.vendor_id] || 0) + winAmount;
+      vendorCurrencies[winner.vendor_id] = winner.currency;
       totalPayouts += winAmount;
 
       // Notify winner
@@ -526,13 +549,25 @@ export async function publishResults(
     }
 
     // 9. Deduct winner payouts from each vendor's balance (vendor pays winners)
-    let totalAdminCommission = 0;
     for (const [vid, payoutAmount] of Object.entries(vendorPayouts)) {
       if (payoutAmount > 0) {
-        await client.query(
-          `UPDATE vendors SET available_balance = available_balance - $1 WHERE id = $2`,
+        // Deduct payout — vendor can go negative but we warn on excessive debt
+        const balResult = await client.query(
+          `UPDATE vendors SET available_balance = available_balance - $1 WHERE id = $2
+           RETURNING available_balance`,
           [payoutAmount, vid]
         );
+
+        // Warn vendor if balance goes significantly negative
+        const newBalance = parseFloat(balResult.rows[0]?.available_balance || '0');
+        if (newBalance < -10000) {
+          notificationService.createVendorNotification(
+            vid,
+            'balance_warning',
+            'High Debt Warning',
+            `Your balance is ${newBalance.toFixed(2)}. Please contact admin to resolve your debt.`
+          );
+        }
 
         // Create payout deduction transaction for vendor
         const vendorUserResult = await client.query(
@@ -540,12 +575,14 @@ export async function publishResults(
           [vid]
         );
         if (vendorUserResult.rows.length > 0) {
+          const vendorCurrency = vendorCurrencies[vid] || 'HTG';
           await client.query(
             `INSERT INTO transactions (user_id, type, amount, currency, status, description, vendor_id)
-             VALUES ($1, 'winning_payout', $2, 'USD', 'completed', $3, $4)`,
+             VALUES ($1, 'winning_payout', $2, $3, 'completed', $4, $5)`,
             [
               vendorUserResult.rows[0].user_id,
               payoutAmount,
+              vendorCurrency,
               `Winner payouts for ${drawState} round (${targetDate})`,
               vid,
             ]
@@ -553,63 +590,23 @@ export async function publishResults(
         }
 
         // Notify vendor about payouts
+        const vendorCurrencySymbol = (vendorCurrencies[vid] || 'HTG') === 'USD' ? '$' : 'G';
         notificationService.createVendorNotification(
           vid,
           'payout_deduction',
           'Winner Payouts Deducted',
-          `$${payoutAmount.toFixed(2)} deducted from your balance for winner payouts in ${drawState} (${targetDate}).`
+          `${vendorCurrencySymbol}${payoutAmount.toFixed(2)} deducted from your balance for winner payouts in ${drawState} (${targetDate}).`
         );
       }
     }
 
-    // 10. Deduct admin commission (10%) from each vendor's total bets
-    for (const [vid, betTotal] of Object.entries(vendorBets)) {
-      const adminCommission = Math.round(betTotal * systemCommissionRate * 100) / 100;
-      if (adminCommission > 0) {
-        // Deduct from vendor
-        await client.query(
-          `UPDATE vendors SET available_balance = available_balance - $1 WHERE id = $2`,
-          [adminCommission, vid]
-        );
-
-        // Create admin commission transaction for vendor
-        const vendorUserResult = await client.query(
-          `SELECT user_id FROM vendors WHERE id = $1`,
-          [vid]
-        );
-        if (vendorUserResult.rows.length > 0) {
-          await client.query(
-            `INSERT INTO transactions (user_id, type, amount, currency, status, description, vendor_id)
-             VALUES ($1, 'admin_commission', $2, 'USD', 'completed', $3, $4)`,
-            [
-              vendorUserResult.rows[0].user_id,
-              adminCommission,
-              `Admin commission (${systemCommissionRate * 100}%) on ${drawState} round bets ($${betTotal.toFixed(2)})`,
-              vid,
-            ]
-          );
-        }
-
-        totalAdminCommission += adminCommission;
-
-        // Notify vendor about admin commission
-        notificationService.createVendorNotification(
-          vid,
-          'admin_commission',
-          'Admin Commission Charged',
-          `$${adminCommission.toFixed(2)} admin commission (${systemCommissionRate * 100}%) charged on your ${drawState} bets ($${betTotal.toFixed(2)}).`
-        );
-      }
-    }
-
-    // 11. Update round with final payout stats
+    // 10. Update round with final payout stats (admin_commission_total already tracked at bet time)
     await client.query(
       `UPDATE lottery_rounds SET
          total_payouts = $1,
-         winner_count = $2,
-         admin_commission_total = $3
-       WHERE id = $4`,
-      [totalPayouts, winners.length, totalAdminCommission, roundId]
+         winner_count = $2
+       WHERE id = $3`,
+      [totalPayouts, winners.length, roundId]
     );
 
     return {
@@ -621,7 +618,6 @@ export async function publishResults(
       winnerCount: winners.length,
       totalBets: parseFloat(round.total_bets || '0'),
       totalPayouts,
-      totalAdminCommission,
       vendorPayouts,
     };
   });
@@ -773,10 +769,10 @@ export async function getVendorRoundDetails(vendorId: string, roundId: string) {
 
 /**
  * Check if a ticket's numbers match the winning numbers.
- * Rules:
- * - SENP: 1 number must match exactly
- * - MARYAJ: 2 numbers must match exactly (order matters)
- * - LOTO3-5: all digits must match in exact order
+ * All game types require exact positional match:
+ * - SENP: 1 number (00-99) must match exactly
+ * - MARYAJ: 2 numbers (00-99) must match in exact order
+ * - LOTO3-5: 3-5 digits (0-9) must match in exact order
  */
 function checkWin(gameType: string, ticketNumbers: number[], winningNumbers: number[]): boolean {
   if (ticketNumbers.length !== winningNumbers.length) return false;

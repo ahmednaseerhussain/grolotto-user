@@ -140,8 +140,8 @@ export async function redeemGiftCard(userId: string, code: string) {
       throw new AppError('This gift card has been cancelled', 400, 'CANCELLED');
     }
 
-    // Cannot redeem own gift card
-    if (String(gc.purchased_by) === String(userId)) {
+    // Cannot redeem own gift card (null purchased_by means admin-created — anyone can redeem)
+    if (gc.purchased_by && gc.purchased_by === userId) {
       throw new AppError('You cannot redeem your own gift card', 400, 'SELF_REDEEM');
     }
 

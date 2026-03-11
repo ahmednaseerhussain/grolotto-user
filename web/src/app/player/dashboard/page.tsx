@@ -94,9 +94,6 @@ export default function PlayerDashboard() {
     ? (wallet?.balanceHtg ?? wallet?.balance ?? 0)
     : (wallet?.balanceUsd ?? wallet?.balance ?? 0);
 
-  const balanceHtg = wallet?.balanceHtg ?? wallet?.balance ?? 0;
-  const balanceUsd = wallet?.balanceUsd ?? 0;
-
   const filteredVendors = (vendors || []).filter((v: any) => {
     // Filter by operating currency match
     const matchesCurrency = !v.operatingCurrency || v.operatingCurrency === currency;
@@ -195,52 +192,32 @@ export default function PlayerDashboard() {
         </div>
       )}
 
-      {/* Dual Currency Wallets */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* HTG Wallet - MonCash */}
-        <Card className="bg-red-50 border border-red-200 hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push("/player/payment")}>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="bg-red-500 p-1.5 rounded-lg">
-                <DollarSign className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-xs font-semibold text-red-800">MonCash</span>
+      {/* Wallet */}
+      <Card
+        className={`${currency === "HTG" ? "bg-red-50 border-red-200" : "bg-blue-50 border-blue-200"} border hover:shadow-md transition-shadow cursor-pointer`}
+        onClick={() => router.push("/player/payment")}
+      >
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className={`${currency === "HTG" ? "bg-red-500" : "bg-blue-500"} p-1.5 rounded-lg`}>
+              <DollarSign className="h-4 w-4 text-white" />
             </div>
-            <p className="text-xs text-gray-500">HTG Balance</p>
-            <div className="flex items-center gap-1 mt-1">
-              <p className="text-xl font-bold text-gray-900">
-                {showBalance ? formatCurrency(balanceHtg, "HTG") : "••••••"}
-              </p>
-              <button onClick={(e) => { e.stopPropagation(); setShowBalance(!showBalance); }} className="p-0.5 text-gray-400 hover:text-gray-600">
-                {showBalance ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-              </button>
-            </div>
-            <p className="text-[10px] text-red-600 font-medium mt-2">+ Add HTG</p>
-          </CardContent>
-        </Card>
-
-        {/* USD Wallet - PayPal */}
-        <Card className="bg-blue-50 border border-blue-200 hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push("/player/payment")}>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="bg-blue-500 p-1.5 rounded-lg">
-                <DollarSign className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-xs font-semibold text-blue-800">PayPal</span>
-            </div>
-            <p className="text-xs text-gray-500">USD Balance</p>
-            <div className="flex items-center gap-1 mt-1">
-              <p className="text-xl font-bold text-gray-900">
-                {showBalance ? formatCurrency(balanceUsd, "USD") : "••••••"}
-              </p>
-              <button onClick={(e) => { e.stopPropagation(); setShowBalance(!showBalance); }} className="p-0.5 text-gray-400 hover:text-gray-600">
-                {showBalance ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-              </button>
-            </div>
-            <p className="text-[10px] text-blue-600 font-medium mt-2">+ Add USD</p>
-          </CardContent>
-        </Card>
-      </div>
+            <span className={`text-xs font-semibold ${currency === "HTG" ? "text-red-800" : "text-blue-800"}`}>
+              {currency === "HTG" ? "MonCash" : "PayPal"}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500">{currency} Balance</p>
+          <div className="flex items-center gap-1 mt-1">
+            <p className="text-xl font-bold text-gray-900">
+              {showBalance ? formatCurrency(balance, currency) : "••••••"}
+            </p>
+            <button onClick={(e) => { e.stopPropagation(); setShowBalance(!showBalance); }} className="p-0.5 text-gray-400 hover:text-gray-600">
+              {showBalance ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+            </button>
+          </div>
+          <p className={`text-[10px] ${currency === "HTG" ? "text-red-600" : "text-blue-600"} font-medium mt-2`}>+ Add {currency}</p>
+        </CardContent>
+      </Card>
 
       {/* View Transactions */}
       <div className="flex items-center justify-center">

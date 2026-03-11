@@ -150,6 +150,16 @@ export async function createPayment(input: {
     // Build the redirect URL for the user
     const paymentUrl = `${baseUrl}/Moncash-middleware/Payment/Redirect?token=${paymentToken}`;
 
+    // Store pending transaction to track ownership (userId → orderId)
+    try {
+      await query(
+        `INSERT INTO transactions (user_id, type, amount, currency, status, description, idempotency_key)
+         VALUES ($1, 'deposit', $2, $3, 'pending', $4, $5)
+         ON CONFLICT (idempotency_key) DO NOTHING`,
+        [userId, amountHtg, 'HTG', `MonCash deposit - ${amountHtg} HTG`, `moncash_order_${orderId}`]
+      );
+    } catch { /* non-fatal — ownership check is a safety net */ }
+
     return {
       paymentUrl,
       orderId,
@@ -274,6 +284,17 @@ export async function verifyAndCreditPayment(
 
   if (payment.status !== 'completed') {
     throw new AppError(`Payment not completed. Status: ${payment.status}`, 400, 'PAYMENT_NOT_COMPLETED');
+  }
+
+  // 1b. Verify this payment belongs to the requesting user (prevent cross-user credit)
+  if (orderId) {
+    const ownerCheck = await query(
+      `SELECT user_id FROM transactions WHERE idempotency_key = $1 AND status = 'pending' LIMIT 1`,
+      [`moncash_order_${orderId}`]
+    );
+    if (ownerCheck.rows.length > 0 && ownerCheck.rows[0].user_id !== userId) {
+      throw new AppError('This payment does not belong to your account', 403, 'PAYMENT_OWNERSHIP_ERROR');
+    }
   }
 
   // 2. Credit wallet with idempotency

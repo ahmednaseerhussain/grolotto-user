@@ -198,19 +198,19 @@ export default function VendorProfileScreen() {
               </div>
 
               {[
-                { key: "businessName", label: t("businessName") || "Business Name", icon: Store },
-                { key: "ownerName", label: t("ownerName") || "Owner Name", icon: User },
+                { key: "businessName", label: t("businessName") || "Business Name", icon: Store, readOnly: true },
+                { key: "ownerName", label: t("ownerName") || "Owner Name", icon: User, readOnly: true },
                 { key: "email", label: t("email") || "Email", icon: Mail },
                 { key: "phone", label: t("phone") || "Phone", icon: Phone },
                 { key: "address", label: t("address") || "Address", icon: MapPin },
                 { key: "city", label: t("city") || "City", icon: Globe },
                 { key: "state", label: t("state") || "State", icon: Globe },
-              ].map(({ key, label, icon: Icon }) => (
+              ].map(({ key, label, icon: Icon, readOnly }) => (
                 <div key={key}>
                   <label className="text-sm text-gray-500 flex items-center gap-1.5">
                     <Icon className="h-3.5 w-3.5" /> {label}
                   </label>
-                  {editing ? (
+                  {editing && !readOnly ? (
                     <Input
                       value={(form as any)[key]}
                       onChange={(e) => setForm({ ...form, [key]: e.target.value })}

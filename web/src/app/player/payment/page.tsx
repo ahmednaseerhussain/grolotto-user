@@ -59,6 +59,16 @@ export default function PaymentScreen() {
           let captured = false;
           for (let attempt = 0; attempt < 24; attempt++) {
             await new Promise((r) => setTimeout(r, 5000));
+            if (ppWindow?.closed) {
+              // User closed window — check one last time then stop
+              try {
+                const capRes = await paymentAPI.capturePayPalOrder(ppRes.orderId);
+                if (capRes?.status === 'COMPLETED' || capRes?.status === 'credited' || capRes?.status === 'already_processed') {
+                  captured = true;
+                }
+              } catch {}
+              break;
+            }
             try {
               const capRes = await paymentAPI.capturePayPalOrder(ppRes.orderId);
               if (capRes?.status === 'COMPLETED' || capRes?.status === 'credited' || capRes?.status === 'already_processed') {
@@ -104,6 +114,17 @@ export default function PaymentScreen() {
         let verified = false;
         for (let attempt = 0; attempt < 12; attempt++) {
           await new Promise((r) => setTimeout(r, 5000));
+          if (paymentWindow?.closed) {
+            // User closed window — check one last time then stop
+            try {
+              const verifyRes = await paymentAPI.verifyPayment(orderId!);
+              const status = verifyRes?.status;
+              if (status === "credited" || status === "already_processed" || status === "completed") {
+                verified = true;
+              }
+            } catch {}
+            break;
+          }
           try {
             const verifyRes = await paymentAPI.verifyPayment(orderId!);
             const status = verifyRes?.status;

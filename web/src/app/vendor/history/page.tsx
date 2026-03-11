@@ -35,6 +35,7 @@ export default function VendorHistoryScreen() {
   const router = useRouter();
   const t = useTranslation();
   const currency = useAppStore((s) => s.currency);
+  const commissionRate = useAppStore((s) => s.vendorStats)?.commissionRate ?? 0.1;
 
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -100,12 +101,14 @@ export default function VendorHistoryScreen() {
     loto5: "bg-red-100 text-red-700",
   };
 
+  const escapeCSV = (val: string) => `"${String(val).replace(/"/g, '""')}"`;
+
   const handleExportCSV = () => {
     const headers = "Player,Game,Numbers,Amount,Won,WinAmount,State,Date\n";
     const rows = filtered
       .map(
         (i) =>
-          `"${i.playerName || ""}","${i.gameType}","${i.numbers}",${i.betAmount},${i.won || false},${i.winAmount || 0},"${i.state || ""}","${i.createdAt || ""}"`
+          `${escapeCSV(i.playerName || "")},${escapeCSV(i.gameType)},${escapeCSV(i.numbers)},${i.betAmount},${i.won || false},${i.winAmount || 0},${escapeCSV(i.state || "")},${escapeCSV(i.createdAt || "")}`
       )
       .join("\n");
     const blob = new Blob([headers + rows], { type: "text/csv" });

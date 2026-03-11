@@ -36,8 +36,8 @@ export default function PayoutsScreen() {
   const vendorProfile = useAppStore((s) => s.vendorProfile);
   const withdrawalCurrency = (vendorProfile?.operatingCurrency || currency) as "HTG" | "USD";
 
-  const balance = vendorStats?.balance || 0;
-  const displayBalance = withdrawalCurrency === "HTG" ? balance * 150 : balance;
+  const balance = vendorStats?.availableBalance || vendorStats?.balance || 0;
+  const displayBalance = balance;
   const pendingAmount = payouts
     .filter((p: any) => p.status === "pending")
     .reduce((s: number, p: any) => s + (p.amount || 0), 0);
@@ -48,15 +48,15 @@ export default function PayoutsScreen() {
       toast.error("Please enter a valid amount");
       return;
     }
-    const amtInUsd = withdrawalCurrency === "HTG" ? amt / 150 : amt;
-    if (amtInUsd > balance) {
+    if (amt > balance) {
       toast.error(t("insufficientBalance") || "Insufficient balance");
       return;
     }
-    if (amtInUsd < 10) {
-      toast.error(t("minimumAmount") || "Minimum withdrawal is $10");
+    if (amt < 10) {
+      toast.error(t("minimumAmount") || "Minimum withdrawal is 10");
       return;
     }
+    if (!confirm(t("confirmWithdrawal") || `Are you sure you want to withdraw ${formatCurrency(amt, withdrawalCurrency)}?`)) return;
     setProcessing(true);
     try {
       await vendorAPI.requestPayout({

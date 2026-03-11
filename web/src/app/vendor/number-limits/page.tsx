@@ -13,6 +13,7 @@ import {
   ArrowLeft, Plus, Trash2, StopCircle, PlayCircle, AlertTriangle, Shield, Loader2, Pencil
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import type { NumberLimit, DrawState } from "@/types";
 import toast from "react-hot-toast";
 
 const DRAWS = [
@@ -26,23 +27,13 @@ const DRAWS = [
   { code: "NJ", name: "New Jersey", flag: "🏖️" },
 ];
 
-interface NumberLimit {
-  id: string;
-  drawState: string;
-  number: string;
-  betLimit: number;
-  currentTotal: number;
-  isStopped: boolean;
-  createdAt?: string;
-}
-
 export default function NumberLimitsScreen() {
   const router = useRouter();
   const t = useTranslation();
   const user = useAppStore((s) => s.user);
   const currency = useAppStore((s) => s.currency);
 
-  const [selectedDraw, setSelectedDraw] = useState("NY");
+  const [selectedDraw, setSelectedDraw] = useState<DrawState>("NY");
   const [isAdding, setIsAdding] = useState(false);
   const [isStopping, setIsStopping] = useState(false);
   const [newNumber, setNewNumber] = useState("");
@@ -87,7 +78,7 @@ export default function NumberLimitsScreen() {
     setSaving(true);
     try {
       await vendorAPI.createNumberLimit({
-        drawState: selectedDraw as any,
+        drawState: selectedDraw,
         number: String(num).padStart(2, "0"),
         betLimit: limit,
       });
@@ -117,7 +108,7 @@ export default function NumberLimitsScreen() {
         number: String(num).padStart(2, "0"),
         betLimit: 0,
         isStopped: true,
-      } as any);
+      });
       toast.success(`Sales stopped for number ${String(num).padStart(2, "0")}`);
       setStopNumber("");
       setIsStopping(false);
@@ -191,7 +182,7 @@ export default function NumberLimitsScreen() {
         {DRAWS.map((draw) => (
           <button
             key={draw.code}
-            onClick={() => setSelectedDraw(draw.code)}
+            onClick={() => setSelectedDraw(draw.code as DrawState)}
             className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${selectedDraw === draw.code
                 ? "bg-emerald-600 text-white border-emerald-600"
                 : "bg-white text-gray-700 border-gray-200 hover:border-emerald-300"

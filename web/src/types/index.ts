@@ -258,6 +258,15 @@ export interface VendorStats {
   balance?: number;
   totalTicketsSold?: number;
   earningsToday?: number;
+  // Financial summary fields
+  commissionRate?: number;
+  totalSales?: number;
+  totalCommission?: number;
+  netIncome?: number;
+  totalPlayerWins?: number;
+  totalProfit?: number;
+  totalLoss?: number;
+  period?: string;
 }
 
 export interface AppSettings {

@@ -32,7 +32,8 @@ export async function getMyVendorProfile(req: Request, res: Response, next: Next
 export async function getMyVendorStats(req: Request, res: Response, next: NextFunction) {
   try {
     const vendor = await vendorService.getVendorByUserId(req.user!.id);
-    const stats = await vendorService.getVendorStats(vendor.id);
+    const period = (req.query.period as string) || 'today';
+    const stats = await vendorService.getVendorStats(vendor.id, period);
     res.json(stats);
   } catch (error) {
     next(error);

@@ -1,5 +1,6 @@
 import { query } from '../database/pool';
 import { AppError } from '../middleware/errorHandler';
+import bcrypt from 'bcrypt';
 
 /**
  * Admin service for system-wide operations.
@@ -221,6 +222,31 @@ export async function getAppSettings() {
 }
 
 export async function updateAppSetting(key: string, value: any, updatedBy: string) {
+  // Validate specific settings to prevent dangerous values
+  if (key === 'system_commission') {
+    const num = Number(value);
+    if (isNaN(num) || num < 0 || num > 1) {
+      throw new AppError('Commission rate must be between 0 and 1 (e.g. 0.10 for 10%)', 400);
+    }
+  }
+  if (key === 'win_multipliers') {
+    const obj = typeof value === 'object' ? value : null;
+    if (!obj || typeof obj !== 'object') {
+      throw new AppError('Win multipliers must be an object', 400);
+    }
+    for (const [game, mult] of Object.entries(obj)) {
+      if (typeof mult !== 'number' || mult <= 0) {
+        throw new AppError(`Invalid multiplier for ${game}: must be a positive number`, 400);
+      }
+    }
+  }
+  if (key === 'number_auto_stop_threshold') {
+    const num = Number(value);
+    if (isNaN(num) || num < 0) {
+      throw new AppError('Auto-stop threshold must be a non-negative number', 400);
+    }
+  }
+
   await query(
     `UPDATE app_settings SET value = $1, updated_at = NOW(), updated_by = $3
      WHERE key = $2`,
@@ -664,11 +690,11 @@ export async function getTransactions(page: number = 1, limit: number = 50, filt
 // ──────────────────────────────────────────────────────────
 
 export async function createAdminUser(email: string, name: string, password: string) {
-  // Hash password using pgcrypto
+  const passwordHash = await bcrypt.hash(password, 12);
   const result = await query(
     `INSERT INTO users (email, name, password_hash, role, is_active, is_verified)
-     VALUES ($1, $2, crypt($3, gen_salt('bf')), 'admin', TRUE, TRUE) RETURNING id, email, name, role, is_active, created_at`,
-    [email, name, password]
+     VALUES ($1, $2, $3, 'admin', TRUE, TRUE) RETURNING id, email, name, role, is_active, created_at`,
+    [email, name, passwordHash]
   );
   return result.rows[0];
 }

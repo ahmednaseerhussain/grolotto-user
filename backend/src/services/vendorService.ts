@@ -257,7 +257,7 @@ export async function registerVendor(
 /**
  * Get vendor stats for dashboard.
  */
-export async function getVendorStats(vendorId: string) {
+export async function getVendorStats(vendorId: string, period: string = 'today') {
   const vendor = await query(
     `SELECT total_revenue, available_balance, total_players, rating, total_tickets_sold
      FROM vendors WHERE id = $1`,
@@ -265,10 +265,43 @@ export async function getVendorStats(vendorId: string) {
   );
   if (vendor.rows.length === 0) throw new AppError('Vendor not found', 404);
 
-  const todayTickets = await query(
+  // Determine date filter based on period
+  let dateFilter: string;
+  switch (period) {
+    case 'week':
+      dateFilter = `created_at >= date_trunc('week', CURRENT_DATE)`;
+      break;
+    case 'month':
+      dateFilter = `created_at >= date_trunc('month', CURRENT_DATE)`;
+      break;
+    default: // 'today'
+      dateFilter = `created_at::date = CURRENT_DATE`;
+      break;
+  }
+
+  // Get ticket stats for the period
+  const periodTickets = await query(
     `SELECT COUNT(*) as count, COALESCE(SUM(bet_amount), 0) as total_bets
      FROM lottery_tickets
-     WHERE vendor_id = $1 AND created_at::date = CURRENT_DATE`,
+     WHERE vendor_id = $1 AND ${dateFilter}`,
+    [vendorId]
+  );
+
+  // Get commission already deducted (from admin_commission transactions at bet time)
+  const commissionResult = await query(
+    `SELECT COALESCE(SUM(t.amount), 0) as total_commission
+     FROM transactions t
+     JOIN vendors v ON v.user_id = t.user_id
+     WHERE v.id = $1 AND t.type = 'admin_commission' AND t.${dateFilter}`,
+    [vendorId]
+  );
+
+  // Get total player winnings paid by this vendor in the period
+  const payoutsResult = await query(
+    `SELECT COALESCE(SUM(t.amount), 0) as total_payouts
+     FROM transactions t
+     JOIN vendors v ON v.user_id = t.user_id
+     WHERE v.id = $1 AND t.type = 'winning_payout' AND t.${dateFilter}`,
     [vendorId]
   );
 
@@ -279,12 +312,20 @@ export async function getVendorStats(vendorId: string) {
       `SELECT value FROM app_settings WHERE key = 'system_commission'`
     );
     if (commResult.rows.length > 0) {
-      commissionRate = parseFloat(commResult.rows[0].value) || 0.10;
+      const parsed = parseFloat(commResult.rows[0].value);
+      if (!isNaN(parsed) && parsed >= 0 && parsed <= 1) {
+        commissionRate = parsed;
+      }
     }
   } catch {}
 
   const v = vendor.rows[0];
-  const t = todayTickets.rows[0];
+  const t = periodTickets.rows[0];
+  const totalSales = parseFloat(t.total_bets);
+  const totalCommission = parseFloat(commissionResult.rows[0].total_commission);
+  const netIncome = totalSales - totalCommission;
+  const totalPlayerWins = parseFloat(payoutsResult.rows[0].total_payouts);
+  const profitLoss = netIncome - totalPlayerWins;
 
   return {
     totalRevenue: parseFloat(v.total_revenue),
@@ -293,9 +334,16 @@ export async function getVendorStats(vendorId: string) {
     rating: parseFloat(v.rating),
     totalTicketsSold: v.total_tickets_sold,
     ticketsToday: parseInt(t.count),
-    todayBets: parseFloat(t.total_bets),
-    earningsToday: parseFloat(t.total_bets) * commissionRate,
-    commissionRate: commissionRate,
+    todayBets: totalSales,
+    commissionRate,
+    // Financial summary fields
+    totalSales,
+    totalCommission,
+    netIncome,
+    totalPlayerWins,
+    totalProfit: profitLoss > 0 ? profitLoss : 0,
+    totalLoss: profitLoss < 0 ? Math.abs(profitLoss) : 0,
+    period,
   };
 }
 
@@ -392,14 +440,14 @@ export async function getNumberLimits(vendorId: string) {
 }
 
 export async function createNumberLimit(vendorId: string, data: {
-  drawState: string; number: string; betLimit: number;
+  drawState: string; number: string; betLimit: number; isStopped?: boolean;
 }) {
   const result = await query(
-    `INSERT INTO number_limits (vendor_id, draw_state, number, bet_limit)
-     VALUES ($1, $2, $3, $4)
-     ON CONFLICT (vendor_id, draw_state, number) DO UPDATE SET bet_limit = $4
+    `INSERT INTO number_limits (vendor_id, draw_state, number, bet_limit, is_stopped)
+     VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT (vendor_id, draw_state, number) DO UPDATE SET bet_limit = $4, is_stopped = $5
      RETURNING id`,
-    [vendorId, data.drawState, data.number, data.betLimit]
+    [vendorId, data.drawState, data.number, data.betLimit, data.isStopped || false]
   );
   return result.rows[0];
 }

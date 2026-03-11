@@ -6,6 +6,8 @@ import { X } from "lucide-react";
 
 // Simple Dialog/Modal
 
+const DialogContext = React.createContext<{ onOpenChange: (open: boolean) => void } | null>(null);
+
 interface DialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -16,16 +18,21 @@ function Dialog({ open, onOpenChange, children }: DialogProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50">
-      <div className="fixed inset-0 bg-black/50" onClick={() => onOpenChange(false)} />
-      <div className="fixed inset-0 flex items-center justify-center p-4">
-        {children}
+    <DialogContext.Provider value={{ onOpenChange }}>
+      <div className="fixed inset-0 z-50">
+        <div className="fixed inset-0 bg-black/50" onClick={() => onOpenChange(false)} />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          {children}
+        </div>
       </div>
-    </div>
+    </DialogContext.Provider>
   );
 }
 
 function DialogContent({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement> & { onClose?: () => void }) {
+  const ctx = React.useContext(DialogContext);
+  const handleClose = props.onClose || (ctx ? () => ctx.onOpenChange(false) : undefined);
+
   return (
     <div
       className={cn(
@@ -35,9 +42,9 @@ function DialogContent({ className, children, ...props }: React.HTMLAttributes<H
       onClick={(e) => e.stopPropagation()}
       {...props}
     >
-      {props.onClose && (
+      {handleClose && (
         <button
-          onClick={props.onClose}
+          onClick={handleClose}
           className="absolute right-4 top-4 rounded-sm text-gray-400 hover:text-gray-600 transition-colors"
         >
           <X className="h-4 w-4" />

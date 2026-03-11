@@ -24,8 +24,8 @@ export const vendorAPI = {
     return response.data.data || response.data;
   },
 
-  async getMyStats(): Promise<VendorStats> {
-    const response = await apiClient.get("/vendors/me/stats");
+  async getMyStats(period?: string): Promise<VendorStats> {
+    const response = await apiClient.get("/vendors/me/stats", { params: period ? { period } : undefined });
     return response.data.data || response.data;
   },
 
