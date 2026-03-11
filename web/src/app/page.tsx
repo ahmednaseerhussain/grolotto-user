@@ -10,6 +10,16 @@ export default function HomePage() {
   const user = useAppStore((s) => s.user);
   const hasHydrated = useAppStore((s) => s._hasHydrated);
 
+  // Safety: if Zustand persist hasn't hydrated after 2s, force it
+  useEffect(() => {
+    if (!hasHydrated) {
+      const timeout = setTimeout(() => {
+        useAppStore.setState({ _hasHydrated: true });
+      }, 2000);
+      return () => clearTimeout(timeout);
+    }
+  }, [hasHydrated]);
+
   useEffect(() => {
     if (!hasHydrated) return;
     if (isAuthenticated && user) {

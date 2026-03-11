@@ -168,3 +168,16 @@ export const useAppStore = create<AppState>()(
     }
   )
 );
+
+// Safety: subscribe to persist finish event in case onRehydrateStorage fires
+// before useAppStore is assigned (race condition on SSR → client hydration)
+if (typeof window !== "undefined") {
+  const unsub = useAppStore.persist.onFinishHydration(() => {
+    useAppStore.setState({ _hasHydrated: true });
+    unsub();
+  });
+  // If already hydrated (callback fired before subscription), set it now
+  if (useAppStore.persist.hasHydrated()) {
+    useAppStore.setState({ _hasHydrated: true });
+  }
+}
