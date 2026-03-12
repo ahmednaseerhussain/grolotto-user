@@ -83,7 +83,7 @@ export function PlayerBottomNav() {
   const bottomItems = [
     { href: "/player/dashboard", icon: Home, labelKey: "home" },
     { href: "/player/notifications", icon: Bell, labelKey: "notifications" },
-    { href: "/player/history", icon: History, labelKey: "history" },
+    { href: "/player/history", icon: History, labelKey: "bet" }, //history is mostly bets
     { href: "/player/help", icon: HelpCircle, labelKey: "help" },
     { href: "/player/settings", icon: Settings, labelKey: "settings" },
   ];

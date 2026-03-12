@@ -469,9 +469,39 @@ export async function publishResults(
       [roundId]
     );
 
-    // 6. Check each ticket for wins using multiplier-based payouts
-    const winners: Array<typeof tickets.rows[0] & { winAmount: number }> = [];
+    // 6. Check each ticket for wins using vendor-specific payout multipliers.
+    // For senp, support multi-position winning numbers (1st, 2nd, 3rd prizes).
+    const winners: Array<typeof tickets.rows[0] & { winAmount: number; usedMultiplier: number }> = [];
     const losers: typeof tickets.rows = [];
+
+    // Cache vendor payout multipliers to avoid repeated DB queries
+    const vendorMultipliersCache: Record<string, Record<string, number>> = {};
+
+    async function getVendorMultipliers(vendorId: string): Promise<Record<string, number>> {
+      if (vendorMultipliersCache[vendorId]) return vendorMultipliersCache[vendorId];
+      try {
+        const vmResult = await client.query(
+          'SELECT payout_multipliers FROM vendors WHERE id = $1',
+          [vendorId]
+        );
+        if (vmResult.rows.length > 0 && vmResult.rows[0].payout_multipliers) {
+          const val = vmResult.rows[0].payout_multipliers;
+          vendorMultipliersCache[vendorId] = typeof val === 'string' ? JSON.parse(val) : val;
+          return vendorMultipliersCache[vendorId];
+        }
+      } catch { /* fall through to global defaults */ }
+      // Fall back to global win_multipliers converted to the new key format
+      vendorMultipliersCache[vendorId] = {
+        senp_1st: winMultipliers['senp'] || 50,
+        senp_2nd: Math.round((winMultipliers['senp'] || 50) / 3),
+        senp_3rd: Math.round((winMultipliers['senp'] || 50) / 6),
+        maryaj: winMultipliers['maryaj'] || 100,
+        loto3: winMultipliers['loto3'] || 500,
+        loto4: winMultipliers['loto4'] || 5000,
+        loto5: winMultipliers['loto5'] || 50000,
+      };
+      return vendorMultipliersCache[vendorId];
+    }
 
     for (const ticket of tickets.rows) {
       const gameWinningNums = winningNumbers[ticket.game_type];
@@ -479,12 +509,29 @@ export async function publishResults(
         losers.push(ticket);
         continue;
       }
-      if (checkWin(ticket.game_type, ticket.numbers, gameWinningNums)) {
-        const multiplier = winMultipliers[ticket.game_type] || 1;
-        const winAmount = Math.round(parseFloat(ticket.bet_amount) * multiplier * 100) / 100;
-        winners.push({ ...ticket, winAmount });
+
+      const vMults = await getVendorMultipliers(ticket.vendor_id);
+
+      if (ticket.game_type === 'senp') {
+        // Senp: check ticket's single number against each winning position
+        const position = checkSenpPosition(ticket.numbers[0], gameWinningNums);
+        if (position >= 0) {
+          const multKey = position === 0 ? 'senp_1st' : position === 1 ? 'senp_2nd' : 'senp_3rd';
+          const multiplier = vMults[multKey] || winMultipliers['senp'] || 50;
+          const winAmount = Math.round(parseFloat(ticket.bet_amount) * multiplier * 100) / 100;
+          winners.push({ ...ticket, winAmount, usedMultiplier: multiplier });
+        } else {
+          losers.push(ticket);
+        }
       } else {
-        losers.push(ticket);
+        // maryaj, loto3-5: standard exact match
+        if (checkWin(ticket.game_type, ticket.numbers, gameWinningNums)) {
+          const multiplier = vMults[ticket.game_type] || winMultipliers[ticket.game_type] || 1;
+          const winAmount = Math.round(parseFloat(ticket.bet_amount) * multiplier * 100) / 100;
+          winners.push({ ...ticket, winAmount, usedMultiplier: multiplier });
+        } else {
+          losers.push(ticket);
+        }
       }
     }
 
@@ -527,7 +574,7 @@ export async function publishResults(
           winner.player_id,
           winAmount,
           winner.currency,
-          `Won ${winner.game_type.toUpperCase()} - ${drawState}: ${winMultipliers[winner.game_type]}x payout = $${winAmount.toFixed(2)}`,
+          `Won ${winner.game_type.toUpperCase()} - ${drawState}: ${winner.usedMultiplier}x payout = $${winAmount.toFixed(2)}`,
           winner.id,
           winner.vendor_id,
         ]
@@ -543,8 +590,8 @@ export async function publishResults(
         winner.player_id,
         'win',
         'Congratulations! You Won!',
-        `Your ${winner.game_type.toUpperCase()} bet on ${drawState} won $${winAmount.toFixed(2)} (${winMultipliers[winner.game_type]}x multiplier)!`,
-        { ticketId: winner.id, winAmount, gameType: winner.game_type, multiplier: winMultipliers[winner.game_type] }
+        `Your ${winner.game_type.toUpperCase()} bet on ${drawState} won $${winAmount.toFixed(2)} (${winner.usedMultiplier}x multiplier)!`,
+        { ticketId: winner.id, winAmount, gameType: winner.game_type, multiplier: winner.usedMultiplier }
       );
     }
 
@@ -783,6 +830,18 @@ function checkWin(gameType: string, ticketNumbers: number[], winningNumbers: num
   }
 
   return true;
+}
+
+/**
+ * For senp with multi-position winning numbers (1st, 2nd, 3rd):
+ * Returns the prize position (0=1st, 1=2nd, 2=3rd) or -1 if no match.
+ * Ticket has 1 number; winning numbers may have 1-3 numbers for different positions.
+ */
+function checkSenpPosition(ticketNumber: number, winningNumbers: number[]): number {
+  for (let i = 0; i < winningNumbers.length; i++) {
+    if (ticketNumber === winningNumbers[i]) return i;
+  }
+  return -1;
 }
 
 /**

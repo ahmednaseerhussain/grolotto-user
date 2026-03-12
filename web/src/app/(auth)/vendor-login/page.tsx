@@ -90,6 +90,12 @@ export default function VendorLoginPage() {
             <Button type="submit" loading={isLoading} variant="success" className="w-full" size="lg">
               {t("login")}
             </Button>
+
+            <div className="text-center">
+              <Link href="/forgot-password" className="text-sm text-gray-500 hover:text-gray-700">
+                {t("forgotPassword")}
+              </Link>
+            </div>
           </form>
 
           <div className="mt-4 text-center">

@@ -27,6 +27,13 @@ router.delete('/me/number-limits/:limitId', authenticate, authorize('vendor'), c
 // Payout requests
 router.post('/me/payouts', authenticate, authorize('vendor'), ctrl.requestPayout);
 
+// Payout multiplier management
+router.get('/me/payout-multipliers', authenticate, authorize('vendor'), ctrl.getPayoutMultipliers);
+router.put('/me/payout-multipliers', authenticate, authorize('vendor'), ctrl.updatePayoutMultipliers);
+
+// Public: vendor payout rates (for player Results popup)
+router.get('/:id/payout-multipliers', ctrl.getPublicPayoutMultipliers);
+
 // Vendor lottery rounds (read-only — admin publishes results globally)
 router.get('/me/rounds', authenticate, authorize('vendor'), ctrl.getMyRounds);
 router.get('/me/rounds/:roundId', authenticate, authorize('vendor'), ctrl.getMyRoundDetails);

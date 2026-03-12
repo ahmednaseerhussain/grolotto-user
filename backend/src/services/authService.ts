@@ -308,3 +308,86 @@ export async function updateProfile(
 
   return getProfile(userId);
 }
+
+/**
+ * Request a password reset. Generates a 6-digit OTP, stores it in email_verifications,
+ * and returns the OTP (in production this would be emailed/SMS'd).
+ */
+export async function requestPasswordReset(email: string): Promise<{ message: string; otp?: string }> {
+  const userResult = await query(
+    'SELECT id, email, is_active FROM users WHERE email = $1',
+    [email.toLowerCase()]
+  );
+
+  // Always return success to avoid email enumeration
+  if (userResult.rows.length === 0) {
+    return { message: 'If an account with that email exists, a reset code has been sent.' };
+  }
+
+  const user = userResult.rows[0];
+  if (!user.is_active) {
+    return { message: 'If an account with that email exists, a reset code has been sent.' };
+  }
+
+  // Generate 6-digit OTP
+  const otp = String(Math.floor(100000 + Math.random() * 900000));
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+  // Invalidate previous unused codes for this user
+  await query(
+    'UPDATE email_verifications SET used = TRUE WHERE user_id = $1 AND used = FALSE',
+    [user.id]
+  );
+
+  // Store new OTP
+  await query(
+    `INSERT INTO email_verifications (user_id, otp_code, expires_at)
+     VALUES ($1, $2, $3)`,
+    [user.id, otp, expiresAt]
+  );
+
+  // In production: send email/SMS here
+  // For development: log and return the OTP
+  console.log(`[PASSWORD RESET] OTP for ${email}: ${otp}`);
+
+  const isDev = process.env.NODE_ENV !== 'production';
+  return {
+    message: 'If an account with that email exists, a reset code has been sent.',
+    ...(isDev ? { otp } : {}),
+  };
+}
+
+/**
+ * Reset password using OTP code.
+ */
+export async function resetPassword(email: string, otpCode: string, newPassword: string): Promise<void> {
+  const userResult = await query(
+    'SELECT id FROM users WHERE email = $1 AND is_active = TRUE',
+    [email.toLowerCase()]
+  );
+
+  if (userResult.rows.length === 0) {
+    throw new AppError('Invalid email or reset code', 400, 'INVALID_RESET');
+  }
+
+  const userId = userResult.rows[0].id;
+
+  // Find valid OTP
+  const otpResult = await query(
+    `SELECT id FROM email_verifications
+     WHERE user_id = $1 AND otp_code = $2 AND used = FALSE AND expires_at > NOW()
+     ORDER BY created_at DESC LIMIT 1`,
+    [userId, otpCode]
+  );
+
+  if (otpResult.rows.length === 0) {
+    throw new AppError('Invalid or expired reset code', 400, 'INVALID_OTP');
+  }
+
+  // Mark OTP as used
+  await query('UPDATE email_verifications SET used = TRUE WHERE id = $1', [otpResult.rows[0].id]);
+
+  // Hash new password and update
+  const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  await query('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, userId]);
+}

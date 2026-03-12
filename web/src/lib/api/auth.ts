@@ -37,4 +37,14 @@ export const authAPI = {
     const response = await apiClient.put<{ data: User }>("/auth/profile", data);
     return response.data.data || response.data as unknown as User;
   },
+
+  async forgotPassword(email: string): Promise<{ message: string; otp?: string }> {
+    const response = await apiClient.post("/auth/forgot-password", { email });
+    return response.data;
+  },
+
+  async resetPassword(email: string, otp: string, newPassword: string): Promise<{ message: string }> {
+    const response = await apiClient.post("/auth/reset-password", { email, otp, newPassword });
+    return response.data;
+  },
 };

@@ -126,4 +126,21 @@ export const vendorAPI = {
     const response = await apiClient.put(`/vendors/draws/${drawState}/games/${gameType}`, data);
     return response;
   },
+
+  // Payout multipliers
+  async getPayoutMultipliers(): Promise<Record<string, number>> {
+    const response = await apiClient.get("/vendors/me/payout-multipliers");
+    return response.data;
+  },
+
+  async updatePayoutMultipliers(multipliers: Record<string, number>): Promise<Record<string, number>> {
+    const response = await apiClient.put("/vendors/me/payout-multipliers", multipliers);
+    return response.data;
+  },
+
+  // Public: get vendor payout rates
+  async getVendorPayoutRates(vendorId: string): Promise<Record<string, number>> {
+    const response = await apiClient.get(`/vendors/${vendorId}/payout-multipliers`);
+    return response.data;
+  },
 };

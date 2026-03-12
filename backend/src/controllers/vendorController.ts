@@ -164,3 +164,32 @@ export async function getMyRoundDetails(req: Request, res: Response, next: NextF
 
 // NOTE: publishMyResults and generateRandomNumbers were REMOVED.
 // Vendors no longer publish results — only admin publishes globally.
+
+export async function getPayoutMultipliers(req: Request, res: Response, next: NextFunction) {
+  try {
+    const vendor = await vendorService.getVendorByUserId(req.user!.id);
+    const multipliers = await vendorService.getPayoutMultipliers(vendor.id);
+    res.json(multipliers);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updatePayoutMultipliers(req: Request, res: Response, next: NextFunction) {
+  try {
+    const vendor = await vendorService.getVendorByUserId(req.user!.id);
+    const result = await vendorService.updatePayoutMultipliers(vendor.id, req.body);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getPublicPayoutMultipliers(req: Request, res: Response, next: NextFunction) {
+  try {
+    const multipliers = await vendorService.getPayoutMultipliers(req.params.id);
+    res.json(multipliers);
+  } catch (error) {
+    next(error);
+  }
+}

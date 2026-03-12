@@ -59,3 +59,31 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
     next(error);
   }
 }
+
+export async function forgotPassword(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res.status(400).json({ error: 'Email is required' });
+      return;
+    }
+    const result = await authService.requestPasswordReset(email);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function resetPassword(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) {
+      res.status(400).json({ error: 'Email, OTP and new password are required' });
+      return;
+    }
+    await authService.resetPassword(email, otp, newPassword);
+    res.json({ message: 'Password reset successfully' });
+  } catch (error) {
+    next(error);
+  }
+}

@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store/app-store";
 import { useTranslation } from "@/hooks/use-translation";
 import { lotteryAPI } from "@/lib/api/lottery";
+import { vendorAPI } from "@/lib/api/vendor";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/common/empty-state";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
-  ArrowLeft, Trophy, Wallet, Sparkles, Clock, ChevronRight, Star, Loader2, TrendingUp
+  ArrowLeft, Trophy, Wallet, Sparkles, Clock, ChevronRight, Star, Loader2, TrendingUp, Info
 } from "lucide-react";
 import { formatCurrency, GAME_LABELS } from "@/lib/utils";
 import { format } from "date-fns";
@@ -46,6 +48,8 @@ export default function ResultsScreen() {
   const [lotteryRounds, setLotteryRounds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentResultIndex, setCurrentResultIndex] = useState(0);
+  const [showPayoutInfo, setShowPayoutInfo] = useState(false);
+  const [payoutRates, setPayoutRates] = useState<Record<string, number> | null>(null);
 
   useEffect(() => {
     const loadResults = async () => {
@@ -61,6 +65,22 @@ export default function ResultsScreen() {
     };
     loadResults();
   }, []);
+
+  // Load payout rates from the first vendor (or show defaults)
+  useEffect(() => {
+    const loadPayoutRates = async () => {
+      try {
+        if (vendors && vendors.length > 0) {
+          const rates = await vendorAPI.getVendorPayoutRates(vendors[0].id);
+          setPayoutRates(rates);
+        }
+      } catch {
+        // Show defaults if API fails
+        setPayoutRates({ senp_1st: 60, senp_2nd: 20, senp_3rd: 10, maryaj: 800, loto3: 700, loto4: 4000, loto5: 30000 });
+      }
+    };
+    loadPayoutRates();
+  }, [vendors]);
 
   // Auto-cycle results
   useEffect(() => {
@@ -97,6 +117,9 @@ export default function ResultsScreen() {
           <p className="text-gray-600">{t("welcome")}, {t("player")}</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setShowPayoutInfo(true)} title="Payout Rates">
+            <Info className="h-5 w-5 text-amber-600" />
+          </Button>
           <Button variant="ghost" size="sm" onClick={() => router.push("/player/settings")}>
             <Star className="h-5 w-5" />
           </Button>
@@ -105,6 +128,59 @@ export default function ResultsScreen() {
           </Button>
         </div>
       </div>
+
+      {/* Payout Rates Popup */}
+      <Dialog open={showPayoutInfo} onOpenChange={setShowPayoutInfo}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg">
+              <Trophy className="h-5 w-5 text-amber-500" />
+              {t("resultDetails") || "Result Details"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 space-y-3">
+            {/* Senp tiers */}
+            <div className="bg-amber-50 rounded-lg p-3 space-y-2">
+              <h4 className="text-sm font-bold text-amber-800">Senp</h4>
+              {[
+                { key: "senp_1st", label: "1st Prize", color: "text-yellow-600" },
+                { key: "senp_2nd", label: "2nd Prize", color: "text-gray-500" },
+                { key: "senp_3rd", label: "3rd Prize", color: "text-amber-700" },
+              ].map((tier) => (
+                <div key={tier.key} className="flex items-center justify-between text-sm">
+                  <span className={`font-medium ${tier.color}`}>
+                    {tier.label}
+                  </span>
+                  <span className="text-gray-700">
+                    $1 Play = <span className="font-bold text-emerald-700">${payoutRates?.[tier.key] ?? "..."}</span> Payout
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Other games */}
+            {[
+              { key: "maryaj", label: "Maryaj" },
+              { key: "loto3", label: "Lotto 3" },
+              { key: "loto4", label: "Lotto 4" },
+              { key: "loto5", label: "Lotto 5" },
+            ].map((game) => (
+              <div key={game.key} className="flex items-center justify-between text-sm px-3 py-2 bg-gray-50 rounded-lg">
+                <span className="font-medium text-gray-700">{game.label}</span>
+                <span className="text-gray-700">
+                  $1 Play = <span className="font-bold text-emerald-700">
+                    ${(payoutRates?.[game.key] ?? 0).toLocaleString()}
+                  </span> Payout
+                </span>
+              </div>
+            ))}
+
+            <p className="text-xs text-gray-400 text-center mt-2">
+              {t("ratesSetByVendor") || "Payout rates may vary by vendor"}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Balance Card */}
       <Card className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white border-0">

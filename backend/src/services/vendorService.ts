@@ -527,3 +527,66 @@ export async function requestPayout(
 
   return result.rows[0];
 }
+
+/**
+ * Default payout multipliers (matches the user's requested payout table).
+ */
+export const DEFAULT_PAYOUT_MULTIPLIERS = {
+  senp_1st: 60,
+  senp_2nd: 20,
+  senp_3rd: 10,
+  maryaj: 800,
+  loto3: 700,
+  loto4: 4000,
+  loto5: 30000,
+};
+
+/**
+ * Get a vendor's payout multipliers. Falls back to defaults if not set.
+ */
+export async function getPayoutMultipliers(vendorId: string): Promise<Record<string, number>> {
+  try {
+    const result = await query(
+      'SELECT payout_multipliers FROM vendors WHERE id = $1',
+      [vendorId]
+    );
+    if (result.rows.length > 0 && result.rows[0].payout_multipliers) {
+      const val = result.rows[0].payout_multipliers;
+      return typeof val === 'string' ? JSON.parse(val) : val;
+    }
+  } catch {
+    // Column may not exist yet — use defaults
+  }
+  return { ...DEFAULT_PAYOUT_MULTIPLIERS };
+}
+
+/**
+ * Update a vendor's payout multipliers.
+ */
+export async function updatePayoutMultipliers(
+  vendorId: string,
+  multipliers: Record<string, number>
+): Promise<Record<string, number>> {
+  // Validate all values are positive numbers
+  for (const [key, val] of Object.entries(multipliers)) {
+    if (typeof val !== 'number' || val <= 0) {
+      throw new AppError(`Invalid multiplier for ${key}: must be a positive number`, 400);
+    }
+  }
+
+  // Only allow valid keys
+  const validKeys = ['senp_1st', 'senp_2nd', 'senp_3rd', 'maryaj', 'loto3', 'loto4', 'loto5'];
+  const cleaned: Record<string, number> = {};
+  for (const key of validKeys) {
+    if (multipliers[key] !== undefined) {
+      cleaned[key] = multipliers[key];
+    }
+  }
+
+  await query(
+    'UPDATE vendors SET payout_multipliers = $1 WHERE id = $2',
+    [JSON.stringify(cleaned), vendorId]
+  );
+
+  return cleaned;
+}
