@@ -41,7 +41,7 @@ export default function VendorSettingsScreen() {
   useEffect(() => {
     vendorAPI.getPayoutMultipliers()
       .then((r) => setPayoutRates(r))
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoadingRates(false));
   }, []);
 
@@ -101,8 +101,8 @@ export default function VendorSettingsScreen() {
                 key={lang.code}
                 onClick={() => setLanguage(lang.code as any)}
                 className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-colors ${language === lang.code
-                    ? "border-emerald-500 bg-emerald-50"
-                    : "border-gray-100 hover:border-gray-200"
+                  ? "border-emerald-500 bg-emerald-50"
+                  : "border-gray-100 hover:border-gray-200"
                   }`}
               >
                 <span className="text-lg">{lang.flag}</span>

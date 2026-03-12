@@ -246,15 +246,14 @@ export default function ResultsScreen() {
               const winNums = Array.isArray(round.winningNumbers)
                 ? round.winningNumbers
                 : Object.entries(round.winningNumbers || {}).flatMap(([gameType, nums]: [string, any]) =>
-                    Array.isArray(nums) ? nums : []
-                  );
+                  Array.isArray(nums) ? nums : []
+                );
               const isLive = round.status === "open" || round.status === "live";
               return (
                 <div
                   key={round.id || idx}
-                  className={`transition-all duration-500 ${
-                    idx === currentResultIndex ? "block" : "hidden"
-                  }`}
+                  className={`transition-all duration-500 ${idx === currentResultIndex ? "block" : "hidden"
+                    }`}
                 >
                   <Card className="overflow-hidden">
                     <div className={`h-1 ${STATE_COLORS[round.drawState] || "bg-gray-400"}`} />
@@ -313,9 +312,8 @@ export default function ResultsScreen() {
                   <button
                     key={i}
                     onClick={() => setCurrentResultIndex(i)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      i === currentResultIndex ? "bg-emerald-600 w-6" : "bg-gray-300"
-                    }`}
+                    className={`w-2 h-2 rounded-full transition-all ${i === currentResultIndex ? "bg-emerald-600 w-6" : "bg-gray-300"
+                      }`}
                   />
                 ))}
               </div>
