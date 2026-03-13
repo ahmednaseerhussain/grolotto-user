@@ -327,7 +327,10 @@ export async function deleteAdminUser(req: Request, res: Response, next: NextFun
 
 export async function createLotteryRound(req: Request, res: Response, next: NextFunction) {
   try {
-    const { drawState, drawDate, drawTime } = req.body;
+    // Accept both field name conventions from the admin app
+    const drawState = req.body.drawState || req.body.state;
+    const drawDate = req.body.drawDate || new Date().toISOString().split('T')[0];
+    const drawTime = req.body.drawTime || req.body.drawName || 'midday';
     const round = await adminService.createLotteryRound(drawState, drawDate, drawTime);
     res.status(201).json(round);
   } catch (error) {

@@ -419,7 +419,7 @@ export async function publishResults(
   return withTransaction(async (client) => {
     const targetDate = drawDate || new Date().toISOString().split('T')[0];
 
-    // 1. Find the open/closed round for this state+date
+    // 1. Find the open/closed round for this state+date (or auto-create one)
     const roundResult = await client.query(
       `SELECT id, draw_state, status, total_bets, total_tickets
        FROM lottery_rounds
@@ -428,11 +428,20 @@ export async function publishResults(
       [drawState, targetDate]
     );
 
+    let round;
     if (roundResult.rows.length === 0) {
-      throw new AppError('No active round found for this state and date', 400, 'ROUND_NOT_FOUND');
+      // Auto-create a round so admin can publish results even without a pre-existing round
+      const created = await client.query(
+        `INSERT INTO lottery_rounds (draw_state, draw_date, draw_time, status, opened_at)
+         VALUES ($1, $2, 'midday', 'open', NOW())
+         ON CONFLICT (draw_state, draw_date, draw_time) DO UPDATE SET status = lottery_rounds.status
+         RETURNING id, draw_state, status, total_bets, total_tickets`,
+        [drawState, targetDate]
+      );
+      round = created.rows[0];
+    } else {
+      round = roundResult.rows[0];
     }
-
-    const round = roundResult.rows[0];
     const roundId = round.id;
 
     // 2. Get win multipliers from app_settings
