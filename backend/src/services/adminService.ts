@@ -100,7 +100,7 @@ export async function getAllUsers(role?: string, page: number = 1, limit: number
             v.id as vendor_id, v.first_name as v_first_name, v.last_name as v_last_name,
             v.status as vendor_status, v.total_revenue, v.available_balance as v_available_balance,
             v.commission_rate, v.display_name as business_name,
-            v.city, v.country
+            u.city, u.country
      FROM users u
      LEFT JOIN wallets w ON w.user_id = u.id
      LEFT JOIN vendors v ON v.user_id = u.id

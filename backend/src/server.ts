@@ -3,6 +3,73 @@ import { query } from './database/pool';
 // ─── Startup migrations ─────────────────────────────────
 async function runStartupMigrations() {
   try {
+    // Migration 005: draw_configs table + gift_card_batches + admin_commission enum
+    await query(`ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'admin_commission'`).catch(() => {});
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS draw_configs (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        state draw_state NOT NULL,
+        name VARCHAR(100) NOT NULL,
+        draw_time VARCHAR(20) NOT NULL,
+        cutoff_time VARCHAR(20),
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(state, name)
+      );
+    `);
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS gift_card_batches (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        quantity INTEGER NOT NULL,
+        amount DECIMAL(12,2) NOT NULL,
+        currency VARCHAR(3) DEFAULT 'USD',
+        created_by UUID REFERENCES users(id),
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Seed default draw configs if table is empty
+    await query(`
+      INSERT INTO draw_configs (state, name, draw_time, cutoff_time, is_active) VALUES
+        ('NY', 'New York Midday', '14:30', '14:00', TRUE),
+        ('NY', 'New York Evening', '22:30', '22:00', TRUE),
+        ('FL', 'Florida Midday', '13:30', '13:00', TRUE),
+        ('GA', 'Georgia Midday', '12:29', '12:00', TRUE),
+        ('CT', 'Connecticut Midday', '13:40', '13:10', TRUE),
+        ('TX', 'Texas Day', '12:27', '12:00', TRUE),
+        ('PA', 'Pennsylvania Midday', '13:00', '12:30', TRUE),
+        ('TN', 'Tennessee Midday', '12:28', '12:00', TRUE),
+        ('NJ', 'New Jersey Midday', '12:59', '12:30', TRUE)
+      ON CONFLICT (state, name) DO NOTHING;
+    `);
+
+    // Migration 005b: add last_login column to users (required by getAllUsers)
+    await query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'users' AND column_name = 'last_login'
+        ) THEN
+          ALTER TABLE users ADD COLUMN last_login TIMESTAMPTZ;
+        END IF;
+      END $$;
+    `);
+
+    // Migration 005c: add payout_multipliers JSONB column to vendors
+    await query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'vendors' AND column_name = 'payout_multipliers'
+        ) THEN
+          ALTER TABLE vendors ADD COLUMN payout_multipliers JSONB;
+        END IF;
+      END $$;
+    `);
+
     // Migration 006: operating_currency on vendors
     await query(`
       DO $$ BEGIN
