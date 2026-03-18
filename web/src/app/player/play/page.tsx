@@ -84,7 +84,7 @@ export default function PlayScreen() {
           if (list.length > 0) {
             useAppStore.getState().setVendors(list);
           }
-        } catch {}
+        } catch { }
         setLoading(false);
         return;
       }

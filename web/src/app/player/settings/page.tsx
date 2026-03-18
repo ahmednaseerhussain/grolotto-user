@@ -44,7 +44,7 @@ export default function SettingsScreen() {
     if (!confirm(t("areYouSureSignOut") || "Are you sure you want to sign out?")) return;
     try {
       await authAPI.logout();
-    } catch {} finally {
+    } catch { } finally {
       logout();
       router.replace("/login");
     }
@@ -102,11 +102,10 @@ export default function SettingsScreen() {
                   setLanguage(lang.code);
                   toast.success(t("languageUpdated") || "Language updated");
                 }}
-                className={`p-3 rounded-lg border text-left flex items-center gap-2 transition-all ${
-                  language === lang.code
+                className={`p-3 rounded-lg border text-left flex items-center gap-2 transition-all ${language === lang.code
                     ? "border-amber-500 bg-amber-50"
                     : "border-gray-200 hover:border-gray-300"
-                }`}
+                  }`}
               >
                 <span className="text-lg">{lang.flag}</span>
                 <span className="text-sm font-medium">{lang.name}</span>
@@ -131,11 +130,10 @@ export default function SettingsScreen() {
                   setCurrency(cur.code);
                   toast.success(t("currencyUpdated") || "Currency updated");
                 }}
-                className={`p-3 rounded-lg border text-left flex items-center gap-2 transition-all ${
-                  currency === cur.code
+                className={`p-3 rounded-lg border text-left flex items-center gap-2 transition-all ${currency === cur.code
                     ? "border-green-500 bg-green-50"
                     : "border-gray-200 hover:border-gray-300"
-                }`}
+                  }`}
               >
                 <span className="text-lg">{cur.flag}</span>
                 <div>
@@ -165,14 +163,12 @@ export default function SettingsScreen() {
               </div>
               <button
                 onClick={() => pref.onChange(!pref.value)}
-                className={`relative w-11 h-6 rounded-full transition-colors ${
-                  pref.value ? pref.activeColor : "bg-gray-300"
-                }`}
+                className={`relative w-11 h-6 rounded-full transition-colors ${pref.value ? pref.activeColor : "bg-gray-300"
+                  }`}
               >
                 <span
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                    pref.value ? "translate-x-5" : ""
-                  }`}
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${pref.value ? "translate-x-5" : ""
+                    }`}
                 />
               </button>
             </div>

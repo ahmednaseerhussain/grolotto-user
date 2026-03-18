@@ -239,8 +239,8 @@ export default function HistoryScreen() {
             key={f}
             onClick={() => setFilter(f)}
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${filter === f
-                ? "bg-emerald-600 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              ? "bg-emerald-600 text-white"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
           >
             {f === "all" ? (t("allGames") || "All Games") : t(f) || f.charAt(0).toUpperCase() + f.slice(1)}
