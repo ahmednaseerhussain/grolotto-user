@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  ArrowLeft, User, Globe, DollarSign, Bell, Shield, Fingerprint,
+  ArrowLeft, User, Globe, DollarSign, Bell, Shield,
   CreditCard, Clock, Trash2, Info, LogOut, ChevronRight
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -39,7 +39,6 @@ export default function SettingsScreen() {
 
   const [notifications, setNotifications] = useState(true);
   const [autoPlay, setAutoPlay] = useState(false);
-  const [biometric, setBiometric] = useState(false);
 
   const handleLogout = async () => {
     if (!confirm(t("areYouSureSignOut") || "Are you sure you want to sign out?")) return;
@@ -158,7 +157,6 @@ export default function SettingsScreen() {
           {[
             { label: "Push Notifications", icon: Bell, value: notifications, onChange: setNotifications, activeColor: "bg-amber-500" },
             { label: "Auto-play Results", icon: Clock, value: autoPlay, onChange: setAutoPlay, activeColor: "bg-green-500" },
-            { label: "Biometric Auth", icon: Fingerprint, value: biometric, onChange: setBiometric, activeColor: "bg-violet-500" },
           ].map((pref) => (
             <div key={pref.label} className="flex items-center justify-between">
               <div className="flex items-center gap-2">

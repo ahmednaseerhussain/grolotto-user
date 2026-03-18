@@ -350,7 +350,9 @@ export async function createAdvertisement(data: any, createdBy: string) {
     [
       data.title, data.subtitle, data.content, data.backgroundColor || '#3b82f6',
       data.textColor || '#ffffff', data.imageUrl, data.linkUrl, data.linkText,
-      data.type || 'slideshow', data.status || 'active', data.startDate, data.endDate,
+      data.type || 'slideshow', data.status || 'active',
+      data.startDate || new Date().toISOString(),
+      data.endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
       data.targetAudience || 'all', data.priority || 'medium', data.order || 0, createdBy,
     ]
   );

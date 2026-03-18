@@ -112,18 +112,18 @@ export function PlayerBottomNav() {
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] z-40">
-      <div className="flex items-end justify-around pb-2 pt-1">
+      <div className="flex items-end justify-between px-4 pb-2 pt-1 max-w-md mx-auto">
         {leftItems.map(renderItem)}
         {/* Center Bet Button */}
         <Link
           href="/player/play"
-          className="flex flex-col items-center -mt-6"
+          className="flex flex-col items-center -mt-5"
         >
           <div className={cn(
-            "w-14 h-14 rounded-full flex items-center justify-center shadow-lg border-4 border-white",
+            "w-12 h-12 rounded-full flex items-center justify-center shadow-lg border-4 border-white",
             isBetActive ? "bg-amber-600" : "bg-green-600"
           )}>
-            <Dice5 className="h-7 w-7 text-white" />
+            <Dice5 className="h-6 w-6 text-white" />
           </div>
           <span className={cn(
             "text-[10px] font-bold mt-0.5",

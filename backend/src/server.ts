@@ -309,7 +309,7 @@ app.get('/api/advertisements/active', async (req, res, next) => {
       `SELECT id, title, subtitle, content, background_color, text_color, image_url, 
               link_url, link_text, ad_type, target_audience, priority, display_order
        FROM advertisements 
-       WHERE status = 'active' AND start_date <= NOW() AND end_date >= NOW()
+       WHERE status = 'active' AND (start_date IS NULL OR start_date <= NOW()) AND (end_date IS NULL OR end_date >= NOW())
        ORDER BY display_order ASC`
     );
     res.json(result.rows.map((r: any) => ({

@@ -120,36 +120,47 @@ export default function HistoryScreen() {
   };
   const stateCounts = getStateCounts();
 
-  const handleExportPDF = () => {
-    // Dynamic import for client-side only
-    import("jspdf").then(({ default: jsPDF }) => {
-      import("jspdf-autotable").then(() => {
-        const doc = new jsPDF();
-        doc.setFontSize(18);
-        doc.text("GROLOTTO - Game History", 14, 22);
-        doc.setFontSize(10);
-        doc.text(`Generated: ${format(new Date(), "PPP")}`, 14, 30);
-        doc.text(`Total Bet: ${formatCurrency(totalBet, currency)} | Total Won: ${formatCurrency(totalWon, currency)} | Net: ${formatCurrency(netResult, currency)}`, 14, 36);
+  const handleExportPDF = async () => {
+    try {
+      const { default: jsPDF } = await import("jspdf");
+      const autoTableModule = await import("jspdf-autotable");
+      const autoTable = autoTableModule.default || autoTableModule;
+      const doc = new jsPDF();
+      doc.setFontSize(18);
+      doc.text("GROLOTTO - Game History", 14, 22);
+      doc.setFontSize(10);
+      doc.text(`Generated: ${format(new Date(), "PPP")}`, 14, 30);
+      doc.text(`Total Bet: ${formatCurrency(totalBet, currency)} | Total Won: ${formatCurrency(totalWon, currency)} | Net: ${formatCurrency(netResult, currency)}`, 14, 36);
 
-        const rows = filtered.map((t: any) => [
-          GAME_LABELS[t.gameType] || t.gameType,
-          t.drawState,
-          (t.numbers || []).join(", "),
-          formatCurrency(t.betAmount, currency),
-          t.status,
-          t.status === "won" ? formatCurrency(t.winAmount, currency) : "-",
-          t.date ? format(new Date(t.date), "PP") : "-",
-        ]);
+      const rows = filtered.map((t: any) => [
+        GAME_LABELS[t.gameType] || t.gameType,
+        t.drawState,
+        (t.numbers || []).join(", "),
+        formatCurrency(t.betAmount, currency),
+        t.status,
+        t.status === "won" ? formatCurrency(t.winAmount, currency) : "-",
+        t.date ? format(new Date(t.date), "PP") : "-",
+      ]);
 
+      if (typeof autoTable === 'function') {
+        autoTable(doc, {
+          head: [["Game", "State", "Numbers", "Bet", "Status", "Won", "Date"]],
+          body: rows,
+          startY: 42,
+        });
+      } else {
         (doc as any).autoTable({
           head: [["Game", "State", "Numbers", "Bet", "Status", "Won", "Date"]],
           body: rows,
           startY: 42,
         });
-        doc.save("grolotto-history.pdf");
-        toast("PDF downloaded!");
-      });
-    });
+      }
+      doc.save("grolotto-history.pdf");
+      toast.success("PDF downloaded!");
+    } catch (err) {
+      console.error("PDF export error:", err);
+      toast.error("Failed to generate PDF");
+    }
   };
 
   return (

@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
-  ArrowLeft, Star, Trash2, ShoppingCart, AlertTriangle, CheckCircle, Loader2
+  ArrowLeft, Star, Trash2, ShoppingCart, AlertTriangle, CheckCircle, Loader2, ChevronRight
 } from "lucide-react";
 import { formatCurrency, GAME_LABELS, MULTIPLIERS } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -76,18 +76,26 @@ export default function PlayScreen() {
   // Load vendor
   useEffect(() => {
     const loadVendor = async () => {
-      if (!vendorId) { setLoading(false); return; }
+      if (!vendorId) {
+        // No vendor selected - load all vendors for selection
+        try {
+          const res = await vendorAPI.getVendors();
+          const list = Array.isArray(res) ? res : (res as any)?.vendors || [];
+          if (list.length > 0) {
+            useAppStore.getState().setVendors(list);
+          }
+        } catch {}
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       try {
-        // Use store vendor as immediate value, then always fetch full details for draws
         const found = vendors.find((v: any) => String(v.id) === String(vendorId));
         if (found) setVendor(found);
-        // Always fetch full vendor details to ensure draws are included
         const fullVendor = await vendorAPI.getVendorById(vendorId);
         if (fullVendor) setVendor(fullVendor);
       } catch (err) {
         console.error(err);
-        // Fallback: try fetching all vendors
         try {
           const res = await vendorAPI.getVendors();
           const list = Array.isArray(res) ? res : (res as any)?.vendors || [];
@@ -288,12 +296,76 @@ export default function PlayScreen() {
   }
 
   if (!vendor) {
+    // Show vendor selection screen
+    const availableVendors = (vendors || []).filter((v: any) => v.draws && Object.values(v.draws).some((d: any) => d?.enabled));
     return (
-      <div className="text-center py-16">
-        <p className="text-gray-500">Vendor not found</p>
-        <Button className="mt-4" onClick={() => router.push("/player/dashboard")}>
-          Go Back
-        </Button>
+      <div className="space-y-6 max-w-4xl mx-auto">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => router.back()}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-xl font-bold">{t("selectVendor") || "Select a Vendor"}</h1>
+            <p className="text-sm text-gray-500">{t("chooseVendorToPlay") || "Choose a vendor to place your bets"}</p>
+          </div>
+        </div>
+        {availableVendors.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <AlertTriangle className="h-12 w-12 text-amber-400 mx-auto mb-3" />
+              <p className="font-medium text-gray-700">{t("noVendorsAvailable") || "No vendors available"}</p>
+              <p className="text-sm text-gray-500 mt-1">Check back later or contact support</p>
+              <Button className="mt-4" onClick={() => router.push("/player/dashboard")}>
+                {t("goBack") || "Go Back"}
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-3">
+            {availableVendors.map((v: any) => {
+              const states = v.draws ? Object.entries(v.draws).filter(([, d]: [string, any]) => d?.enabled).map(([code]) => code) : [];
+              const games = new Set<string>();
+              if (v.draws) Object.values(v.draws).forEach((draw: any) => {
+                if (draw?.enabled) Object.entries(draw.games || {}).forEach(([key, g]: [string, any]) => { if (g?.enabled) games.add(key); });
+              });
+              return (
+                <Card
+                  key={v.id}
+                  className="cursor-pointer hover:shadow-md hover:border-green-300 transition-all"
+                  onClick={() => router.push(`/player/play?vendorId=${v.id}`)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold text-lg">
+                        {(v.businessName || v.firstName || "V")[0].toUpperCase()}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900">{v.businessName || `${v.firstName} ${v.lastName}`}</h3>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                          <span className="text-sm text-gray-600">{v.rating?.toFixed(1) || "5.0"}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {states.map((s) => (
+                            <Badge key={s} variant="outline" className="text-xs">{s}</Badge>
+                          ))}
+                        </div>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {Array.from(games).map((g) => (
+                            <span key={g} className={`text-[10px] text-white px-1.5 py-0.5 rounded-full ${GAME_COLORS[g] || "bg-gray-500"}`}>
+                              {GAME_LABELS[g] || g}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-gray-400" />
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }

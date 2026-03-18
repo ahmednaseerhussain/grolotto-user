@@ -21,6 +21,31 @@ interface TchalaResult {
 
 const POPULAR_SEARCHES = ["wedding", "money", "water", "dog", "house", "snake"];
 
+function generateRandomNumbers(keyword: string): TchalaResult {
+  // Generate deterministic-feeling but random lucky numbers based on the keyword
+  const numbers: number[] = [];
+  const seen = new Set<number>();
+  // Use keyword characters to seed variety, then fill with random
+  let seed = 0;
+  for (let i = 0; i < keyword.length; i++) {
+    seed += keyword.charCodeAt(i);
+  }
+  // Generate 3-5 unique numbers between 0-99
+  const count = 3 + (seed % 3); // 3, 4, or 5 numbers
+  while (numbers.length < count) {
+    const num = Math.floor(Math.random() * 100);
+    if (!seen.has(num)) {
+      seen.add(num);
+      numbers.push(num);
+    }
+  }
+  return {
+    keyword: keyword,
+    description: `Lucky numbers for "${keyword}"`,
+    numbers: numbers.sort((a, b) => a - b),
+  };
+}
+
 export default function TchalaScreen() {
   const router = useRouter();
   const t = useTranslation();
@@ -43,10 +68,17 @@ export default function TchalaScreen() {
     setLoading(true);
     try {
       const res = await tchalaAPI.search(q);
-      setResults(Array.isArray(res) ? res : []);
+      const items = Array.isArray(res) ? res : [];
+      if (items.length > 0) {
+        setResults(items);
+      } else {
+        // No database results — generate random lucky numbers
+        setResults([generateRandomNumbers(q)]);
+      }
     } catch (err) {
       console.error(err);
-      setResults([]);
+      // API failed — fall back to random numbers
+      setResults([generateRandomNumbers(q)]);
     } finally {
       setLoading(false);
     }
