@@ -40,13 +40,13 @@ export async function getSystemStats(date?: string) {
 
   // Players who placed bets on the given date
   const playersPlayedResult = await query(
-    `SELECT COUNT(DISTINCT user_id) as players_played FROM lottery_tickets WHERE created_at::date = $1::date`,
+    `SELECT COUNT(DISTINCT player_id) as players_played FROM lottery_tickets WHERE created_at::date = $1::date`,
     [filterDate]
   );
 
   // Players who won on the given date
   const playersWonResult = await query(
-    `SELECT COUNT(DISTINCT user_id) as players_won FROM lottery_tickets WHERE created_at::date = $1::date AND status = 'won'`,
+    `SELECT COUNT(DISTINCT player_id) as players_won FROM lottery_tickets WHERE created_at::date = $1::date AND status = 'won'`,
     [filterDate]
   );
 
