@@ -39,6 +39,38 @@ const DRAW_TIME_COLORS: Record<string, string> = {
   evening: "text-purple-600 bg-purple-50",
 };
 
+const DEFAULT_ADS = [
+  {
+    id: "default-1",
+    title: "Welcome to GroLotto!",
+    subtitle: "Your lucky numbers await",
+    content: "Play the biggest lottery games in Haiti. Pick your numbers and win big today!",
+    backgroundColor: "#166534",
+    textColor: "#ffffff",
+    linkText: "Play Now",
+    linkUrl: "/player/play",
+  },
+  {
+    id: "default-2",
+    title: "Tchala Dream Numbers",
+    subtitle: "Turn dreams into winnings",
+    content: "Use Tchala to discover your lucky numbers from dreams. A Haitian tradition!",
+    backgroundColor: "#4c1d95",
+    textColor: "#ffffff",
+    linkText: "Try Tchala",
+    linkUrl: "/player/tchala",
+  },
+  {
+    id: "default-3",
+    title: "Refer & Earn",
+    subtitle: "Invite friends, get rewards",
+    content: "Share GroLotto with friends and earn bonus credits when they place their first bet!",
+    backgroundColor: "#991b1b",
+    textColor: "#ffffff",
+    linkText: "Learn More",
+  },
+];
+
 export default function PlayerDashboard() {
   const router = useRouter();
   const t = useTranslation();
@@ -50,6 +82,9 @@ export default function PlayerDashboard() {
   const setWallet = useAppStore((s) => s.setWallet);
   const setVendors = useAppStore((s) => s.setVendors);
   const setAdvertisements = useAppStore((s) => s.setAdvertisements);
+
+  // Use API ads if available, otherwise show default promo ads
+  const displayAds = advertisements.length > 0 ? advertisements : DEFAULT_ADS;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showBalance, setShowBalance] = useState(true);
@@ -88,13 +123,13 @@ export default function PlayerDashboard() {
 
   // Auto-slide ads
   useEffect(() => {
-    if (advertisements.length > 1) {
+    if (displayAds.length > 1) {
       slideInterval.current = setInterval(() => {
-        setCurrentSlide((prev) => (prev + 1) % advertisements.length);
+        setCurrentSlide((prev) => (prev + 1) % displayAds.length);
       }, 5000);
       return () => { if (slideInterval.current) clearInterval(slideInterval.current); };
     }
-  }, [advertisements.length]);
+  }, [displayAds.length]);
 
   const balance = currency === "HTG"
     ? (wallet?.balanceHtg ?? wallet?.balance ?? 0)
@@ -158,9 +193,9 @@ export default function PlayerDashboard() {
       </div>
 
       {/* ── Section 2: Ad Banner Slider ── */}
-      {advertisements.length > 0 && (
+      {displayAds.length > 0 && (
         <div className="relative overflow-hidden rounded-2xl h-44 shadow-md">
-          {advertisements.map((ad: any, i: number) => (
+          {displayAds.map((ad: any, i: number) => (
             <div
               key={ad.id || i}
               className={`absolute inset-0 transition-all duration-700 flex items-center p-6 ${i === currentSlide ? "opacity-100 translate-x-0" : "opacity-0 translate-x-full pointer-events-none"
@@ -173,12 +208,16 @@ export default function PlayerDashboard() {
               }}
               onClick={() => {
                 if (ad.linkUrl) {
-                  try {
-                    const url = new URL(ad.linkUrl);
-                    if (url.protocol === 'http:' || url.protocol === 'https:') {
-                      window.open(ad.linkUrl, "_blank", "noopener,noreferrer");
-                    }
-                  } catch { /* invalid URL */ }
+                  if (ad.linkUrl.startsWith("/")) {
+                    router.push(ad.linkUrl);
+                  } else {
+                    try {
+                      const url = new URL(ad.linkUrl);
+                      if (url.protocol === 'http:' || url.protocol === 'https:') {
+                        window.open(ad.linkUrl, "_blank", "noopener,noreferrer");
+                      }
+                    } catch { /* invalid URL */ }
+                  }
                 }
               }}
             >
@@ -220,9 +259,9 @@ export default function PlayerDashboard() {
               </div>
             </div>
           ))}
-          {advertisements.length > 1 && (
+          {displayAds.length > 1 && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
-              {advertisements.map((_: any, i: number) => (
+              {displayAds.map((_: any, i: number) => (
                 <button
                   key={i}
                   onClick={() => setCurrentSlide(i)}

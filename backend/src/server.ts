@@ -159,6 +159,18 @@ async function runStartupMigrations() {
       CREATE INDEX IF NOT EXISTS idx_advertisements_dates  ON advertisements(start_date, end_date);
     `);
 
+    // Seed default advertisements if table is empty
+    const adCount = await query('SELECT COUNT(*) FROM advertisements');
+    if (parseInt(adCount.rows[0].count) === 0) {
+      await query(`
+        INSERT INTO advertisements (title, subtitle, content, background_color, text_color, link_text, ad_type, status, start_date, end_date, display_order)
+        VALUES
+          ('Welcome to GroLotto!', 'Your lucky numbers await', 'Play the biggest lottery games in Haiti. Pick your numbers and win big today!', '#166534', '#ffffff', 'Play Now', 'slideshow', 'active', NOW(), NOW() + INTERVAL '5 years', 0),
+          ('Tchala Dream Numbers', 'Turn dreams into winnings', 'Use Tchala to discover your lucky numbers from dreams. A Haitian tradition meets modern lottery!', '#4c1d95', '#ffffff', 'Try Tchala', 'slideshow', 'active', NOW(), NOW() + INTERVAL '5 years', 1),
+          ('Refer & Earn', 'Invite friends, get rewards', 'Share GroLotto with friends and earn bonus credits when they place their first bet!', '#991b1b', '#ffffff', 'Learn More', 'slideshow', 'active', NOW(), NOW() + INTERVAL '5 years', 2)
+      `);
+    }
+
     // Migration 011: create number_limits table if missing
     await query(`
       CREATE TABLE IF NOT EXISTS number_limits (
