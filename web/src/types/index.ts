@@ -200,6 +200,7 @@ export interface Advertisement {
   textColor?: string;
   imageUrl?: string;
   linkUrl?: string;
+  linkText?: string;
   adType: AdType;
   status: AdStatus;
   startDate?: string;

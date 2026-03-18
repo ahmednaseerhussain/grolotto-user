@@ -39,37 +39,7 @@ const DRAW_TIME_COLORS: Record<string, string> = {
   evening: "text-purple-600 bg-purple-50",
 };
 
-const DEFAULT_ADS = [
-  {
-    id: "default-1",
-    title: "Welcome to GroLotto!",
-    subtitle: "Your lucky numbers await",
-    content: "Play the biggest lottery games in Haiti. Pick your numbers and win big today!",
-    backgroundColor: "#166534",
-    textColor: "#ffffff",
-    linkText: "Play Now",
-    linkUrl: "/player/play",
-  },
-  {
-    id: "default-2",
-    title: "Tchala Dream Numbers",
-    subtitle: "Turn dreams into winnings",
-    content: "Use Tchala to discover your lucky numbers from dreams. A Haitian tradition!",
-    backgroundColor: "#4c1d95",
-    textColor: "#ffffff",
-    linkText: "Try Tchala",
-    linkUrl: "/player/tchala",
-  },
-  {
-    id: "default-3",
-    title: "Refer & Earn",
-    subtitle: "Invite friends, get rewards",
-    content: "Share GroLotto with friends and earn bonus credits when they place their first bet!",
-    backgroundColor: "#991b1b",
-    textColor: "#ffffff",
-    linkText: "Learn More",
-  },
-];
+
 
 export default function PlayerDashboard() {
   const router = useRouter();
@@ -83,8 +53,7 @@ export default function PlayerDashboard() {
   const setVendors = useAppStore((s) => s.setVendors);
   const setAdvertisements = useAppStore((s) => s.setAdvertisements);
 
-  // Use API ads if available, otherwise show default promo ads
-  const displayAds = advertisements.length > 0 ? advertisements : DEFAULT_ADS;
+  const displayAds = advertisements;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showBalance, setShowBalance] = useState(true);
