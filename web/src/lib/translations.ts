@@ -3249,6 +3249,60 @@ export const translations = {
     en: "Contact Support",
     fr: "Contacter le Support",
     es: "Contactar Soporte"
+  },
+  todayResults: {
+    ht: "Rezilta Jodi a",
+    en: "Today's Results",
+    fr: "Résultats du Jour",
+    es: "Resultados de Hoy"
+  },
+  noResultsYetToday: {
+    ht: "Pa gen rezilta pibliye jodi a ankò",
+    en: "No results published yet today",
+    fr: "Aucun résultat publié aujourd'hui",
+    es: "No hay resultados publicados hoy"
+  },
+  viewAllResults: {
+    ht: "Wè Tout Rezilta",
+    en: "View All Results",
+    fr: "Voir Tous les Résultats",
+    es: "Ver Todos los Resultados"
+  },
+  quickPlayVendors: {
+    ht: "Jwe Vit",
+    en: "Quick Play Vendors",
+    fr: "Vendeurs Jeu Rapide",
+    es: "Vendedores Juego Rápido"
+  },
+  latestResults: {
+    ht: "Dènye Rezilta",
+    en: "Latest Results",
+    fr: "Derniers Résultats",
+    es: "Últimos Resultados"
+  },
+  viewDetails: {
+    ht: "Wè Detay",
+    en: "View Details",
+    fr: "Voir Détails",
+    es: "Ver Detalles"
+  },
+  seeAll: {
+    ht: "Wè Tout",
+    en: "See All",
+    fr: "Tout Voir",
+    es: "Ver Todo"
+  },
+  welcomePlayer: {
+    ht: "Byenveni, Jwè!",
+    en: "Welcome, Player!",
+    fr: "Bienvenue, Joueur!",
+    es: "¡Bienvenido, Jugador!"
+  },
+  searchVendors: {
+    ht: "Chèche Vandè...",
+    en: "Search Vendors...",
+    fr: "Rechercher Vendeurs...",
+    es: "Buscar Vendedores..."
   }
 };
 

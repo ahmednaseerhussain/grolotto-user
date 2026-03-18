@@ -16,6 +16,7 @@ import {
   Wallet,
   BookOpen,
   Banknote,
+  Dice5,
 } from "lucide-react";
 
 const navItems = [
@@ -80,34 +81,56 @@ export function PlayerBottomNav() {
   const pathname = usePathname();
   const t = useTranslation();
 
-  const bottomItems = [
+  const leftItems = [
     { href: "/player/dashboard", icon: Home, labelKey: "home" },
     { href: "/player/notifications", icon: Bell, labelKey: "notifications" },
-    { href: "/player/history", icon: History, labelKey: "bet" }, //history is mostly bets
+  ];
+  const rightItems = [
     { href: "/player/help", icon: HelpCircle, labelKey: "help" },
     { href: "/player/settings", icon: Settings, labelKey: "settings" },
   ];
 
+  const renderItem = (item: { href: string; icon: any; labelKey: string }) => {
+    const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+    const Icon = item.icon;
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={cn(
+          "flex flex-col items-center gap-0.5 px-3 py-1 transition-colors",
+          isActive ? "text-amber-600" : "text-gray-400"
+        )}
+      >
+        <Icon className="h-5 w-5" />
+        <span className="text-[10px] font-semibold">{t(item.labelKey)}</span>
+      </Link>
+    );
+  };
+
+  const isBetActive = pathname === "/player/play" || pathname?.startsWith("/player/play/");
+
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-40">
-      <div className="flex items-center justify-around py-2">
-        {bottomItems.map((item) => {
-          const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-colors",
-                isActive ? "text-amber-600" : "text-gray-400"
-              )}
-            >
-              <Icon className="h-6 w-6" />
-              <span className="text-[11px] font-semibold">{t(item.labelKey)}</span>
-            </Link>
-          );
-        })}
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] z-40">
+      <div className="flex items-end justify-around pb-2 pt-1">
+        {leftItems.map(renderItem)}
+        {/* Center Bet Button */}
+        <Link
+          href="/player/play"
+          className="flex flex-col items-center -mt-6"
+        >
+          <div className={cn(
+            "w-14 h-14 rounded-full flex items-center justify-center shadow-lg border-4 border-white",
+            isBetActive ? "bg-amber-600" : "bg-green-600"
+          )}>
+            <Dice5 className="h-7 w-7 text-white" />
+          </div>
+          <span className={cn(
+            "text-[10px] font-bold mt-0.5",
+            isBetActive ? "text-amber-600" : "text-green-600"
+          )}>{t("bet")}</span>
+        </Link>
+        {rightItems.map(renderItem)}
       </div>
     </nav>
   );
