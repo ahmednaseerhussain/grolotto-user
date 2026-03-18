@@ -107,11 +107,7 @@ export async function moncashWebhook(req: Request, res: Response) {
   try {
     const transactionId = req.body?.transactionId || req.query?.transactionId;
     
-    console.log('[MonCash Webhook] Received notification:', {
-      body: req.body,
-      query: req.query,
-      transactionId,
-    });
+    console.log('[MonCash Webhook] Received notification, transactionId:', transactionId);
 
     if (transactionId) {
       // Look up which user owns this order and auto-credit

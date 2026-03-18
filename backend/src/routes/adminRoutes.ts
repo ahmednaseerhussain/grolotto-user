@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as ctrl from '../controllers/adminController';
 import { authenticate, authorize } from '../middleware/auth';
+import { validateUUIDParams } from '../middleware/validate';
 
 const router = Router();
 
@@ -13,16 +14,20 @@ router.get('/stats', ctrl.getSystemStats);
 // User management — specific paths before parameterized
 router.get('/users', ctrl.getAllUsers);
 router.post('/users', ctrl.createAdminUser);
-router.put('/users/:userId/suspend', ctrl.suspendUser);
-router.put('/users/:userId/activate', ctrl.activateUser);
-router.put('/users/:userId', ctrl.updateAdminUser);
-router.delete('/users/:userId', ctrl.deleteAdminUser);
+router.put('/users/:userId/suspend', validateUUIDParams('userId'), ctrl.suspendUser);
+router.put('/users/:userId/activate', validateUUIDParams('userId'), ctrl.activateUser);
+router.put('/users/:userId', validateUUIDParams('userId'), ctrl.updateAdminUser);
+router.delete('/users/:userId', validateUUIDParams('userId'), ctrl.deleteAdminUser);
 
 // Vendor management
-router.put('/vendors/:vendorId/approve', ctrl.approveVendor);
-router.put('/vendors/:vendorId/reject', ctrl.rejectVendor);
-router.put('/vendors/:vendorId/suspend', ctrl.suspendVendor);
-router.put('/vendors/:vendorId/activate', ctrl.activateVendor);
+router.put('/vendors/:vendorId/approve', validateUUIDParams('vendorId'), ctrl.approveVendor);
+router.put('/vendors/:vendorId/reject', validateUUIDParams('vendorId'), ctrl.rejectVendor);
+router.put('/vendors/:vendorId/suspend', validateUUIDParams('vendorId'), ctrl.suspendVendor);
+router.put('/vendors/:vendorId/activate', validateUUIDParams('vendorId'), ctrl.activateVendor);
+
+// Vendor payout multipliers (admin override)
+router.get('/vendors/:vendorId/payout-multipliers', validateUUIDParams('vendorId'), ctrl.getVendorPayoutMultipliers);
+router.put('/vendors/:vendorId/payout-multipliers', validateUUIDParams('vendorId'), ctrl.updateVendorPayoutMultipliers);
 
 // Settings
 router.get('/settings', ctrl.getAppSettings);
@@ -30,21 +35,21 @@ router.put('/settings/:key', ctrl.updateAppSetting);
 
 // Payouts
 router.get('/payouts/pending', ctrl.getPendingPayouts);
-router.post('/payouts/:payoutId/process', ctrl.processVendorPayout);
+router.post('/payouts/:payoutId/process', validateUUIDParams('payoutId'), ctrl.processVendorPayout);
 
 // Advertisements
 router.get('/advertisements', ctrl.getAdvertisements);
 router.post('/advertisements', ctrl.createAdvertisement);
-router.put('/advertisements/:adId', ctrl.updateAdvertisement);
-router.delete('/advertisements/:adId', ctrl.deleteAdvertisement);
-router.post('/advertisements/:adId/click', ctrl.recordAdClick);
-router.post('/advertisements/:adId/impression', ctrl.recordAdImpression);
+router.put('/advertisements/:adId', validateUUIDParams('adId'), ctrl.updateAdvertisement);
+router.delete('/advertisements/:adId', validateUUIDParams('adId'), ctrl.deleteAdvertisement);
+router.post('/advertisements/:adId/click', validateUUIDParams('adId'), ctrl.recordAdClick);
+router.post('/advertisements/:adId/impression', validateUUIDParams('adId'), ctrl.recordAdImpression);
 
 // Draw Configs
 router.get('/draws', ctrl.getDrawConfigs);
 router.post('/draws', ctrl.createDrawConfig);
-router.put('/draws/:id', ctrl.updateDrawConfig);
-router.delete('/draws/:id', ctrl.deleteDrawConfig);
+router.put('/draws/:id', validateUUIDParams('id'), ctrl.updateDrawConfig);
+router.delete('/draws/:id', validateUUIDParams('id'), ctrl.deleteDrawConfig);
 
 // Gift Cards
 router.post('/gift-cards/batch', ctrl.generateGiftCardBatch);
@@ -63,6 +68,6 @@ router.post('/rounds', ctrl.createLotteryRound);
 
 // Player Withdrawals
 router.get('/withdrawals/pending', ctrl.getPendingWithdrawals);
-router.post('/withdrawals/:withdrawalId/process', ctrl.processPlayerWithdrawal);
+router.post('/withdrawals/:withdrawalId/process', validateUUIDParams('withdrawalId'), ctrl.processPlayerWithdrawal);
 
 export default router;

@@ -125,6 +125,70 @@ async function runStartupMigrations() {
       END $$;
     `);
 
+    // Migration 010: create advertisements table + enums if missing
+    await query(`DO $$ BEGIN CREATE TYPE ad_type AS ENUM ('slideshow','banner','popup'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;`);
+    await query(`DO $$ BEGIN CREATE TYPE ad_status AS ENUM ('active','paused','scheduled','expired'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;`);
+    await query(`DO $$ BEGIN CREATE TYPE ad_audience AS ENUM ('all','new_players','active_players'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;`);
+    await query(`DO $$ BEGIN CREATE TYPE ad_priority AS ENUM ('high','medium','low'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;`);
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS advertisements (
+        id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        title            VARCHAR(255) NOT NULL,
+        subtitle         VARCHAR(255),
+        content          TEXT,
+        background_color VARCHAR(20)  DEFAULT '#3b82f6',
+        text_color       VARCHAR(20)  DEFAULT '#ffffff',
+        image_url        VARCHAR(500),
+        link_url         VARCHAR(500),
+        link_text        VARCHAR(100),
+        ad_type          ad_type      DEFAULT 'slideshow',
+        status           ad_status    DEFAULT 'active',
+        start_date       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+        end_date         TIMESTAMPTZ  NOT NULL DEFAULT (NOW() + INTERVAL '1 year'),
+        clicks           INTEGER      DEFAULT 0,
+        impressions      INTEGER      DEFAULT 0,
+        target_audience  ad_audience  DEFAULT 'all',
+        priority         ad_priority  DEFAULT 'medium',
+        display_order    INTEGER      DEFAULT 0,
+        created_by       UUID REFERENCES users(id),
+        created_at       TIMESTAMPTZ  DEFAULT NOW(),
+        updated_at       TIMESTAMPTZ  DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_advertisements_status ON advertisements(status);
+      CREATE INDEX IF NOT EXISTS idx_advertisements_dates  ON advertisements(start_date, end_date);
+    `);
+
+    // Migration 011: create number_limits table if missing
+    await query(`
+      CREATE TABLE IF NOT EXISTS number_limits (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        vendor_id UUID NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+        draw_state draw_state NOT NULL,
+        number VARCHAR(10) NOT NULL,
+        bet_limit DECIMAL(10,2) NOT NULL,
+        current_total DECIMAL(10,2) DEFAULT 0.00,
+        is_stopped BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(vendor_id, draw_state, number)
+      );
+      CREATE INDEX IF NOT EXISTS idx_number_limits_vendor_draw ON number_limits(vendor_id, draw_state);
+    `);
+
+    // Migration 012: create dream_dictionary table if missing
+    await query(`
+      CREATE TABLE IF NOT EXISTS dream_dictionary (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        keyword VARCHAR(100) NOT NULL,
+        numbers INTEGER[] NOT NULL,
+        description TEXT,
+        language VARCHAR(5) DEFAULT 'en',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_dream_dictionary_keyword ON dream_dictionary(keyword);
+      CREATE INDEX IF NOT EXISTS idx_dream_dictionary_lang ON dream_dictionary(language);
+    `);
+
     console.log('[Migration] Startup migrations applied successfully');
   } catch (err) {
     console.error('[Migration] Startup migration error:', err);

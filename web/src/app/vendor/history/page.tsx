@@ -42,7 +42,8 @@ export default function VendorHistoryScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterGame, setFilterGame] = useState("all");
   const [filterState, setFilterState] = useState("all");
-  const [filterDate, setFilterDate] = useState("");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
 
   useEffect(() => {
     fetchHistory();
@@ -75,14 +76,18 @@ export default function VendorHistoryScreen() {
     }
     if (filterGame !== "all") items = items.filter((i) => i.gameType === filterGame);
     if (filterState !== "all") items = items.filter((i) => i.state === filterState);
-    if (filterDate) {
+    if (filterDateFrom || filterDateTo) {
       items = items.filter((i) => {
         const d = i.createdAt || i.drawDate;
-        return d && d.startsWith(filterDate);
+        if (!d) return false;
+        const itemDate = d.slice(0, 10);
+        if (filterDateFrom && itemDate < filterDateFrom) return false;
+        if (filterDateTo && itemDate > filterDateTo) return false;
+        return true;
       });
     }
     return items;
-  }, [history, searchQuery, filterGame, filterState, filterDate]);
+  }, [history, searchQuery, filterGame, filterState, filterDateFrom, filterDateTo]);
 
   const stats = useMemo(() => {
     const total = filtered.length;
@@ -213,9 +218,18 @@ export default function VendorHistoryScreen() {
             </select>
             <Input
               type="date"
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
+              value={filterDateFrom}
+              onChange={(e) => setFilterDateFrom(e.target.value)}
               className="w-auto"
+              placeholder="From"
+            />
+            <span className="text-gray-400 text-sm self-center">to</span>
+            <Input
+              type="date"
+              value={filterDateTo}
+              onChange={(e) => setFilterDateTo(e.target.value)}
+              className="w-auto"
+              placeholder="To"
             />
           </div>
         </CardContent>

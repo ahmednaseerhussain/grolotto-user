@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as adminService from '../services/adminService';
+import * as vendorService from '../services/vendorService';
 
 export async function getSystemStats(req: Request, res: Response, next: NextFunction) {
   try {
@@ -290,6 +291,28 @@ export async function getTransactions(req: Request, res: Response, next: NextFun
 }
 
 // ──────────────────────────────────────────────────────────
+// Vendor Payout Multipliers (admin override)
+// ──────────────────────────────────────────────────────────
+
+export async function getVendorPayoutMultipliers(req: Request, res: Response, next: NextFunction) {
+  try {
+    const multipliers = await vendorService.getPayoutMultipliers(req.params.vendorId);
+    res.json(multipliers);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateVendorPayoutMultipliers(req: Request, res: Response, next: NextFunction) {
+  try {
+    const result = await vendorService.updatePayoutMultipliers(req.params.vendorId, req.body);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ──────────────────────────────────────────────────────────
 // Admin User CRUD
 // ──────────────────────────────────────────────────────────
 
@@ -305,7 +328,9 @@ export async function createAdminUser(req: Request, res: Response, next: NextFun
 
 export async function updateAdminUser(req: Request, res: Response, next: NextFunction) {
   try {
-    await adminService.updateAdminUser(req.params.userId, req.body);
+    // Whitelist allowed fields to prevent mass assignment
+    const { name, email, isActive } = req.body;
+    await adminService.updateAdminUser(req.params.userId, { name, email, isActive });
     res.json({ message: 'Admin user updated' });
   } catch (error) {
     next(error);

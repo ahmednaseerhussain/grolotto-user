@@ -23,20 +23,20 @@ interface FAQSection {
 
 function Accordion({ item, isOpen, onToggle }: { item: FAQItem; isOpen: boolean; onToggle: () => void }) {
   return (
-    <div className="border border-slate-700 rounded-xl overflow-hidden">
+    <div className="border border-gray-200 rounded-xl overflow-hidden">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-800/50 transition-colors"
+        className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
       >
-        <span className="text-white font-medium text-sm pr-4">{item.question}</span>
+        <span className="text-gray-800 font-medium text-sm pr-4">{item.question}</span>
         {isOpen ? (
-          <ChevronUp className="h-5 w-5 text-amber-400 flex-shrink-0" />
+          <ChevronUp className="h-5 w-5 text-emerald-600 flex-shrink-0" />
         ) : (
-          <ChevronDown className="h-5 w-5 text-slate-400 flex-shrink-0" />
+          <ChevronDown className="h-5 w-5 text-gray-400 flex-shrink-0" />
         )}
       </button>
       {isOpen && (
-        <div className="px-4 pb-4 text-slate-400 text-sm leading-relaxed border-t border-slate-700/50 pt-3">
+        <div className="px-4 pb-4 text-gray-600 text-sm leading-relaxed border-t border-gray-100 pt-3">
           {item.answer}
         </div>
       )}
@@ -187,28 +187,28 @@ export default function HelpPage() {
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       {/* Header */}
-      <div className="bg-slate-900 rounded-2xl p-6">
+      <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
         <div className="flex items-center gap-3 mb-6">
-          <Button variant="ghost" size="sm" onClick={() => router.back()} className="text-slate-200 hover:text-white hover:bg-slate-800">
+          <Button variant="ghost" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-xl font-bold text-slate-100">
-            <HelpCircle className="h-5 w-5 inline mr-2 text-amber-400" />
+          <h1 className="text-xl font-bold text-gray-800">
+            <HelpCircle className="h-5 w-5 inline mr-2 text-emerald-600" />
             {t("helpCenter") || "Help Center"}
           </h1>
         </div>
 
-        <div className="text-center py-6 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-xl border border-amber-500/20">
-          <HelpCircle className="h-12 w-12 text-amber-400 mx-auto mb-3" />
-          <h2 className="text-lg font-bold text-white mb-1">{t("howCanWeHelp") || "How can we help you?"}</h2>
-          <p className="text-slate-400 text-sm">Find answers to common questions below</p>
+        <div className="text-center py-6 bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border border-emerald-200">
+          <HelpCircle className="h-12 w-12 text-emerald-600 mx-auto mb-3" />
+          <h2 className="text-lg font-bold text-gray-800 mb-1">{t("howCanWeHelp") || "How can we help you?"}</h2>
+          <p className="text-gray-500 text-sm">Find answers to common questions below</p>
         </div>
       </div>
 
       {/* FAQ Sections */}
       {sections.map((section, si) => (
-        <div key={si} className="bg-slate-900 rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <div key={si} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
             {section.title}
           </h3>
           <div className="space-y-2">
@@ -228,46 +228,46 @@ export default function HelpPage() {
       ))}
 
       {/* Contact Section */}
-      <div className="bg-slate-900 rounded-2xl p-6">
-        <h3 className="text-lg font-bold text-white mb-4">📞 {t("contactSupport") || "Contact Support"}</h3>
-        <p className="text-slate-400 text-sm mb-4">Still need help? Reach out to our support team:</p>
+      <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+        <h3 className="text-lg font-bold text-gray-800 mb-4">📞 {t("contactSupport") || "Contact Support"}</h3>
+        <p className="text-gray-500 text-sm mb-4">Still need help? Reach out to our support team:</p>
         <div className="space-y-3">
           <a
             href="mailto:support@grolotto.com"
-            className="flex items-center gap-3 bg-slate-800 rounded-xl p-4 border border-slate-700 hover:border-amber-500/50 transition-colors"
+            className="flex items-center gap-3 bg-gray-50 rounded-xl p-4 border border-gray-200 hover:border-emerald-400 transition-colors"
           >
-            <div className="bg-blue-500/20 p-2 rounded-lg">
-              <Mail className="h-5 w-5 text-blue-400" />
+            <div className="bg-blue-100 p-2 rounded-lg">
+              <Mail className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-white font-medium text-sm">Email</p>
-              <p className="text-slate-400 text-xs">support@grolotto.com</p>
+              <p className="text-gray-800 font-medium text-sm">Email</p>
+              <p className="text-gray-500 text-xs">support@grolotto.com</p>
             </div>
           </a>
           <a
             href="tel:+50937000000"
-            className="flex items-center gap-3 bg-slate-800 rounded-xl p-4 border border-slate-700 hover:border-amber-500/50 transition-colors"
+            className="flex items-center gap-3 bg-gray-50 rounded-xl p-4 border border-gray-200 hover:border-emerald-400 transition-colors"
           >
-            <div className="bg-green-500/20 p-2 rounded-lg">
-              <Phone className="h-5 w-5 text-green-400" />
+            <div className="bg-green-100 p-2 rounded-lg">
+              <Phone className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <p className="text-white font-medium text-sm">Phone</p>
-              <p className="text-slate-400 text-xs">+509 37 00 0000</p>
+              <p className="text-gray-800 font-medium text-sm">Phone</p>
+              <p className="text-gray-500 text-xs">+509 37 00 0000</p>
             </div>
           </a>
           <a
             href="https://wa.me/50937000000"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 bg-slate-800 rounded-xl p-4 border border-slate-700 hover:border-amber-500/50 transition-colors"
+            className="flex items-center gap-3 bg-gray-50 rounded-xl p-4 border border-gray-200 hover:border-emerald-400 transition-colors"
           >
-            <div className="bg-emerald-500/20 p-2 rounded-lg">
-              <MessageCircle className="h-5 w-5 text-emerald-400" />
+            <div className="bg-emerald-100 p-2 rounded-lg">
+              <MessageCircle className="h-5 w-5 text-emerald-600" />
             </div>
             <div>
-              <p className="text-white font-medium text-sm">WhatsApp</p>
-              <p className="text-slate-400 text-xs">Chat with us</p>
+              <p className="text-gray-800 font-medium text-sm">WhatsApp</p>
+              <p className="text-gray-500 text-xs">Chat with us</p>
             </div>
           </a>
         </div>

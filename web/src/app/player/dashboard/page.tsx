@@ -164,7 +164,16 @@ export default function PlayerDashboard() {
               key={ad.id || i}
               className={`absolute inset-0 transition-opacity duration-500 flex items-center justify-center p-6 ${i === currentSlide ? "opacity-100" : "opacity-0 pointer-events-none"
                 }`}
-              onClick={() => ad.linkUrl && window.open(ad.linkUrl, "_blank")}
+              onClick={() => {
+                if (ad.linkUrl) {
+                  try {
+                    const url = new URL(ad.linkUrl);
+                    if (url.protocol === 'http:' || url.protocol === 'https:') {
+                      window.open(ad.linkUrl, "_blank", "noopener,noreferrer");
+                    }
+                  } catch { /* invalid URL, ignore */ }
+                }
+              }}
               style={{ cursor: ad.linkUrl ? "pointer" : "default" }}
             >
               {ad.imageUrl ? (
@@ -194,28 +203,28 @@ export default function PlayerDashboard() {
 
       {/* Wallet */}
       <Card
-        className={`${currency === "HTG" ? "bg-red-50 border-red-200" : "bg-blue-50 border-blue-200"} border hover:shadow-md transition-shadow cursor-pointer`}
+        className="bg-red-600 border-red-700 border hover:shadow-md transition-shadow cursor-pointer"
         onClick={() => router.push("/player/payment")}
       >
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className={`${currency === "HTG" ? "bg-red-500" : "bg-blue-500"} p-1.5 rounded-lg`}>
+            <div className="bg-white/20 p-1.5 rounded-lg">
               <DollarSign className="h-4 w-4 text-white" />
             </div>
-            <span className={`text-xs font-semibold ${currency === "HTG" ? "text-red-800" : "text-blue-800"}`}>
-              {currency === "HTG" ? "MonCash" : "PayPal"}
+            <span className="text-xs font-semibold text-white">
+              Grolotto Wallet
             </span>
           </div>
-          <p className="text-xs text-gray-500">{currency} Balance</p>
+          <p className="text-xs text-red-200">{currency} Balance</p>
           <div className="flex items-center gap-1 mt-1">
-            <p className="text-xl font-bold text-gray-900">
+            <p className="text-xl font-bold text-white">
               {showBalance ? formatCurrency(balance, currency) : "••••••"}
             </p>
-            <button onClick={(e) => { e.stopPropagation(); setShowBalance(!showBalance); }} className="p-0.5 text-gray-400 hover:text-gray-600">
+            <button onClick={(e) => { e.stopPropagation(); setShowBalance(!showBalance); }} className="p-0.5 text-red-200 hover:text-white">
               {showBalance ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
             </button>
           </div>
-          <p className={`text-[10px] ${currency === "HTG" ? "text-red-600" : "text-blue-600"} font-medium mt-2`}>+ Add {currency}</p>
+          <p className="text-[10px] text-red-200 font-medium mt-2">+ Add {currency}</p>
         </CardContent>
       </Card>
 
