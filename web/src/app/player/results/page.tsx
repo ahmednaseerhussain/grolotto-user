@@ -45,7 +45,7 @@ const GAME_COLORS: Record<string, { bg: string; text: string; ball: string }> = 
 function NumberBall({ number, color = "bg-amber-500", size = "w-11 h-11" }: { number: number | string; color?: string; size?: string }) {
   return (
     <div className={`${size} rounded-full ${color} text-white flex items-center justify-center font-bold shadow-md text-base`}>
-      {String(number).padStart(2, "0")}
+      {number}
     </div>
   );
 }
@@ -264,27 +264,96 @@ export default function ResultsScreen() {
 
                         {winNums && Object.keys(winNums).length > 0 ? (
                           <div className="space-y-3">
-                            {/* Game Results */}
-                            {Object.entries(winNums).map(([gameType, nums]: [string, any]) => {
-                              const numsArr = Array.isArray(nums) ? nums : [];
-                              if (numsArr.length === 0) return null;
-                              const gc = GAME_COLORS[gameType] || GAME_COLORS.senp;
+                            {/* SENP — 1st / 2nd / 3rd */}
+                            {winNums.senp && Array.isArray(winNums.senp) && winNums.senp.length > 0 && (() => {
+                              const gc = GAME_COLORS.senp;
+                              const labels = ["1st", "2nd", "3rd"];
+                              return (
+                                <div className={`${gc.bg} rounded-lg p-3`}>
+                                  <span className={`text-xs font-bold ${gc.text} uppercase tracking-wider block mb-2`}>Senp</span>
+                                  <div className="flex items-center gap-4">
+                                    {winNums.senp.map((n: number, i: number) => (
+                                      <div key={i} className="flex flex-col items-center gap-1">
+                                        <span className={`text-[10px] font-semibold ${gc.text}`}>{labels[i] || ""}</span>
+                                        <NumberBall number={n} color={gc.ball} size="w-10 h-10" />
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            })()}
 
+                            {/* MARYAJ — combinations with × */}
+                            {winNums.maryaj && Array.isArray(winNums.maryaj) && winNums.maryaj.length > 0 && (() => {
+                              const gc = GAME_COLORS.maryaj;
+                              const pairs: [number, number][] = [];
+                              const nums = winNums.maryaj as number[];
+                              // Show pairs: maryaj numbers come as pairs sequentially
+                              for (let i = 0; i < nums.length; i += 2) {
+                                if (i + 1 < nums.length) pairs.push([nums[i], nums[i + 1]]);
+                              }
+                              // Fallback: if odd number, derive combos from senp
+                              const senpNums = winNums.senp && Array.isArray(winNums.senp) ? winNums.senp : [];
+                              const combos = pairs.length > 0 ? pairs : (senpNums.length >= 2 ? [[senpNums[0], senpNums[1]], ...(senpNums.length >= 3 ? [[senpNums[0], senpNums[2]], [senpNums[1], senpNums[2]]] : [])] as [number, number][] : []);
+                              if (combos.length === 0) return null;
+                              return (
+                                <div className={`${gc.bg} rounded-lg p-3`}>
+                                  <span className={`text-xs font-bold ${gc.text} uppercase tracking-wider block mb-2`}>Maryaj</span>
+                                  <div className="flex flex-wrap items-center gap-3">
+                                    {combos.map(([a, b], i) => (
+                                      <div key={i} className="flex items-center gap-1.5">
+                                        <NumberBall number={a} color={gc.ball} size="w-9 h-9" />
+                                        <span className={`text-sm font-bold ${gc.text}`}>×</span>
+                                        <NumberBall number={b} color={gc.ball} size="w-9 h-9" />
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+
+                            {/* LOTO 3 / 4 / 5 — card style with concatenated numbers */}
+                            {(["loto3", "loto4", "loto5"] as const).map((gameType) => {
+                              const nums = winNums[gameType];
+                              if (!nums || !Array.isArray(nums) || nums.length === 0) return null;
+                              const gc = GAME_COLORS[gameType] || GAME_COLORS.senp;
+                              const concatenated = nums.join("");
                               return (
                                 <div key={gameType} className={`${gc.bg} rounded-lg p-3`}>
                                   <div className="flex items-center justify-between">
                                     <span className={`text-xs font-bold ${gc.text} uppercase tracking-wider`}>
                                       {GAME_LABELS[gameType] || gameType}
                                     </span>
-                                    <div className="flex items-center gap-2">
-                                      {numsArr.map((n: number, i: number) => (
-                                        <NumberBall key={i} number={n} color={gc.ball} size="w-9 h-9" />
-                                      ))}
+                                    <div className={`px-4 py-2 rounded-lg ${gc.ball} shadow-md`}>
+                                      <span className="text-white font-bold text-lg tracking-widest">{concatenated}</span>
                                     </div>
                                   </div>
                                 </div>
                               );
                             })}
+
+                            {/* Any other game types not explicitly handled */}
+                            {Object.entries(winNums)
+                              .filter(([gt]) => !["senp", "maryaj", "loto3", "loto4", "loto5"].includes(gt))
+                              .map(([gameType, nums]: [string, any]) => {
+                                const numsArr = Array.isArray(nums) ? nums : [];
+                                if (numsArr.length === 0) return null;
+                                const gc = GAME_COLORS[gameType] || GAME_COLORS.senp;
+                                return (
+                                  <div key={gameType} className={`${gc.bg} rounded-lg p-3`}>
+                                    <div className="flex items-center justify-between">
+                                      <span className={`text-xs font-bold ${gc.text} uppercase tracking-wider`}>
+                                        {GAME_LABELS[gameType] || gameType}
+                                      </span>
+                                      <div className="flex items-center gap-2">
+                                        {numsArr.map((n: number, i: number) => (
+                                          <NumberBall key={i} number={n} color={gc.ball} size="w-9 h-9" />
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
                           </div>
                         ) : (
                           <div className="text-center py-4">
