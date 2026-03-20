@@ -56,7 +56,7 @@ export async function createDream(data: { keyword: string; numbers: number[]; de
     `INSERT INTO dream_dictionary (keyword, numbers, description, language)
      VALUES ($1, $2, $3, $4)
      RETURNING id, keyword, numbers, description, language`,
-    [data.keyword, JSON.stringify(data.numbers), data.description || '', data.language || 'ht']
+    [data.keyword, data.numbers, data.description || '', data.language || 'ht']
   );
   return result.rows[0];
 }
@@ -75,7 +75,7 @@ export async function updateDream(id: string, data: { keyword?: string; numbers?
   }
   if (data.numbers !== undefined) {
     setClauses.push(`numbers = $${paramIndex++}`);
-    values.push(JSON.stringify(data.numbers));
+    values.push(data.numbers);
   }
   if (data.description !== undefined) {
     setClauses.push(`description = $${paramIndex++}`);

@@ -174,9 +174,23 @@ export async function suspendVendor(vendorId: string) {
 
 export async function activateVendor(vendorId: string) {
   await query(
-    `UPDATE vendors SET is_active = TRUE, status = 'active' WHERE id = $1`,
+    `UPDATE vendors SET is_active = TRUE, status = 'approved' WHERE id = $1`,
     [vendorId]
   );
+}
+
+export async function updateVendorCommission(vendorId: string, rate: number) {
+  if (rate < 0 || rate > 0.5) {
+    throw new AppError('Commission rate must be between 0 and 0.5 (0-50%)', 400);
+  }
+  const result = await query(
+    `UPDATE vendors SET commission_rate = $2 WHERE id = $1 RETURNING id, commission_rate`,
+    [vendorId, rate]
+  );
+  if (result.rows.length === 0) {
+    throw new AppError('Vendor not found', 404);
+  }
+  return { commissionRate: parseFloat(result.rows[0].commission_rate) };
 }
 
 export async function suspendUser(userId: string, reason?: string) {
@@ -255,15 +269,20 @@ export async function updateAppSetting(key: string, value: any, updatedBy: strin
 }
 
 /**
- * Get all pending vendor payout requests.
+ * Get vendor payout requests. If status is provided, filter by status.
  */
-export async function getPendingPayouts() {
+export async function getPendingPayouts(status?: string) {
+  const condition = status && status !== 'all' ? 'WHERE vp.status = $1' : '';
+  const values = status && status !== 'all' ? [status] : [];
   const result = await query(
-    `SELECT vp.*, v.display_name as vendor_name, v.first_name, v.last_name
+    `SELECT vp.*, v.display_name as vendor_name, v.first_name, v.last_name,
+            u.email as vendor_email
      FROM vendor_payouts vp
      JOIN vendors v ON v.id = vp.vendor_id
-     WHERE vp.status = 'pending'
-     ORDER BY vp.request_date ASC`
+     JOIN users u ON u.id = v.user_id
+     ${condition}
+     ORDER BY vp.created_at DESC`,
+    values
   );
   return result.rows;
 }
@@ -487,7 +506,7 @@ export async function generateGiftCardBatch(quantity: number, amount: number, cu
   for (let i = 0; i < quantity; i++) {
     const pin = generatePin();
     const cardResult = await query(
-      `INSERT INTO gift_cards (batch_id, pin_code, amount, currency) VALUES ($1, $2, $3, $4) RETURNING *`,
+      `INSERT INTO gift_cards (batch_id, pin_code, code, amount, currency) VALUES ($1, $2, $2, $3, $4) RETURNING *`,
       [batch.id, pin, amount, currency]
     );
     cards.push(cardResult.rows[0]);

@@ -60,6 +60,16 @@ export async function activateVendor(req: Request, res: Response, next: NextFunc
   }
 }
 
+export async function updateVendorCommission(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { rate } = req.body;
+    const result = await adminService.updateVendorCommission(req.params.vendorId, rate);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function suspendUser(req: Request, res: Response, next: NextFunction) {
   try {
     const reason = req.body?.reason;
@@ -99,7 +109,8 @@ export async function updateAppSetting(req: Request, res: Response, next: NextFu
 
 export async function getPendingPayouts(req: Request, res: Response, next: NextFunction) {
   try {
-    const payouts = await adminService.getPendingPayouts();
+    const status = req.query.status as string | undefined;
+    const payouts = await adminService.getPendingPayouts(status);
     res.json(payouts);
   } catch (error) {
     next(error);

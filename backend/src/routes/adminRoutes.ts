@@ -28,6 +28,7 @@ router.put('/vendors/:vendorId/activate', validateUUIDParams('vendorId'), ctrl.a
 // Vendor payout multipliers (admin override)
 router.get('/vendors/:vendorId/payout-multipliers', validateUUIDParams('vendorId'), ctrl.getVendorPayoutMultipliers);
 router.put('/vendors/:vendorId/payout-multipliers', validateUUIDParams('vendorId'), ctrl.updateVendorPayoutMultipliers);
+router.put('/vendors/:vendorId/commission', validateUUIDParams('vendorId'), ctrl.updateVendorCommission);
 
 // Settings
 router.get('/settings', ctrl.getAppSettings);

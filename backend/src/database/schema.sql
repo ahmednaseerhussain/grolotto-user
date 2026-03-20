@@ -439,6 +439,45 @@ CREATE INDEX idx_advertisements_status ON advertisements(status);
 CREATE INDEX idx_advertisements_dates ON advertisements(start_date, end_date);
 
 -- ============================================
+-- GIFT CARD BATCHES (admin-generated)
+-- ============================================
+
+CREATE TABLE gift_card_batches (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    quantity INTEGER NOT NULL,
+    amount DECIMAL(12,2) NOT NULL,
+    currency VARCHAR(3) DEFAULT 'USD',
+    created_by UUID REFERENCES users(id),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================
+-- GIFT CARDS
+-- ============================================
+
+CREATE TABLE gift_cards (
+    id SERIAL PRIMARY KEY,
+    code VARCHAR(20),
+    amount DECIMAL(12,2) NOT NULL,
+    currency VARCHAR(3) DEFAULT 'USD',
+    status VARCHAR(20) DEFAULT 'active',
+    purchased_by UUID REFERENCES users(id),
+    redeemed_by UUID REFERENCES users(id),
+    recipient_name VARCHAR(255),
+    message TEXT,
+    purchased_at TIMESTAMPTZ DEFAULT NOW(),
+    redeemed_at TIMESTAMPTZ,
+    expires_at TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '1 year'),
+    batch_id UUID REFERENCES gift_card_batches(id),
+    pin_code VARCHAR(20),
+    is_redeemed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_gift_cards_code ON gift_cards(code);
+CREATE INDEX idx_gift_cards_batch ON gift_cards(batch_id);
+
+-- ============================================
 -- TCHALA / DREAM DICTIONARY
 -- ============================================
 
