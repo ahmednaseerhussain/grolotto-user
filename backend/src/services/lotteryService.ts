@@ -415,11 +415,11 @@ export async function publishResults(
   winningNumbers: Record<string, number[]>,
   publishedBy: string,
   drawDate?: string,
-  drawTime?: string
+  drawTime: string = 'midday'
 ) {
   return withTransaction(async (client) => {
     const targetDate = drawDate || new Date().toISOString().split('T')[0];
-    const targetDrawTime = drawTime || 'midday';
+    const targetDrawTime = drawTime;
 
     // 1. Find the open/closed round for this state+date+drawTime (or auto-create one)
     const roundResult = await client.query(

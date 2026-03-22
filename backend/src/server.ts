@@ -37,12 +37,19 @@ async function runStartupMigrations() {
         ('NY', 'New York Midday', '14:30', '14:00', TRUE),
         ('NY', 'New York Evening', '22:30', '22:00', TRUE),
         ('FL', 'Florida Midday', '13:30', '13:00', TRUE),
+        ('FL', 'Florida Evening', '21:30', '21:00', TRUE),
         ('GA', 'Georgia Midday', '12:29', '12:00', TRUE),
+        ('GA', 'Georgia Evening', '18:59', '18:30', TRUE),
         ('CT', 'Connecticut Midday', '13:40', '13:10', TRUE),
+        ('CT', 'Connecticut Evening', '22:30', '22:00', TRUE),
         ('TX', 'Texas Day', '12:27', '12:00', TRUE),
+        ('TX', 'Texas Evening', '22:12', '21:45', TRUE),
         ('PA', 'Pennsylvania Midday', '13:00', '12:30', TRUE),
+        ('PA', 'Pennsylvania Evening', '18:30', '18:00', TRUE),
         ('TN', 'Tennessee Midday', '12:28', '12:00', TRUE),
-        ('NJ', 'New Jersey Midday', '12:59', '12:30', TRUE)
+        ('TN', 'Tennessee Evening', '18:28', '18:00', TRUE),
+        ('NJ', 'New Jersey Midday', '12:59', '12:30', TRUE),
+        ('NJ', 'New Jersey Evening', '19:57', '19:30', TRUE)
       ON CONFLICT (state, name) DO NOTHING;
     `);
 
