@@ -414,18 +414,20 @@ export async function publishResults(
   drawState: string,
   winningNumbers: Record<string, number[]>,
   publishedBy: string,
-  drawDate?: string
+  drawDate?: string,
+  drawTime?: string
 ) {
   return withTransaction(async (client) => {
     const targetDate = drawDate || new Date().toISOString().split('T')[0];
+    const targetDrawTime = drawTime || 'midday';
 
-    // 1. Find the open/closed round for this state+date (or auto-create one)
+    // 1. Find the open/closed round for this state+date+drawTime (or auto-create one)
     const roundResult = await client.query(
       `SELECT id, draw_state, status, total_bets, total_tickets
        FROM lottery_rounds
-       WHERE draw_state = $1 AND draw_date = $2 AND status IN ('open', 'closed')
-       ORDER BY draw_time LIMIT 1`,
-      [drawState, targetDate]
+       WHERE draw_state = $1 AND draw_date = $2 AND draw_time = $3 AND status IN ('open', 'closed')
+       ORDER BY created_at DESC LIMIT 1`,
+      [drawState, targetDate, targetDrawTime]
     );
 
     let round;
@@ -433,10 +435,10 @@ export async function publishResults(
       // Auto-create a round so admin can publish results even without a pre-existing round
       const created = await client.query(
         `INSERT INTO lottery_rounds (draw_state, draw_date, draw_time, status, opened_at)
-         VALUES ($1, $2, 'midday', 'open', NOW())
+         VALUES ($1, $2, $3, 'open', NOW())
          ON CONFLICT (draw_state, draw_date, draw_time) DO UPDATE SET status = lottery_rounds.status
          RETURNING id, draw_state, status, total_bets, total_tickets`,
-        [drawState, targetDate]
+        [drawState, targetDate, targetDrawTime]
       );
       round = created.rows[0];
     } else {

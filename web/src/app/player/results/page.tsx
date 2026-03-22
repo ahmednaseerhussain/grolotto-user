@@ -42,6 +42,12 @@ const GAME_COLORS: Record<string, { bg: string; text: string; ball: string }> = 
   loto5: { bg: "bg-red-50", text: "text-red-800", ball: "bg-red-600" },
 };
 
+const MARYAJ_PAIR_COLORS = [
+  "bg-purple-500",
+  "bg-blue-500",
+  "bg-red-500",
+];
+
 function NumberBall({ number, color = "bg-amber-500", size = "w-11 h-11" }: { number: number | string; color?: string; size?: string }) {
   return (
     <div className={`${size} rounded-full ${color} text-white flex items-center justify-center font-bold shadow-md text-base`}>
@@ -116,10 +122,15 @@ export default function ResultsScreen() {
 
   const getDrawTimeLabel = (time: string) => {
     if (!time) return "";
-    const lower = time.toLowerCase();
+    const lower = time.toLowerCase().trim();
+    // Exact match first
+    if (lower === "morning") return "Morning";
+    if (lower === "midday") return "Midday";
+    if (lower === "evening") return "Evening";
+    // Keyword match
     if (lower.includes("morning") || lower.includes("am") || lower.includes("matin")) return "Morning";
-    if (lower.includes("midday") || lower.includes("midi") || lower.includes("12") || lower.includes("13") || lower.includes("14")) return "Midday";
-    if (lower.includes("evening") || lower.includes("soir") || lower.includes("pm") || lower.includes("19") || lower.includes("20") || lower.includes("21") || lower.includes("22")) return "Evening";
+    if (lower.includes("midday") || lower.includes("midi")) return "Midday";
+    if (lower.includes("evening") || lower.includes("soir") || lower.includes("pm")) return "Evening";
     return time;
   };
 
@@ -300,13 +311,16 @@ export default function ResultsScreen() {
                                 <div className={`${gc.bg} rounded-lg p-3`}>
                                   <span className={`text-xs font-bold ${gc.text} uppercase tracking-wider block mb-2`}>Maryaj</span>
                                   <div className="flex flex-wrap items-center gap-3">
-                                    {combos.map(([a, b], i) => (
-                                      <div key={i} className="flex items-center gap-1.5">
-                                        <NumberBall number={a} color={gc.ball} size="w-9 h-9" />
-                                        <span className={`text-sm font-bold ${gc.text}`}>×</span>
-                                        <NumberBall number={b} color={gc.ball} size="w-9 h-9" />
-                                      </div>
-                                    ))}
+                                    {combos.map(([a, b], i) => {
+                                      const pairColor = MARYAJ_PAIR_COLORS[i % MARYAJ_PAIR_COLORS.length];
+                                      return (
+                                        <div key={i} className="flex items-center gap-1.5">
+                                          <NumberBall number={a} color={pairColor} size="w-9 h-9" />
+                                          <span className={`text-sm font-bold ${gc.text}`}>×</span>
+                                          <NumberBall number={b} color={pairColor} size="w-9 h-9" />
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               );

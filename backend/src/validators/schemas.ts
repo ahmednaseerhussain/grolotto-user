@@ -73,6 +73,7 @@ export const publishResultsSchema = z.object({
     z.array(z.number().int().min(0))
   ),
   drawDate: z.string().optional(),
+  drawTime: z.enum(['midday', 'evening']).optional(),
 });
 
 export const vendorRegistrationSchema = z.object({

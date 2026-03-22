@@ -41,8 +41,8 @@ export async function getLotteryRounds(req: Request, res: Response, next: NextFu
 
 export async function publishResults(req: Request, res: Response, next: NextFunction) {
   try {
-    const { drawState, winningNumbers, drawDate } = req.body;
-    const result = await lotteryService.publishResults(drawState, winningNumbers, req.user!.id, drawDate);
+    const { drawState, winningNumbers, drawDate, drawTime } = req.body;
+    const result = await lotteryService.publishResults(drawState, winningNumbers, req.user!.id, drawDate, drawTime);
     res.json(result);
   } catch (error) {
     next(error);
