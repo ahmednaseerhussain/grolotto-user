@@ -86,22 +86,50 @@ async function runStartupMigrations() {
     await query(`
       CREATE TABLE IF NOT EXISTS gift_cards (
         id            SERIAL PRIMARY KEY,
-        code          VARCHAR(20) UNIQUE NOT NULL,
+        code          VARCHAR(20) UNIQUE,
         amount        NUMERIC(12,2) NOT NULL,
         currency      VARCHAR(3) NOT NULL DEFAULT 'HTG',
         status        VARCHAR(20) NOT NULL DEFAULT 'active',
-        purchased_by  UUID NOT NULL REFERENCES users(id),
+        purchased_by  UUID REFERENCES users(id),
         redeemed_by   UUID REFERENCES users(id),
         recipient_name VARCHAR(100),
         message       TEXT,
-        purchased_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        purchased_at  TIMESTAMPTZ DEFAULT NOW(),
         redeemed_at   TIMESTAMPTZ,
-        expires_at    TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '1 year')
+        expires_at    TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '1 year'),
+        batch_id      UUID REFERENCES gift_card_batches(id),
+        pin_code      VARCHAR(20),
+        is_redeemed   BOOLEAN DEFAULT FALSE,
+        created_at    TIMESTAMPTZ DEFAULT NOW()
       );
       CREATE INDEX IF NOT EXISTS idx_gift_cards_code ON gift_cards(code);
       CREATE INDEX IF NOT EXISTS idx_gift_cards_purchased_by ON gift_cards(purchased_by);
       CREATE INDEX IF NOT EXISTS idx_gift_cards_status ON gift_cards(status);
     `);
+
+    // Fix: ensure purchased_by is nullable (for admin-created batch cards with no purchaser)
+    await query(`ALTER TABLE gift_cards ALTER COLUMN purchased_by DROP NOT NULL`).catch(() => {});
+
+    // Fix: add missing columns if table was created from old migration
+    await query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='gift_cards' AND column_name='batch_id') THEN
+          ALTER TABLE gift_cards ADD COLUMN batch_id UUID REFERENCES gift_card_batches(id);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='gift_cards' AND column_name='pin_code') THEN
+          ALTER TABLE gift_cards ADD COLUMN pin_code VARCHAR(20);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='gift_cards' AND column_name='is_redeemed') THEN
+          ALTER TABLE gift_cards ADD COLUMN is_redeemed BOOLEAN DEFAULT FALSE;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='gift_cards' AND column_name='created_at') THEN
+          ALTER TABLE gift_cards ADD COLUMN created_at TIMESTAMPTZ DEFAULT NOW();
+        END IF;
+      END $$;
+    `);
+
+    // Fix: ensure code column is nullable (batch cards use pin_code instead)
+    await query(`ALTER TABLE gift_cards ALTER COLUMN code DROP NOT NULL`).catch(() => {});
 
     // Migration 008: extend transaction_type enum for gift cards & refunds
     // ALTER TYPE ADD VALUE cannot run inside a transaction block — run each separately
