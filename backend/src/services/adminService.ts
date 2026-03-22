@@ -506,7 +506,7 @@ export async function generateGiftCardBatch(quantity: number, amount: number, cu
   for (let i = 0; i < quantity; i++) {
     const pin = generatePin();
     const cardResult = await query(
-      `INSERT INTO gift_cards (batch_id, pin_code, code, amount, currency) VALUES ($1, $2, $2, $3, $4) RETURNING *`,
+      `INSERT INTO gift_cards (batch_id, pin_code, code, amount, currency, purchased_by) VALUES ($1, $2, $2, $3, $4, NULL) RETURNING *`,
       [batch.id, pin, amount, currency]
     );
     cards.push(cardResult.rows[0]);
