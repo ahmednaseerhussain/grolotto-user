@@ -21,9 +21,10 @@ export const walletAPI = {
     amount: number;
     currency: string;
     method: string;
-    bankName: string;
-    accountHolderName: string;
-    accountNumber: string;
+    moncashPhone?: string;
+    bankName?: string;
+    accountHolderName?: string;
+    accountNumber?: string;
     routingNumber?: string;
     notes?: string;
   }): Promise<any> {
