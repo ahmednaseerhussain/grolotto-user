@@ -27,9 +27,9 @@ export default function SettingsScreen() {
   const setLanguage = useAppStore(s => s.setLanguage);
   const setCurrency = useAppStore(s => s.setCurrency);
   const logout = useAppStore(s => s.logout);
-  
+
   const t = (key: string) => getTranslation(key as any, language);
-  
+
   const [notifications, setNotifications] = useState(true);
   const [autoPlay, setAutoPlay] = useState(false);
 
@@ -49,8 +49,8 @@ export default function SettingsScreen() {
       t("areYouSureSignOut"),
       [
         { text: t("cancel"), style: "cancel" },
-        { 
-          text: t("signOut"), 
+        {
+          text: t("signOut"),
           style: "destructive",
           onPress: async () => { await authAPI.logout(); logout(); }
         }
@@ -64,8 +64,8 @@ export default function SettingsScreen() {
       t("clearCacheConfirm"),
       [
         { text: t("cancel"), style: "cancel" },
-        { 
-          text: t("clearCache"), 
+        {
+          text: t("clearCache"),
           onPress: async () => {
             try {
               const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
@@ -117,10 +117,10 @@ export default function SettingsScreen() {
               className="flex-row items-center"
             >
               <View className="bg-yellow-100 rounded-full p-3 mr-4">
-                <Ionicons 
-                  name={user?.role === "vendor" ? "business" : "person"} 
-                  size={24} 
-                  color="#ca8a04" 
+                <Ionicons
+                  name={user?.role === "vendor" ? "business" : "person"}
+                  size={24}
+                  color="#ca8a04"
                 />
               </View>
               <View className="flex-1">
@@ -151,19 +151,17 @@ export default function SettingsScreen() {
                 <Pressable
                   key={lang.code}
                   onPress={() => handleLanguageChange(lang.code)}
-                  className={`p-3 rounded-xl border flex-row items-center ${
-                    language === lang.code
+                  className={`p-3 rounded-xl border flex-row items-center ${language === lang.code
                       ? "border-yellow-500 bg-yellow-50"
                       : "border-gray-200 bg-white"
-                  }`}
+                    }`}
                 >
                   <Text className="text-xl mr-3">{lang.flag}</Text>
                   <Text
-                    className={`text-base font-medium flex-1 ${
-                      language === lang.code
+                    className={`text-base font-medium flex-1 ${language === lang.code
                         ? "text-yellow-600"
                         : "text-gray-700"
-                    }`}
+                      }`}
                   >
                     {lang.name}
                   </Text>
@@ -188,20 +186,18 @@ export default function SettingsScreen() {
                 <Pressable
                   key={curr.code}
                   onPress={() => handleCurrencyChange(curr.code)}
-                  className={`p-3 rounded-xl border flex-row items-center ${
-                    currency === curr.code
+                  className={`p-3 rounded-xl border flex-row items-center ${currency === curr.code
                       ? "border-green-500 bg-green-50"
                       : "border-gray-200 bg-white"
-                  }`}
+                    }`}
                 >
                   <Text className="text-xl mr-3">{curr.flag}</Text>
                   <View className="flex-1">
                     <Text
-                      className={`text-base font-medium ${
-                        currency === curr.code
+                      className={`text-base font-medium ${currency === curr.code
                           ? "text-green-600"
                           : "text-gray-700"
-                      }`}
+                        }`}
                     >
                       {curr.name}
                     </Text>
@@ -222,7 +218,7 @@ export default function SettingsScreen() {
             <Text className="text-xl font-bold text-gray-800 mb-4">
               Preferences
             </Text>
-            
+
             <View className="space-y-4">
               <View className="flex-row items-center justify-between">
                 <View className="flex-1">
@@ -304,7 +300,7 @@ export default function SettingsScreen() {
             <Text className="text-xl font-bold text-gray-800 mb-4">
               App Management
             </Text>
-            
+
             <Pressable
               onPress={clearCache}
               className="flex-row items-center p-3 rounded-xl bg-gray-50 mb-3"

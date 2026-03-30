@@ -63,16 +63,16 @@ export default function DrawManagement() {
   const navigation = useNavigation();
   const user = useAppStore(s => s.user);
   const language = useAppStore(s => s.language);
-  
+
   const t = (key: string) => getTranslation(key as any, language);
   const vendors = useAppStore(s => s.vendors);
   const appSettings = useAppStore(s => s.appSettings);
   const updateVendorDrawSettings = useAppStore(s => s.updateVendorDrawSettings);
-  
+
   const [expandedDraw, setExpandedDraw] = useState<string | null>(null);
-  const [editingLimits, setEditingLimits] = useState<{drawCode: string, gameKey: string} | null>(null);
-  const [tempLimits, setTempLimits] = useState<{min: string, max: string}>({min: "", max: ""});
-  
+  const [editingLimits, setEditingLimits] = useState<{ drawCode: string, gameKey: string } | null>(null);
+  const [tempLimits, setTempLimits] = useState<{ min: string, max: string }>({ min: "", max: "" });
+
   // ─── Draw Schedules ───
   const [schedules, setSchedules] = useState<ScheduleEntry[]>([]);
   const [showScheduleEditor, setShowScheduleEditor] = useState<string | null>(null); // drawCode
@@ -148,9 +148,9 @@ export default function DrawManagement() {
     setCloseMinute(close.minute);
     setCloseAmPm(close.ampm);
   };
-  
+
   const currentVendor = vendors.find(v => v.userId === user?.id);
-  
+
   if (!currentVendor) {
     return (
       <SafeAreaView style={styles.container}>
@@ -168,7 +168,7 @@ export default function DrawManagement() {
 
   const toggleDrawEnabled = (drawCode: string) => {
     const currentDraw = currentVendor.draws[drawCode as keyof typeof currentVendor.draws];
-    
+
     // If enabling a draw, ensure it has at least one active game
     if (!currentDraw.enabled && getEnabledGamesCount(currentDraw) === 0) {
       Alert.alert(
@@ -195,7 +195,7 @@ export default function DrawManagement() {
       );
       return;
     }
-    
+
     const updatedDraw: DrawSettings = {
       ...currentDraw,
       enabled: !currentDraw.enabled,
@@ -206,7 +206,7 @@ export default function DrawManagement() {
 
   const toggleGameEnabled = (drawCode: string, gameKey: string) => {
     const currentDraw = currentVendor.draws[drawCode as keyof typeof currentVendor.draws];
-    
+
     // Prevent disabling if it's the only enabled game in an active draw
     if (currentDraw.enabled && getEnabledGamesCount(currentDraw) === 1) {
       const gameSettings = currentDraw.games[gameKey as keyof typeof currentDraw.games];
@@ -219,7 +219,7 @@ export default function DrawManagement() {
         return;
       }
     }
-    
+
     const updatedDraw: DrawSettings = {
       ...currentDraw,
       games: {
@@ -237,7 +237,7 @@ export default function DrawManagement() {
   const startEditingLimits = (drawCode: string, gameKey: string) => {
     const currentDraw = currentVendor.draws[drawCode as keyof typeof currentVendor.draws];
     const gameSettings = currentDraw.games[gameKey as keyof typeof currentDraw.games];
-    
+
     setEditingLimits({ drawCode, gameKey });
     setTempLimits({
       min: gameSettings.minAmount.toString(),
@@ -247,32 +247,32 @@ export default function DrawManagement() {
 
   const saveLimits = () => {
     if (!editingLimits) return;
-    
+
     const minAmount = parseFloat(tempLimits.min);
     const maxAmount = parseFloat(tempLimits.max);
-    
+
     // Validation
     if (isNaN(minAmount) || isNaN(maxAmount)) {
       Alert.alert(t("error"), t("enterValidAmounts"));
       return;
     }
-    
+
     if (minAmount >= maxAmount) {
       Alert.alert(t("error"), t("minMustBeLessThanMax"));
       return;
     }
-    
+
     if (minAmount < appSettings.minBetAmount || maxAmount > appSettings.maxBetAmount) {
       Alert.alert(
-        t("error"), 
+        t("error"),
         `${t("limitsMustBeWithinGlobal")}: ${appSettings.minBetAmount} - ${appSettings.maxBetAmount}`
       );
       return;
     }
-    
+
     const { drawCode, gameKey } = editingLimits;
     const currentDraw = currentVendor.draws[drawCode as keyof typeof currentVendor.draws];
-    
+
     const updatedDraw: DrawSettings = {
       ...currentDraw,
       games: {
@@ -284,7 +284,7 @@ export default function DrawManagement() {
         },
       },
     };
-    
+
     updateVendorDrawSettings(currentVendor.id, drawCode, updatedDraw);
     syncDrawToAPI(drawCode, updatedDraw);
     setEditingLimits(null);
@@ -292,7 +292,7 @@ export default function DrawManagement() {
 
   const cancelEditingLimits = () => {
     setEditingLimits(null);
-    setTempLimits({min: "", max: ""});
+    setTempLimits({ min: "", max: "" });
   };
 
   const getEnabledGamesCount = (draw: DrawSettings) => {
@@ -302,9 +302,9 @@ export default function DrawManagement() {
   const getDrawStatus = (draw: DrawSettings) => {
     if (!draw.enabled) return { status: t("disabled"), color: "#9ca3af" };
     const enabledGames = getEnabledGamesCount(draw);
-    return { 
-      status: `${enabledGames} ${t("gamesActive")}`, 
-      color: "#10b981" 
+    return {
+      status: `${enabledGames} ${t("gamesActive")}`,
+      color: "#10b981"
     };
   };
 
@@ -312,7 +312,7 @@ export default function DrawManagement() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable 
+        <Pressable
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
@@ -389,7 +389,7 @@ export default function DrawManagement() {
                       </Text>
                     </View>
                   </View>
-                  
+
                   <View style={styles.drawActions}>
                     <Switch
                       value={drawSettings.enabled}
@@ -409,7 +409,7 @@ export default function DrawManagement() {
                 {isExpanded && (
                   <View style={styles.drawContent}>
                     <Text style={styles.gamesTitle}>{t("availableGameTypes")}</Text>
-                    
+
                     {GAMES.map((game) => {
                       const gameSettings = drawSettings.games[game.key as keyof typeof drawSettings.games];
                       const isGameEnabled = gameSettings.enabled;
@@ -435,7 +435,7 @@ export default function DrawManagement() {
                                     <TextInput
                                       style={styles.limitInput}
                                       value={tempLimits.min}
-                                      onChangeText={(text) => setTempLimits({...tempLimits, min: text})}
+                                      onChangeText={(text) => setTempLimits({ ...tempLimits, min: text })}
                                       keyboardType="numeric"
                                       placeholder="0"
                                     />
@@ -445,20 +445,20 @@ export default function DrawManagement() {
                                     <TextInput
                                       style={styles.limitInput}
                                       value={tempLimits.max}
-                                      onChangeText={(text) => setTempLimits({...tempLimits, max: text})}
+                                      onChangeText={(text) => setTempLimits({ ...tempLimits, max: text })}
                                       keyboardType="numeric"
                                       placeholder="100"
                                     />
                                   </View>
                                 </View>
                                 <View style={styles.limitsActions}>
-                                  <Pressable 
+                                  <Pressable
                                     style={styles.cancelButton}
                                     onPress={cancelEditingLimits}
                                   >
                                     <Text style={styles.cancelButtonText}>{t("cancel")}</Text>
                                   </Pressable>
-                                  <Pressable 
+                                  <Pressable
                                     style={styles.saveButton}
                                     onPress={saveLimits}
                                   >
@@ -471,29 +471,29 @@ export default function DrawManagement() {
                               </View>
                             ) : (
                               <View style={styles.gameLimits}>
-                              <View style={styles.gameLimitsRow}>
-                                <Text style={styles.limitText}>
-                                  {t("min")}: ${gameSettings.minAmount} • {t("max")}: ${gameSettings.maxAmount}
-                                </Text>
-                                <Pressable 
-                                  style={[styles.editLimitsButton, (!drawSettings.enabled || !isGameEnabled) ? styles.editLimitsButtonDisabled : styles.editLimitsButtonEnabled]}
-                                  onPress={() => {
-                                    if (!drawSettings.enabled || !isGameEnabled) {
-                                      Alert.alert(t("configUnavailable"), t("enableDrawAndGameFirst"));
-                                      return;
-                                    }
-                                    startEditingLimits(draw.code, game.key);
-                                  }}
-                                >
-                                  <Text style={[styles.editLimitsButtonText, (!drawSettings.enabled || !isGameEnabled) ? styles.editLimitsButtonTextDisabled : styles.editLimitsButtonTextEnabled]}>
-                                    {t("editLimits")}
+                                <View style={styles.gameLimitsRow}>
+                                  <Text style={styles.limitText}>
+                                    {t("min")}: ${gameSettings.minAmount} • {t("max")}: ${gameSettings.maxAmount}
                                   </Text>
-                                </Pressable>
-                              </View>
+                                  <Pressable
+                                    style={[styles.editLimitsButton, (!drawSettings.enabled || !isGameEnabled) ? styles.editLimitsButtonDisabled : styles.editLimitsButtonEnabled]}
+                                    onPress={() => {
+                                      if (!drawSettings.enabled || !isGameEnabled) {
+                                        Alert.alert(t("configUnavailable"), t("enableDrawAndGameFirst"));
+                                        return;
+                                      }
+                                      startEditingLimits(draw.code, game.key);
+                                    }}
+                                  >
+                                    <Text style={[styles.editLimitsButtonText, (!drawSettings.enabled || !isGameEnabled) ? styles.editLimitsButtonTextDisabled : styles.editLimitsButtonTextEnabled]}>
+                                      {t("editLimits")}
+                                    </Text>
+                                  </Pressable>
+                                </View>
                               </View>
                             )}
                           </View>
-                          
+
                           <View style={styles.gameActions}>
                             <Switch
                               value={isGameEnabled}
@@ -502,7 +502,7 @@ export default function DrawManagement() {
                               trackColor={{ false: "#d1d5db", true: "#10b981" }}
                               thumbColor={isGameEnabled ? "#ffffff" : "#f3f4f6"}
                             />
-                            <Pressable 
+                            <Pressable
                               style={[styles.configButton, (!drawSettings.enabled || !isGameEnabled) ? styles.configButtonDisabled : styles.configButtonEnabled]}
                               onPress={() => {
                                 if (!drawSettings.enabled || !isGameEnabled) {
@@ -512,10 +512,10 @@ export default function DrawManagement() {
                                 startEditingLimits(draw.code, game.key);
                               }}
                             >
-                              <Ionicons 
-                                name="settings-outline" 
-                                size={18} 
-                                color={(!drawSettings.enabled || !isGameEnabled) ? "#9ca3af" : "#f97316"} 
+                              <Ionicons
+                                name="settings-outline"
+                                size={18}
+                                color={(!drawSettings.enabled || !isGameEnabled) ? "#9ca3af" : "#f97316"}
                               />
                             </Pressable>
                           </View>
@@ -590,7 +590,7 @@ export default function DrawManagement() {
                       {showScheduleEditor === draw.code && (
                         <View style={{ backgroundColor: '#fffbeb', padding: 14, borderRadius: 12, marginTop: 8, borderWidth: 1, borderColor: '#fde68a' }}>
                           <Text style={{ fontWeight: '700', fontSize: 14, color: '#92400e', marginBottom: 10 }}>Set Schedule</Text>
-                          
+
                           {/* Draw Time selector */}
                           <Text style={{ fontSize: 12, fontWeight: '600', color: '#6b7280', marginBottom: 4 }}>Draw Time</Text>
                           <View style={{ flexDirection: 'row', marginBottom: 12 }}>
@@ -618,7 +618,7 @@ export default function DrawManagement() {
                             <TextInput
                               style={{ width: 44, height: 38, borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, textAlign: 'center', backgroundColor: '#fff', fontSize: 16, fontWeight: '600' }}
                               value={openHour}
-                              onChangeText={(v) => { const n = parseInt(v); if (!v || (n >= 1 && n <= 12)) setOpenHour(v.slice(0,2)); }}
+                              onChangeText={(v) => { const n = parseInt(v); if (!v || (n >= 1 && n <= 12)) setOpenHour(v.slice(0, 2)); }}
                               keyboardType="numeric"
                               maxLength={2}
                             />
@@ -626,7 +626,7 @@ export default function DrawManagement() {
                             <TextInput
                               style={{ width: 44, height: 38, borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, textAlign: 'center', backgroundColor: '#fff', fontSize: 16, fontWeight: '600' }}
                               value={openMinute}
-                              onChangeText={(v) => { const n = parseInt(v); if (!v || (n >= 0 && n <= 59)) setOpenMinute(v.slice(0,2)); }}
+                              onChangeText={(v) => { const n = parseInt(v); if (!v || (n >= 0 && n <= 59)) setOpenMinute(v.slice(0, 2)); }}
                               keyboardType="numeric"
                               maxLength={2}
                             />
@@ -644,7 +644,7 @@ export default function DrawManagement() {
                             <TextInput
                               style={{ width: 44, height: 38, borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, textAlign: 'center', backgroundColor: '#fff', fontSize: 16, fontWeight: '600' }}
                               value={closeHour}
-                              onChangeText={(v) => { const n = parseInt(v); if (!v || (n >= 1 && n <= 12)) setCloseHour(v.slice(0,2)); }}
+                              onChangeText={(v) => { const n = parseInt(v); if (!v || (n >= 1 && n <= 12)) setCloseHour(v.slice(0, 2)); }}
                               keyboardType="numeric"
                               maxLength={2}
                             />
@@ -652,7 +652,7 @@ export default function DrawManagement() {
                             <TextInput
                               style={{ width: 44, height: 38, borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, textAlign: 'center', backgroundColor: '#fff', fontSize: 16, fontWeight: '600' }}
                               value={closeMinute}
-                              onChangeText={(v) => { const n = parseInt(v); if (!v || (n >= 0 && n <= 59)) setCloseMinute(v.slice(0,2)); }}
+                              onChangeText={(v) => { const n = parseInt(v); if (!v || (n >= 0 && n <= 59)) setCloseMinute(v.slice(0, 2)); }}
                               keyboardType="numeric"
                               maxLength={2}
                             />
@@ -697,18 +697,18 @@ export default function DrawManagement() {
             <Text style={styles.quickSetupDescription}>
               {t("applyPresetSettings")}
             </Text>
-            
+
             <View style={styles.quickSetupActions}>
               <Pressable style={styles.quickSetupButton}>
                 <Ionicons name="flash" size={16} color="#f59e0b" />
                 <Text style={styles.quickSetupButtonText}>{t("beginner")}</Text>
               </Pressable>
-              
+
               <Pressable style={styles.quickSetupButton}>
                 <Ionicons name="trending-up" size={16} color="#3b82f6" />
                 <Text style={styles.quickSetupButtonText}>{t("advanced")}</Text>
               </Pressable>
-              
+
               <Pressable style={styles.quickSetupButton}>
                 <Ionicons name="star" size={16} color="#8b5cf6" />
                 <Text style={styles.quickSetupButtonText}>{t("enableAll")}</Text>

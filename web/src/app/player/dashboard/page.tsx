@@ -245,11 +245,10 @@ export default function PlayerDashboard() {
 
       {/* ── Section 3: Wallet Banner (currency-specific color) ── */}
       <div
-        className={`rounded-2xl px-5 py-4 cursor-pointer shadow-sm hover:shadow-md transition-shadow ${
-          currency === "HTG"
+        className={`rounded-2xl px-5 py-4 cursor-pointer shadow-sm hover:shadow-md transition-shadow ${currency === "HTG"
             ? "bg-gradient-to-r from-red-700 to-red-600"
             : "bg-gradient-to-r from-green-700 to-green-600"
-        }`}
+          }`}
         onClick={() => router.push("/player/payment")}
       >
         <div className="flex items-center justify-between">

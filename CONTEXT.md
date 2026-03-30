@@ -284,13 +284,13 @@ Admin publishes winning numbers for NY:
 
 ### Bugs Fixed
 
-| Bug | File(s) | Fix |
-|-----|---------|-----|
-| Gift card `purchased_by` NOT NULL error | `backend/src/server.ts` (inline migration) | Removed NOT NULL from inline CREATE TABLE, added ALTER TABLE safety to drop NOT NULL, added missing columns (batch_id, pin_code, is_redeemed) |
-| Rate limiting / server timeout | `backend/src/config/index.ts`, `backend/src/server.ts`, `backend/src/database/pool.ts` | maxRequests 100→1000, auth limiter 10→30, DB pool 20→50, timeout 2s→10s |
-| Midday label everywhere | `grolotto-admin/src/screens/ResultPublishing.tsx`, `backend/src/services/lotteryService.ts`, `backend/src/server.ts`, `backend/src/database/migration-005.sql` | Fixed `getDrawTimeSlot()` broken time matching, added evening draw configs for all states, removed silent midday default |
-| Admin player details modal not scrolling | `grolotto-admin/src/screens/PlayerManagement.tsx` | Rewrote modal to use FlatList with explicit height from Dimensions |
-| React Hooks order violation | `grolotto-admin/src/screens/PlayerManagement.tsx` | Moved `if (!player) return null` after all hooks |
+| Bug                                      | File(s)                                                                                                                                                        | Fix                                                                                                                                           |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Gift card `purchased_by` NOT NULL error  | `backend/src/server.ts` (inline migration)                                                                                                                     | Removed NOT NULL from inline CREATE TABLE, added ALTER TABLE safety to drop NOT NULL, added missing columns (batch_id, pin_code, is_redeemed) |
+| Rate limiting / server timeout           | `backend/src/config/index.ts`, `backend/src/server.ts`, `backend/src/database/pool.ts`                                                                         | maxRequests 100→1000, auth limiter 10→30, DB pool 20→50, timeout 2s→10s                                                                       |
+| Midday label everywhere                  | `grolotto-admin/src/screens/ResultPublishing.tsx`, `backend/src/services/lotteryService.ts`, `backend/src/server.ts`, `backend/src/database/migration-005.sql` | Fixed `getDrawTimeSlot()` broken time matching, added evening draw configs for all states, removed silent midday default                      |
+| Admin player details modal not scrolling | `grolotto-admin/src/screens/PlayerManagement.tsx`                                                                                                              | Rewrote modal to use FlatList with explicit height from Dimensions                                                                            |
+| React Hooks order violation              | `grolotto-admin/src/screens/PlayerManagement.tsx`                                                                                                              | Moved `if (!player) return null` after all hooks                                                                                              |
 
 ---
 
@@ -300,94 +300,97 @@ Admin publishes winning numbers for NY:
 
 ### Feature Audit Summary
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Vendor currency separation | ⚠️ PARTIAL | DB field `operating_currency` exists, backend returns it, frontend filtering NOT done |
-| Vendor signup approval flow | ⚠️ PARTIAL | Status flow complete, document upload endpoint missing |
-| Vendor draw open/close timer | ❌ MISSING | No time-based scheduling, only on/off toggle per state |
-| Gift card system | ✅ COMPLETE | Full purchase/generate/redeem pipeline |
-| Notifications | ⚠️ PARTIAL | DB tables & service exist, NO push notifications, NO UI display |
-| Tchala (dream book) | ✅ COMPLETE | Full CRUD, multilingual support, player & admin UI |
-| Wallet recharge (MonCash/PayPal) | ✅ COMPLETE | MonCash for HTG, PayPal for USD, gift cards |
-| Admin roles/permissions | ⚠️ PARTIAL | Basic role check (admin/vendor/player), no granular permissions |
-| Vendor play history/export | ⚠️ PARTIAL | View history works, no CSV/PDF export |
-| Help section / multilingual | ⚠️ PARTIAL | Help page exists but hardcoded English |
+| Feature                          | Status      | Notes                                                                                 |
+| -------------------------------- | ----------- | ------------------------------------------------------------------------------------- |
+| Vendor currency separation       | ⚠️ PARTIAL  | DB field `operating_currency` exists, backend returns it, frontend filtering NOT done |
+| Vendor signup approval flow      | ⚠️ PARTIAL  | Status flow complete, document upload endpoint missing                                |
+| Vendor draw open/close timer     | ❌ MISSING  | No time-based scheduling, only on/off toggle per state                                |
+| Gift card system                 | ✅ COMPLETE | Full purchase/generate/redeem pipeline                                                |
+| Notifications                    | ⚠️ PARTIAL  | DB tables & service exist, NO push notifications, NO UI display                       |
+| Tchala (dream book)              | ✅ COMPLETE | Full CRUD, multilingual support, player & admin UI                                    |
+| Wallet recharge (MonCash/PayPal) | ✅ COMPLETE | MonCash for HTG, PayPal for USD, gift cards                                           |
+| Admin roles/permissions          | ⚠️ PARTIAL  | Basic role check (admin/vendor/player), no granular permissions                       |
+| Vendor play history/export       | ⚠️ PARTIAL  | View history works, no CSV/PDF export                                                 |
+| Help section / multilingual      | ⚠️ PARTIAL  | Help page exists but hardcoded English                                                |
 
 ### Phase 1: Critical Bugs & Fixes
 
-| # | Task | CR Ref | Status |
-|---|------|--------|--------|
-| 1.1 | Admin settings page crash | 3.10 | ✅ DONE |
-| 1.2 | Player vendor list crash | 2.9 | ✅ DONE |
-| 1.3 | Admin payout shortcut not working | 3.1 | ✅ DONE |
-| 1.4 | Midday/evening draw label fix | 3.2 | ✅ DONE |
-| 1.5 | Gift card purchased_by error | 3.4 | ✅ DONE |
-| 1.6 | Rate limiting / timeout | — | ✅ DONE |
+| #   | Task                              | CR Ref | Status  |
+| --- | --------------------------------- | ------ | ------- |
+| 1.1 | Admin settings page crash         | 3.10   | ✅ DONE |
+| 1.2 | Player vendor list crash          | 2.9    | ✅ DONE |
+| 1.3 | Admin payout shortcut not working | 3.1    | ✅ DONE |
+| 1.4 | Midday/evening draw label fix     | 3.2    | ✅ DONE |
+| 1.5 | Gift card purchased_by error      | 3.4    | ✅ DONE |
+| 1.6 | Rate limiting / timeout           | —      | ✅ DONE |
 
 ### Phase 2: Currency Separation
 
-| # | Task | CR Ref |
-|---|------|--------|
+| #   | Task                                                        | CR Ref        |
+| --- | ----------------------------------------------------------- | ------------- |
 | 2.1 | Frontend vendor filtering by player currency (web + mobile) | 1.1, 1.3, 2.1 |
-| 2.2 | Wallet color: HTG=red, USD=green (web + mobile) | 1.2, 2.2 |
-| 2.3 | Remove $ sign for HTG currency display | 2.2 |
-| 2.4 | Currency-specific withdrawal methods | 1.6 |
-| 2.5 | Currency-specific recharge methods | 2.5 |
-| 2.6 | Transaction history currency tabs (admin) | 3.8 |
+| 2.2 | Wallet color: HTG=red, USD=green (web + mobile)             | 1.2, 2.2      |
+| 2.3 | Remove $ sign for HTG currency display                      | 2.2           |
+| 2.4 | Currency-specific withdrawal methods                        | 1.6           |
+| 2.5 | Currency-specific recharge methods                          | 2.5           |
+| 2.6 | Transaction history currency tabs (admin)                   | 3.8           |
 
 ### Phase 3: Vendor Features
 
-| # | Task | CR Ref |
-|---|------|--------|
-| 3.1 | Vendor draw schedule — open/close timer | 1.7 |
-| 3.2 | Vendor play history enhanced fields | 1.8 |
-| 3.3 | Vendor pre-result export (CSV) | 1.9 |
-| 3.4 | Vendor post-result export (CSV + filters) | 1.10 |
-| 3.5 | Document upload endpoint for vendor signup | 1.5 |
+| #   | Task                                       | CR Ref |
+| --- | ------------------------------------------ | ------ |
+| 3.1 | Vendor draw schedule — open/close timer    | 1.7    |
+| 3.2 | Vendor play history enhanced fields        | 1.8    |
+| 3.3 | Vendor pre-result export (CSV)             | 1.9    |
+| 3.4 | Vendor post-result export (CSV + filters)  | 1.10   |
+| 3.5 | Document upload endpoint for vendor signup | 1.5    |
 
 ### Phase 4: Player Features
 
-| # | Task | CR Ref |
-|---|------|--------|
-| 4.1 | Replace Wallet shortcut with Withdraw | 2.3 |
-| 4.2 | Enforce wallet-only gameplay | 2.4 |
+| #   | Task                                             | CR Ref   |
+| --- | ------------------------------------------------ | -------- |
+| 4.1 | Replace Wallet shortcut with Withdraw            | 2.3      |
+| 4.2 | Enforce wallet-only gameplay                     | 2.4      |
 | 4.3 | Gift card buy→website redirect, redeem→PIN entry | 2.6, 2.7 |
-| 4.4 | Withdrawal method limits display | 2.8 |
-| 4.5 | Banner ads auto-slide + manual swipe | 2.12 |
+| 4.4 | Withdrawal method limits display                 | 2.8      |
+| 4.5 | Banner ads auto-slide + manual swipe             | 2.12     |
 
 ### Phase 5: Admin Panel
 
-| # | Task | CR Ref |
-|---|------|--------|
-| 5.1 | Simplified result publishing | 3.2 |
-| 5.2 | Gift card management polish (HTG/USD tabs, stats) | 3.4 |
-| 5.3 | Admin roles & permissions | 3.9 |
-| 5.4 | Admin payments logic | 3.11 |
-| 5.5 | Account suspension enforcement | 3.12 |
-| 5.6 | Ads editor improvements | 3.7 |
+| #   | Task                                              | CR Ref |
+| --- | ------------------------------------------------- | ------ |
+| 5.1 | Simplified result publishing                      | 3.2    |
+| 5.2 | Gift card management polish (HTG/USD tabs, stats) | 3.4    |
+| 5.3 | Admin roles & permissions                         | 3.9    |
+| 5.4 | Admin payments logic                              | 3.11   |
+| 5.5 | Account suspension enforcement                    | 3.12   |
+| 5.6 | Ads editor improvements                           | 3.7    |
 
 ### Phase 6: Platform-Wide Polish
 
-| # | Task | CR Ref |
-|---|------|--------|
-| 6.1 | Push notifications (Expo/FCM) + notification UI | 3.5, 3.6 |
-| 6.2 | Full multilingual translation | 4.2, 2.10 |
-| 6.3 | Tchala reflection fix | 2.11, 3.3 |
-| 6.4 | Text orthography & formatting fixes | 4.1 |
-| 6.5 | Performance optimization | 4.3 |
-| 6.6 | Admin notification page fix | 3.6 |
+| #   | Task                                            | CR Ref    |
+| --- | ----------------------------------------------- | --------- |
+| 6.1 | Push notifications (Expo/FCM) + notification UI | 3.5, 3.6  |
+| 6.2 | Full multilingual translation                   | 4.2, 2.10 |
+| 6.3 | Tchala reflection fix                           | 2.11, 3.3 |
+| 6.4 | Text orthography & formatting fixes             | 4.1       |
+| 6.5 | Performance optimization                        | 4.3       |
+| 6.6 | Admin notification page fix                     | 3.6       |
 
 ---
 
 ## Session 4 — Full Change Request Implementation (All 6 Phases Complete)
 
 ### Phase 1-3: Completed in earlier session chunks
+
 ### Phase 4: Player Features ✅
+
 - 4.1: Wallet → Withdraw quick action (mobile + web)
 - 4.3: Gift card Buy tab → website redirect on mobile (web keeps Buy form since web IS the website)
 - 4.4: Withdrawal limits display (min/max per method, validation on both platforms)
 
 ### Phase 5: Admin Panel ✅
+
 - 5.1: Simplified result publishing (state + time buttons instead of draw list)
 - 5.2: Gift card management (status filter, recent redemptions section)
 - 5.3: Admin roles & permissions (migration-011, backend CRUD, auth middleware)
@@ -396,13 +399,14 @@ Admin publishes winning numbers for NY:
 - 5.6: Ads editor (expanded colors, custom hex, font size/weight controls)
 
 ### Phase 6: Platform-Wide Polish ✅
+
 - 6.1: Push notifications — full Expo Push pipeline
   - `push_device_tokens` table (migration in server.ts)
   - Backend: token registration/removal endpoints at `/notifications/device-token`
   - Backend: Expo Push API integration in `notificationService.ts` (sends to exp.host, handles batching, auto-deactivates invalid tokens)
   - Backend: `createPlayerNotification` and `createVendorNotification` now auto-trigger push
   - Backend: `broadcastNotification` now sends push to all devices of target role
-  - Mobile: `src/utils/pushNotifications.ts` — permission request, token retrieval, foreground handler (setNotificationHandler) 
+  - Mobile: `src/utils/pushNotifications.ts` — permission request, token retrieval, foreground handler (setNotificationHandler)
   - Mobile: `AppNavigator.tsx` — auto-registers push on login, unregisters on logout
   - Mobile API: `registerPushToken`/`removePushToken` added to `notificationsAPI`
 - 6.2: Multilingual — added missing translation keys (notifications, gift card redirect, schedule times, help/support, tchala screen, settings alerts) to both mobile and web translation files
@@ -421,11 +425,12 @@ Admin publishes winning numbers for NY:
   - Success alert shows "Sent to N users" count
 
 ### New Files Created This Session
+
 - `backend/src/database/migration-012.sql` — push_device_tokens DDL (also embedded in server.ts startup migrations)
 - `src/utils/pushNotifications.ts` — Expo push notification registration/unregistration utility
 
 ### Key Database Changes
+
 - `push_device_tokens` table: user_id, token, platform, is_active
 - `broadcast_history` table: title, message, type, target_audience, total_sent, sent_by
 - `admin_role` column on users table (from Phase 5.3)
-

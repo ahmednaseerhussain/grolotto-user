@@ -162,7 +162,7 @@ export default function PlayerWithdrawPage() {
                             className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${withdrawMethod === "moncash"
                                 ? "border-red-500 bg-red-50"
                                 : "border-gray-200 hover:border-gray-300 bg-white"
-                            }`}
+                                }`}
                         >
                             <div className="bg-red-500 w-10 h-10 rounded-full flex items-center justify-center">
                                 <Smartphone className="h-5 w-5 text-white" />
@@ -181,7 +181,7 @@ export default function PlayerWithdrawPage() {
                         className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${withdrawMethod === "bank_transfer"
                             ? "border-amber-500 bg-amber-50"
                             : "border-gray-200 hover:border-gray-300 bg-white"
-                        }`}
+                            }`}
                     >
                         <div className="bg-amber-500 w-10 h-10 rounded-full flex items-center justify-center">
                             <Banknote className="h-5 w-5 text-white" />
@@ -229,64 +229,64 @@ export default function PlayerWithdrawPage() {
 
             {/* Bank Details (USD / optional for HTG) */}
             {withdrawMethod === "bank_transfer" && (
-            <Card>
-                <CardContent className="p-4 space-y-4">
-                    <div className="flex items-center gap-2 mb-1">
-                        <Banknote className="h-5 w-5 text-amber-600" />
-                        <h3 className="font-semibold">{t("bankDetails") || "Bank Details"}</h3>
-                    </div>
+                <Card>
+                    <CardContent className="p-4 space-y-4">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Banknote className="h-5 w-5 text-amber-600" />
+                            <h3 className="font-semibold">{t("bankDetails") || "Bank Details"}</h3>
+                        </div>
 
-                    <div>
-                        <label className="text-sm text-gray-600">{t("bankName") || "Bank Name"}</label>
-                        <Input
-                            value={bankName}
-                            onChange={(e) => setBankName(e.target.value)}
-                            placeholder="e.g. Sogebank, BNC, Unibank"
-                            className="mt-1"
-                        />
-                    </div>
+                        <div>
+                            <label className="text-sm text-gray-600">{t("bankName") || "Bank Name"}</label>
+                            <Input
+                                value={bankName}
+                                onChange={(e) => setBankName(e.target.value)}
+                                placeholder="e.g. Sogebank, BNC, Unibank"
+                                className="mt-1"
+                            />
+                        </div>
 
-                    <div>
-                        <label className="text-sm text-gray-600">{t("accountHolderName") || "Account Holder Name"}</label>
-                        <Input
-                            value={accountHolderName}
-                            onChange={(e) => setAccountHolderName(e.target.value)}
-                            placeholder="Full name on bank account"
-                            className="mt-1"
-                        />
-                    </div>
+                        <div>
+                            <label className="text-sm text-gray-600">{t("accountHolderName") || "Account Holder Name"}</label>
+                            <Input
+                                value={accountHolderName}
+                                onChange={(e) => setAccountHolderName(e.target.value)}
+                                placeholder="Full name on bank account"
+                                className="mt-1"
+                            />
+                        </div>
 
-                    <div>
-                        <label className="text-sm text-gray-600">{t("accountNumber") || "Account Number"}</label>
-                        <Input
-                            value={accountNumber}
-                            onChange={(e) => setAccountNumber(e.target.value)}
-                            placeholder="Bank account number"
-                            className="mt-1"
-                        />
-                    </div>
+                        <div>
+                            <label className="text-sm text-gray-600">{t("accountNumber") || "Account Number"}</label>
+                            <Input
+                                value={accountNumber}
+                                onChange={(e) => setAccountNumber(e.target.value)}
+                                placeholder="Bank account number"
+                                className="mt-1"
+                            />
+                        </div>
 
-                    <div>
-                        <label className="text-sm text-gray-600">{t("routingNumber") || "Routing Number"} ({t("optional") || "optional"})</label>
-                        <Input
-                            value={routingNumber}
-                            onChange={(e) => setRoutingNumber(e.target.value)}
-                            placeholder="Routing/transit number"
-                            className="mt-1"
-                        />
-                    </div>
+                        <div>
+                            <label className="text-sm text-gray-600">{t("routingNumber") || "Routing Number"} ({t("optional") || "optional"})</label>
+                            <Input
+                                value={routingNumber}
+                                onChange={(e) => setRoutingNumber(e.target.value)}
+                                placeholder="Routing/transit number"
+                                className="mt-1"
+                            />
+                        </div>
 
-                    <div>
-                        <label className="text-sm text-gray-600">{t("additionalNotes") || "Additional Notes"} ({t("optional") || "optional"})</label>
-                        <Input
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            placeholder="Any special instructions"
-                            className="mt-1"
-                        />
-                    </div>
-                </CardContent>
-            </Card>
+                        <div>
+                            <label className="text-sm text-gray-600">{t("additionalNotes") || "Additional Notes"} ({t("optional") || "optional"})</label>
+                            <Input
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                placeholder="Any special instructions"
+                                className="mt-1"
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
             )}
 
             {/* Submit Button */}

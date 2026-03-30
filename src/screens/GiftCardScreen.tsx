@@ -64,7 +64,7 @@ export default function GiftCardScreen() {
         const b = currency === "HTG" ? (w.data?.balanceHtg ?? w.balanceHtg ?? 0) : (w.data?.balanceUsd ?? w.balanceUsd ?? 0);
         setBalance(parseFloat(b) || 0);
       }
-    } catch {}
+    } catch { }
   };
 
   const fetchHistory = async () => {
@@ -155,7 +155,7 @@ export default function GiftCardScreen() {
         message: `🎁 Here's your GroLotto Gift Card!\nCode: ${code}\n\nRedeem it on the GroLotto app!`,
         title: "GroLotto Gift Card",
       });
-    } catch {}
+    } catch { }
   };
 
   const handleCopy = (code: string) => {

@@ -14,7 +14,7 @@ export default function TchalaScreen() {
   const language = useAppStore(s => s.language);
   const [searchQuery, setSearchQuery] = useState("");
   const [apiResults, setApiResults] = useState<any[]>([]);
-  
+
   const t = (key: string) => getTranslation(key as any, language);
 
   // Fetch latest dictionary from backend on mount
@@ -48,8 +48,8 @@ export default function TchalaScreen() {
       `Your lucky numbers are: ${numbers.join(", ")}`,
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Use These Numbers", 
+        {
+          text: "Use These Numbers",
           onPress: () => {
             // Navigate back with selected numbers
             navigation.goBack();
@@ -137,13 +137,13 @@ export default function TchalaScreen() {
                         <Text className="text-lg font-bold text-gray-800 mb-2 capitalize">
                           {item.keyword}
                         </Text>
-                        
+
                         {item.description && (
                           <Text className="text-gray-600 mb-3">
                             {item.description}
                           </Text>
                         )}
-                        
+
                         <View className="flex-row items-center">
                           <Text className="text-sm text-purple-600 font-medium mr-2">
                             {t("luckyNumbers")}
@@ -160,7 +160,7 @@ export default function TchalaScreen() {
                           ))}
                         </View>
                       </View>
-                      
+
                       <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
                     </View>
                   </Pressable>
@@ -190,7 +190,7 @@ export default function TchalaScreen() {
               <Text className="text-gray-600 text-center mb-6 px-4">
                 {t("tchalaWelcomeDescription")}
               </Text>
-              
+
               <View className="w-full">
                 <Text className="text-sm font-medium text-gray-700 mb-3">
                   {t("popularSearches")}

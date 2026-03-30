@@ -100,7 +100,7 @@ export default function PayoutManagement() {
 
   const handleRequestPayout = () => {
     const isMoncash = selectedMethod === 'moncash';
-    
+
     if (isMoncash) {
       if (!amount || !moncashPhone.trim() || moncashPhone.trim().length < 8) {
         Alert.alert(t("error"), "Please enter amount and a valid MonCash phone number");
@@ -307,77 +307,77 @@ export default function PayoutManagement() {
 
                 {/* Bank Details — bank_transfer only */}
                 {selectedMethod === 'bank_transfer' && (
-                <View style={{ marginTop: 12, gap: 10 }}>
-                  <View>
-                    <Text style={styles.amountLabel}>{t("bankName") || "Bank Name"}</Text>
-                    <TextInput
-                      style={styles.amountInput}
-                      value={bankName}
-                      onChangeText={setBankName}
-                      placeholder="e.g. Sogebank, BNC, Unibank"
-                    />
+                  <View style={{ marginTop: 12, gap: 10 }}>
+                    <View>
+                      <Text style={styles.amountLabel}>{t("bankName") || "Bank Name"}</Text>
+                      <TextInput
+                        style={styles.amountInput}
+                        value={bankName}
+                        onChangeText={setBankName}
+                        placeholder="e.g. Sogebank, BNC, Unibank"
+                      />
+                    </View>
+                    <View>
+                      <Text style={styles.amountLabel}>{t("accountHolderName") || "Account Holder Name"}</Text>
+                      <TextInput
+                        style={styles.amountInput}
+                        value={bankAccountName}
+                        onChangeText={setBankAccountName}
+                        placeholder="Full name on account"
+                      />
+                    </View>
+                    <View>
+                      <Text style={styles.amountLabel}>{t("accountNumber") || "Account Number"}</Text>
+                      <TextInput
+                        style={styles.amountInput}
+                        value={bankAccountNumber}
+                        onChangeText={setBankAccountNumber}
+                        placeholder="Bank account number"
+                      />
+                    </View>
+                    <View>
+                      <Text style={styles.amountLabel}>{t("routingNumber") || "Routing Number (optional)"}</Text>
+                      <TextInput
+                        style={styles.amountInput}
+                        value={bankRoutingNumber}
+                        onChangeText={setBankRoutingNumber}
+                        placeholder="Routing/transit number"
+                      />
+                    </View>
                   </View>
-                  <View>
-                    <Text style={styles.amountLabel}>{t("accountHolderName") || "Account Holder Name"}</Text>
-                    <TextInput
-                      style={styles.amountInput}
-                      value={bankAccountName}
-                      onChangeText={setBankAccountName}
-                      placeholder="Full name on account"
-                    />
-                  </View>
-                  <View>
-                    <Text style={styles.amountLabel}>{t("accountNumber") || "Account Number"}</Text>
-                    <TextInput
-                      style={styles.amountInput}
-                      value={bankAccountNumber}
-                      onChangeText={setBankAccountNumber}
-                      placeholder="Bank account number"
-                    />
-                  </View>
-                  <View>
-                    <Text style={styles.amountLabel}>{t("routingNumber") || "Routing Number (optional)"}</Text>
-                    <TextInput
-                      style={styles.amountInput}
-                      value={bankRoutingNumber}
-                      onChangeText={setBankRoutingNumber}
-                      placeholder="Routing/transit number"
-                    />
-                  </View>
-                </View>
                 )}
 
                 {/* MonCash Details — moncash only */}
                 {selectedMethod === 'moncash' && (
-                <View style={{ marginTop: 12, gap: 10 }}>
-                  <View>
-                    <Text style={styles.amountLabel}>MonCash Phone Number</Text>
-                    <TextInput
-                      style={styles.amountInput}
-                      value={moncashPhone}
-                      onChangeText={setMoncashPhone}
-                      placeholder="+509 XXXX XXXX"
-                      keyboardType="phone-pad"
-                    />
+                  <View style={{ marginTop: 12, gap: 10 }}>
+                    <View>
+                      <Text style={styles.amountLabel}>MonCash Phone Number</Text>
+                      <TextInput
+                        style={styles.amountInput}
+                        value={moncashPhone}
+                        onChangeText={setMoncashPhone}
+                        placeholder="+509 XXXX XXXX"
+                        keyboardType="phone-pad"
+                      />
+                    </View>
                   </View>
-                </View>
                 )}
 
                 {/* PayPal Details — paypal only */}
                 {selectedMethod === 'paypal' && (
-                <View style={{ marginTop: 12, gap: 10 }}>
-                  <View>
-                    <Text style={styles.amountLabel}>PayPal Email</Text>
-                    <TextInput
-                      style={styles.amountInput}
-                      value={bankAccountName}
-                      onChangeText={setBankAccountName}
-                      placeholder="your@email.com"
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                    />
+                  <View style={{ marginTop: 12, gap: 10 }}>
+                    <View>
+                      <Text style={styles.amountLabel}>PayPal Email</Text>
+                      <TextInput
+                        style={styles.amountInput}
+                        value={bankAccountName}
+                        onChangeText={setBankAccountName}
+                        placeholder="your@email.com"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                      />
+                    </View>
                   </View>
-                </View>
                 )}
               </View>
 

@@ -133,11 +133,11 @@ export default function AppNavigator() {
   // Register for push notifications when authenticated
   React.useEffect(() => {
     if (isAuthenticated) {
-      registerForPushNotifications().catch(() => {});
+      registerForPushNotifications().catch(() => { });
     }
     return () => {
       if (isAuthenticated) {
-        unregisterPushNotifications().catch(() => {});
+        unregisterPushNotifications().catch(() => { });
       }
     };
   }, [isAuthenticated]);

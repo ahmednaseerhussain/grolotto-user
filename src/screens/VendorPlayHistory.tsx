@@ -36,11 +36,11 @@ export default function VendorPlayHistory() {
   const vendors = useAppStore(s => s.vendors);
   const gamePlays = useAppStore(s => s.gamePlays);
   const language = useAppStore(s => s.language);
-  
+
   const t = (key: string) => getTranslation(key as any, language);
   const FILTER_OPTIONS = getFilterOptions(t);
   const STATE_OPTIONS = getStateOptions(t);
-  
+
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGameType, setSelectedGameType] = useState<string | null>(null);
@@ -50,7 +50,7 @@ export default function VendorPlayHistory() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'detail' | 'summary'>('summary');
   const [summaryData, setSummaryData] = useState<any[]>([]);
-  
+
   const currentVendor = vendors.find(v => (v as any).userId === user?.id) || vendors[0];
 
   // Fetch play history from API
@@ -96,7 +96,7 @@ export default function VendorPlayHistory() {
     };
     fetchSummary();
   }, []);
-  
+
   if (!currentVendor) {
     return (
       <SafeAreaView style={styles.container}>
@@ -114,15 +114,15 @@ export default function VendorPlayHistory() {
   }
 
   // Use API data if available, fall back to local store
-  const vendorGamePlays = apiPlays.length > 0 
-    ? apiPlays 
+  const vendorGamePlays = apiPlays.length > 0
+    ? apiPlays
     : gamePlays.filter(game => game.vendorId === currentVendor.id);
-  
+
   // Apply filters
   const filteredGamePlays = vendorGamePlays.filter(game => {
     const gameDate = new Date(game.timestamp);
     const now = new Date();
-    
+
     // Date filter
     switch (selectedFilter) {
       case "today":
@@ -137,21 +137,21 @@ export default function VendorPlayHistory() {
         if (gameDate < monthAgo) return false;
         break;
     }
-    
+
     // Game type filter
     if (selectedGameType && game.gameType !== selectedGameType) return false;
-    
+
     // State filter
     if (selectedState !== "all" && game.draw !== selectedState) return false;
-    
+
     // Draw filter
     if (selectedDraw && game.draw !== selectedDraw) return false;
-    
+
     // Search filter (by numbers)
     if (searchQuery && !game.numbers.some((num: any) => num.toString().includes(searchQuery))) {
       return false;
     }
-    
+
     return true;
   });
 
@@ -300,240 +300,240 @@ export default function VendorPlayHistory() {
 
       {viewMode === 'detail' && <>
 
-      {/* Stats Summary */}
-      <View style={styles.statsContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.statsScroll}>
-          <View style={styles.statCard}>
-            <Ionicons name="ticket" size={20} color="#3b82f6" />
-            <Text style={styles.statValue}>{stats.totalTickets}</Text>
-            <Text style={styles.statLabel}>{t("tickets")}</Text>
-          </View>
-          
-          <View style={styles.statCard}>
-            <Ionicons name="cash" size={20} color="#10b981" />
-            <Text style={styles.statValue}>${stats.totalAmount.toFixed(0)}</Text>
-            <Text style={styles.statLabel}>{t("totalBetAmount")}</Text>
-          </View>
-          
-          <View style={styles.statCard}>
-            <Ionicons name="trophy" size={20} color="#f59e0b" />
-            <Text style={styles.statValue}>{stats.winningTickets}</Text>
-            <Text style={styles.statLabel}>{t("winners")}</Text>
-          </View>
-          
-          <View style={styles.statCard}>
-            <Ionicons name="trending-up" size={20} color="#8b5cf6" />
-            <Text style={styles.statValue}>${stats.commission.toFixed(0)}</Text>
-            <Text style={styles.statLabel}>{t("commission")}</Text>
-          </View>
-        </ScrollView>
-      </View>
+        {/* Stats Summary */}
+        <View style={styles.statsContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.statsScroll}>
+            <View style={styles.statCard}>
+              <Ionicons name="ticket" size={20} color="#3b82f6" />
+              <Text style={styles.statValue}>{stats.totalTickets}</Text>
+              <Text style={styles.statLabel}>{t("tickets")}</Text>
+            </View>
 
-      {/* Filters */}
-      <View style={styles.filtersContainer}>
-        {/* Date Filter */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-          {FILTER_OPTIONS.map((filter) => (
-            <Pressable
-              key={filter.key}
-              style={[styles.filterChip, selectedFilter === filter.key && styles.filterChipActive]}
-              onPress={() => setSelectedFilter(filter.key)}
-            >
-              <Ionicons 
-                name={filter.icon as any} 
-                size={16} 
-                color={selectedFilter === filter.key ? "#ffffff" : "#6b7280"} 
-              />
-              <Text style={[
-                styles.filterChipText, 
-                selectedFilter === filter.key && styles.filterChipTextActive
-              ]}>
-                {filter.label}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
+            <View style={styles.statCard}>
+              <Ionicons name="cash" size={20} color="#10b981" />
+              <Text style={styles.statValue}>${stats.totalAmount.toFixed(0)}</Text>
+              <Text style={styles.statLabel}>{t("totalBetAmount")}</Text>
+            </View>
 
-        {/* Game Type Filter */}
-        {gameTypeStats.length > 0 && (
-          <View style={styles.filterSection}>
-            <Text style={styles.filterSectionTitle}>{t("gameTypes")}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+            <View style={styles.statCard}>
+              <Ionicons name="trophy" size={20} color="#f59e0b" />
+              <Text style={styles.statValue}>{stats.winningTickets}</Text>
+              <Text style={styles.statLabel}>{t("winners")}</Text>
+            </View>
+
+            <View style={styles.statCard}>
+              <Ionicons name="trending-up" size={20} color="#8b5cf6" />
+              <Text style={styles.statValue}>${stats.commission.toFixed(0)}</Text>
+              <Text style={styles.statLabel}>{t("commission")}</Text>
+            </View>
+          </ScrollView>
+        </View>
+
+        {/* Filters */}
+        <View style={styles.filtersContainer}>
+          {/* Date Filter */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+            {FILTER_OPTIONS.map((filter) => (
               <Pressable
-                style={[styles.gameTypeChip, !selectedGameType && styles.gameTypeChipActive]}
-                onPress={() => setSelectedGameType(null)}
+                key={filter.key}
+                style={[styles.filterChip, selectedFilter === filter.key && styles.filterChipActive]}
+                onPress={() => setSelectedFilter(filter.key)}
               >
-                <Text style={[styles.gameTypeChipText, !selectedGameType && styles.gameTypeChipTextActive]}>
-                  {t("allGames")}
+                <Ionicons
+                  name={filter.icon as any}
+                  size={16}
+                  color={selectedFilter === filter.key ? "#ffffff" : "#6b7280"}
+                />
+                <Text style={[
+                  styles.filterChipText,
+                  selectedFilter === filter.key && styles.filterChipTextActive
+                ]}>
+                  {filter.label}
                 </Text>
               </Pressable>
-              
-              {gameTypeStats.map(([gameType, count]) => (
+            ))}
+          </ScrollView>
+
+          {/* Game Type Filter */}
+          {gameTypeStats.length > 0 && (
+            <View style={styles.filterSection}>
+              <Text style={styles.filterSectionTitle}>{t("gameTypes")}</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
                 <Pressable
-                  key={gameType}
-                  style={[
-                    styles.gameTypeChip,
-                    selectedGameType === gameType && styles.gameTypeChipActive,
-                    { borderColor: GAME_TYPE_COLORS[gameType as keyof typeof GAME_TYPE_COLORS] }
-                  ]}
-                  onPress={() => setSelectedGameType(selectedGameType === gameType ? null : gameType)}
+                  style={[styles.gameTypeChip, !selectedGameType && styles.gameTypeChipActive]}
+                  onPress={() => setSelectedGameType(null)}
                 >
-                  <View 
+                  <Text style={[styles.gameTypeChipText, !selectedGameType && styles.gameTypeChipTextActive]}>
+                    {t("allGames")}
+                  </Text>
+                </Pressable>
+
+                {gameTypeStats.map(([gameType, count]) => (
+                  <Pressable
+                    key={gameType}
                     style={[
-                      styles.gameTypeDot, 
-                      { backgroundColor: GAME_TYPE_COLORS[gameType as keyof typeof GAME_TYPE_COLORS] }
-                    ]} 
+                      styles.gameTypeChip,
+                      selectedGameType === gameType && styles.gameTypeChipActive,
+                      { borderColor: GAME_TYPE_COLORS[gameType as keyof typeof GAME_TYPE_COLORS] }
+                    ]}
+                    onPress={() => setSelectedGameType(selectedGameType === gameType ? null : gameType)}
+                  >
+                    <View
+                      style={[
+                        styles.gameTypeDot,
+                        { backgroundColor: GAME_TYPE_COLORS[gameType as keyof typeof GAME_TYPE_COLORS] }
+                      ]}
+                    />
+                    <Text style={[
+                      styles.gameTypeChipText,
+                      selectedGameType === gameType && styles.gameTypeChipTextActive
+                    ]}>
+                      {gameType.toUpperCase()} ({count as number})
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
+          {/* State Filter */}
+          <View style={styles.filterSection}>
+            <Text style={styles.filterSectionTitle}>{t("states")}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+              {STATE_OPTIONS.map((state) => (
+                <Pressable
+                  key={state.key}
+                  style={[styles.stateChip, selectedState === state.key && styles.stateChipActive]}
+                  onPress={() => setSelectedState(state.key)}
+                >
+                  <Ionicons
+                    name={state.icon as any}
+                    size={14}
+                    color={selectedState === state.key ? "#ffffff" : "#6b7280"}
                   />
                   <Text style={[
-                    styles.gameTypeChipText,
-                    selectedGameType === gameType && styles.gameTypeChipTextActive
+                    styles.stateChipText,
+                    selectedState === state.key && styles.stateChipTextActive
                   ]}>
-                    {gameType.toUpperCase()} ({count as number})
+                    {state.label}
+                    {state.key !== "all" && stateStats.find(([s]) => s === state.key) &&
+                      ` (${stateStats.find(([s]) => s === state.key)?.[1] || 0})`
+                    }
                   </Text>
                 </Pressable>
               ))}
             </ScrollView>
           </View>
-        )}
 
-        {/* State Filter */}
-        <View style={styles.filterSection}>
-          <Text style={styles.filterSectionTitle}>{t("states")}</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-            {STATE_OPTIONS.map((state) => (
-              <Pressable
-                key={state.key}
-                style={[styles.stateChip, selectedState === state.key && styles.stateChipActive]}
-                onPress={() => setSelectedState(state.key)}
-              >
-                <Ionicons 
-                  name={state.icon as any} 
-                  size={14} 
-                  color={selectedState === state.key ? "#ffffff" : "#6b7280"} 
-                />
-                <Text style={[
-                  styles.stateChipText, 
-                  selectedState === state.key && styles.stateChipTextActive
-                ]}>
-                  {state.label}
-                  {state.key !== "all" && stateStats.find(([s]) => s === state.key) && 
-                    ` (${stateStats.find(([s]) => s === state.key)?.[1] || 0})`
-                  }
-                </Text>
+          {/* Search */}
+          <View style={styles.searchContainer}>
+            <Ionicons name="search" size={16} color="#9ca3af" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder={t("searchByNumbers")}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor="#9ca3af"
+            />
+            {searchQuery.length > 0 && (
+              <Pressable onPress={() => setSearchQuery("")}>
+                <Ionicons name="close-circle" size={16} color="#9ca3af" />
               </Pressable>
-            ))}
-          </ScrollView>
+            )}
+          </View>
         </View>
 
-        {/* Search */}
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={16} color="#9ca3af" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder={t("searchByNumbers")}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholderTextColor="#9ca3af"
-          />
-          {searchQuery.length > 0 && (
-            <Pressable onPress={() => setSearchQuery("")}>
-              <Ionicons name="close-circle" size={16} color="#9ca3af" />
-            </Pressable>
-          )}
-        </View>
-      </View>
-
-      {/* Game History */}
-      <ScrollView style={styles.historyScroll} showsVerticalScrollIndicator={false}>
-        <View style={styles.historyContainer}>
-          {filteredGamePlays.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="receipt-outline" size={48} color="#d1d5db" />
-              <Text style={styles.emptyStateText}>{t("noResultsFound")}</Text>
-              <Text style={styles.emptyStateSubtext}>
-                {t("adjustFilters")}
-              </Text>
-            </View>
-          ) : (
-            filteredGamePlays
-              .sort((a, b) => b.timestamp - a.timestamp)
-              .map((game) => (
-                <View key={game.id} style={styles.gameCard}>
-                  <View style={styles.gameHeader}>
-                    <View style={styles.gameInfo}>
-                      <View style={styles.gameTypeContainer}>
-                        <View 
-                          style={[
-                            styles.gameTypeBadge, 
-                            { backgroundColor: GAME_TYPE_COLORS[game.gameType as keyof typeof GAME_TYPE_COLORS] }
-                          ]}
-                        >
-                          <Text style={styles.gameTypeBadgeText}>{game.gameType.toUpperCase()}</Text>
-                        </View>
-                        <Text style={styles.gameDraw}>{game.draw}</Text>
-                      </View>
-                      
-                      <View style={styles.gameNumbers}>
-                        {game.numbers.map((number: any, index: number) => (
-                          <View key={index} style={styles.numberBall}>
-                            <Text style={styles.numberText}>{number.toString().padStart(2, '0')}</Text>
+        {/* Game History */}
+        <ScrollView style={styles.historyScroll} showsVerticalScrollIndicator={false}>
+          <View style={styles.historyContainer}>
+            {filteredGamePlays.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="receipt-outline" size={48} color="#d1d5db" />
+                <Text style={styles.emptyStateText}>{t("noResultsFound")}</Text>
+                <Text style={styles.emptyStateSubtext}>
+                  {t("adjustFilters")}
+                </Text>
+              </View>
+            ) : (
+              filteredGamePlays
+                .sort((a, b) => b.timestamp - a.timestamp)
+                .map((game) => (
+                  <View key={game.id} style={styles.gameCard}>
+                    <View style={styles.gameHeader}>
+                      <View style={styles.gameInfo}>
+                        <View style={styles.gameTypeContainer}>
+                          <View
+                            style={[
+                              styles.gameTypeBadge,
+                              { backgroundColor: GAME_TYPE_COLORS[game.gameType as keyof typeof GAME_TYPE_COLORS] }
+                            ]}
+                          >
+                            <Text style={styles.gameTypeBadgeText}>{game.gameType.toUpperCase()}</Text>
                           </View>
-                        ))}
-                      </View>
-                    </View>
-                    
-                    <View style={styles.gameStats}>
-                      <Text style={styles.gameAmount}>${game.betAmount}</Text>
-                      <View style={[
-                        styles.gameStatus,
-                        game.status === "won" ? styles.gameStatusWon : 
-                        game.status === "lost" ? styles.gameStatusLost : styles.gameStatusPending
-                      ]}>
-                        <Text style={styles.gameStatusText}>
-                          {game.status === "won" ? t("winner") : 
-                           game.status === "lost" ? t("lost") : t("pending")}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  
-                  <View style={styles.gameFooter}>
-                    <Text style={styles.gameTime}>
-                      {new Date(game.timestamp).toLocaleDateString("fr-FR", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </Text>
-                    
-                    {game.status === "won" && game.winAmount && (
-                      <Text style={styles.gameWinAmount}>
-                        {t("winnings")}: ${game.winAmount.toFixed(2)}
-                      </Text>
-                    )}
-                  </View>
-                </View>
-              ))
-          )}
-        </View>
-      </ScrollView>
+                          <Text style={styles.gameDraw}>{game.draw}</Text>
+                        </View>
 
-      {/* Export Options */}
-      {filteredGamePlays.length > 0 && (
-        <View style={styles.exportContainer}>
-          <Pressable style={styles.exportOption} onPress={() => exportToCSV(false)}>
-            <Ionicons name="document-text" size={20} color="#10b981" />
-            <Text style={styles.exportOptionText}>{t("exportCSV") || "Pre-Result CSV"}</Text>
-          </Pressable>
-          
-          <Pressable style={styles.exportOption} onPress={() => exportToCSV(true)}>
-            <Ionicons name="document" size={20} color="#ef4444" />
-            <Text style={styles.exportOptionText}>{t("exportPDF") || "Post-Result CSV"}</Text>
-          </Pressable>
-        </View>
-      )}
+                        <View style={styles.gameNumbers}>
+                          {game.numbers.map((number: any, index: number) => (
+                            <View key={index} style={styles.numberBall}>
+                              <Text style={styles.numberText}>{number.toString().padStart(2, '0')}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+
+                      <View style={styles.gameStats}>
+                        <Text style={styles.gameAmount}>${game.betAmount}</Text>
+                        <View style={[
+                          styles.gameStatus,
+                          game.status === "won" ? styles.gameStatusWon :
+                            game.status === "lost" ? styles.gameStatusLost : styles.gameStatusPending
+                        ]}>
+                          <Text style={styles.gameStatusText}>
+                            {game.status === "won" ? t("winner") :
+                              game.status === "lost" ? t("lost") : t("pending")}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <View style={styles.gameFooter}>
+                      <Text style={styles.gameTime}>
+                        {new Date(game.timestamp).toLocaleDateString("fr-FR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </Text>
+
+                      {game.status === "won" && game.winAmount && (
+                        <Text style={styles.gameWinAmount}>
+                          {t("winnings")}: ${game.winAmount.toFixed(2)}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                ))
+            )}
+          </View>
+        </ScrollView>
+
+        {/* Export Options */}
+        {filteredGamePlays.length > 0 && (
+          <View style={styles.exportContainer}>
+            <Pressable style={styles.exportOption} onPress={() => exportToCSV(false)}>
+              <Ionicons name="document-text" size={20} color="#10b981" />
+              <Text style={styles.exportOptionText}>{t("exportCSV") || "Pre-Result CSV"}</Text>
+            </Pressable>
+
+            <Pressable style={styles.exportOption} onPress={() => exportToCSV(true)}>
+              <Ionicons name="document" size={20} color="#ef4444" />
+              <Text style={styles.exportOptionText}>{t("exportPDF") || "Post-Result CSV"}</Text>
+            </Pressable>
+          </View>
+        )}
 
       </>}
     </SafeAreaView>
