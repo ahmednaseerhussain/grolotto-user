@@ -7,6 +7,7 @@ export interface AuthUser {
   id: string;
   email: string;
   role: 'player' | 'vendor' | 'admin';
+  adminRole?: 'super_admin' | 'admin' | 'moderator' | 'viewer';
 }
 
 declare global {
@@ -38,12 +39,17 @@ export const authenticate = async (
 
     // Verify user still exists and is active
     const result = await query(
-      'SELECT id, email, role, is_active FROM users WHERE id = $1',
+      'SELECT id, email, role, admin_role, is_active FROM users WHERE id = $1',
       [decoded.id]
     );
 
-    if (result.rows.length === 0 || !result.rows[0].is_active) {
-      res.status(401).json({ error: 'User account is inactive or not found' });
+    if (result.rows.length === 0) {
+      res.status(401).json({ error: 'User account not found' });
+      return;
+    }
+
+    if (!result.rows[0].is_active) {
+      res.status(403).json({ error: 'Account is suspended. Please contact support.', code: 'ACCOUNT_SUSPENDED' });
       return;
     }
 
@@ -51,6 +57,7 @@ export const authenticate = async (
       id: result.rows[0].id,
       email: result.rows[0].email,
       role: result.rows[0].role,
+      adminRole: result.rows[0].admin_role,
     };
 
     next();

@@ -236,6 +236,37 @@ async function runStartupMigrations() {
       CREATE INDEX IF NOT EXISTS idx_dream_dictionary_lang ON dream_dictionary(language);
     `);
 
+    // Migration 013: push device tokens for Expo Push Notifications
+    await query(`
+      CREATE TABLE IF NOT EXISTS push_device_tokens (
+        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        token VARCHAR(255) NOT NULL,
+        platform VARCHAR(20) NOT NULL DEFAULT 'unknown',
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(user_id, token)
+      );
+      CREATE INDEX IF NOT EXISTS idx_push_tokens_user ON push_device_tokens(user_id);
+      CREATE INDEX IF NOT EXISTS idx_push_tokens_active ON push_device_tokens(is_active) WHERE is_active = TRUE;
+    `);
+
+    // Migration 014: broadcast history table
+    await query(`
+      CREATE TABLE IF NOT EXISTS broadcast_history (
+        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        type VARCHAR(50) NOT NULL DEFAULT 'info',
+        target_audience VARCHAR(20) NOT NULL DEFAULT 'all',
+        total_sent INTEGER DEFAULT 0,
+        sent_by UUID REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_broadcast_history_date ON broadcast_history(created_at DESC);
+    `);
+
     console.log('[Migration] Startup migrations applied successfully');
   } catch (err) {
     console.error('[Migration] Startup migration error:', err);
@@ -334,6 +365,7 @@ app.use('/api/gift-cards', giftCardRoutes);
 // Public app settings (non-sensitive only)
 app.get('/api/settings/public', async (_req, res, next) => {
   try {
+    res.set('Cache-Control', 'public, max-age=300'); // 5 min cache
     const { query: dbQuery } = require('./database/pool');
     const result = await dbQuery(
       `SELECT key, value FROM app_settings
@@ -351,6 +383,7 @@ app.get('/api/settings/public', async (_req, res, next) => {
 // Public advertisements (no auth required)
 app.get('/api/advertisements/active', async (req, res, next) => {
   try {
+    res.set('Cache-Control', 'public, max-age=600'); // 10 min cache
     const { query: dbQuery } = require('./database/pool');
     const result = await dbQuery(
       `SELECT id, title, subtitle, content, background_color, text_color, image_url, 

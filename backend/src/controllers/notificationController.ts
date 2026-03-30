@@ -43,3 +43,31 @@ export async function markAllAsRead(req: Request, res: Response, next: NextFunct
     next(error);
   }
 }
+
+export async function registerPushToken(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { token, platform } = req.body;
+    if (!token || typeof token !== 'string') {
+      res.status(400).json({ error: 'Push token is required' });
+      return;
+    }
+    await notificationService.registerPushToken(req.user!.id, token, platform || 'unknown');
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function removePushToken(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { token } = req.body;
+    if (!token || typeof token !== 'string') {
+      res.status(400).json({ error: 'Push token is required' });
+      return;
+    }
+    await notificationService.removePushToken(req.user!.id, token);
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+}

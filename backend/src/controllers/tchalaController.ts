@@ -18,6 +18,7 @@ export async function searchDreams(req: Request, res: Response, next: NextFuncti
 
 export async function getAllDreams(req: Request, res: Response, next: NextFunction) {
   try {
+    res.set('Cache-Control', 'public, max-age=1800'); // 30 min cache
     const language = req.query.lang as string;
     const results = await tchalaService.getAllDreams(language);
     res.json(results);

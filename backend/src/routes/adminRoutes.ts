@@ -60,6 +60,7 @@ router.get('/gift-cards', ctrl.getGiftCards);
 
 // Notifications
 router.post('/notifications/broadcast', ctrl.broadcastNotification);
+router.get('/notifications/history', ctrl.getBroadcastHistory);
 
 // Transactions
 router.get('/transactions', ctrl.getTransactions);

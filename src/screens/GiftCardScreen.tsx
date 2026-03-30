@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  View, Text, Pressable, StyleSheet, ScrollView, TextInput, Alert, Share, Clipboard,
+  View, Text, Pressable, StyleSheet, ScrollView, TextInput, Alert, Share, Clipboard, Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -321,50 +321,32 @@ export default function GiftCardScreen() {
 
         {/* ─── BUY TAB ─── */}
         {activeTab === "buy" && (
-          <View>
-            <Text style={styles.sectionTitle}>Select Amount</Text>
-            <View style={styles.amountGrid}>
-              {amounts.map((amt) => (
-                <Pressable
-                  key={amt}
-                  style={[styles.amountChip, selectedAmount === amt && styles.amountChipSelected]}
-                  onPress={() => setSelectedAmount(amt)}
-                >
-                  <Text style={[styles.amountText, selectedAmount === amt && styles.amountTextSelected]}>
-                    {symbol}{amt}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-
-            <Text style={styles.sectionTitle}>Recipient (optional)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Recipient's name"
-              placeholderTextColor="#9ca3af"
-              value={recipientName}
-              onChangeText={setRecipientName}
-            />
-
-            <Text style={styles.sectionTitle}>Message (optional)</Text>
-            <TextInput
-              style={[styles.input, { height: 80, textAlignVertical: "top" }]}
-              placeholder="Add a personal message..."
-              placeholderTextColor="#9ca3af"
-              value={giftMessage}
-              onChangeText={setGiftMessage}
-              multiline
-            />
-
+          <View style={{ alignItems: "center", paddingVertical: 24 }}>
+            <Ionicons name="globe-outline" size={64} color="#f59e0b" />
+            <Text style={{ fontSize: 20, fontWeight: "700", color: "#fff", marginTop: 16, textAlign: "center" }}>
+              Buy Gift Cards Online
+            </Text>
+            <Text style={{ fontSize: 14, color: "#9ca3af", marginTop: 8, textAlign: "center", paddingHorizontal: 16 }}>
+              Gift cards are purchased through our website.{"\n"}
+              You'll be redirected to the {currency === "HTG" ? "HTG" : "USD"} gift card store.
+            </Text>
+            <Text style={{ fontSize: 13, color: "#6b7280", marginTop: 12, textAlign: "center" }}>
+              {currency === "HTG" ? "Pay with MonCash" : "Pay with Zelle, CashApp, PayPal, or Debit Card"}
+            </Text>
+            <Text style={{ fontSize: 13, color: "#6b7280", marginTop: 4, textAlign: "center" }}>
+              PIN delivered via Email or WhatsApp
+            </Text>
             <Pressable
-              style={[styles.primaryButton, (!selectedAmount || processing) && { opacity: 0.5 }]}
-              onPress={handlePurchase}
-              disabled={!selectedAmount || processing}
+              style={[styles.primaryButton, { marginTop: 24, width: "100%" }]}
+              onPress={() => {
+                const url = currency === "HTG"
+                  ? "https://grolotto.com/player/gift-cards?currency=HTG"
+                  : "https://grolotto.com/player/gift-cards?currency=USD";
+                Linking.openURL(url);
+              }}
             >
-              <Ionicons name="gift" size={20} color="#fff" />
-              <Text style={styles.primaryButtonText}>
-                {processing ? "Processing..." : `Buy Gift Card${selectedAmount ? ` (${symbol}${selectedAmount})` : ""}`}
-              </Text>
+              <Ionicons name="open-outline" size={20} color="#fff" />
+              <Text style={styles.primaryButtonText}>Go to Website to Buy</Text>
             </Pressable>
           </View>
         )}

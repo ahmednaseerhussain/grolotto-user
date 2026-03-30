@@ -393,6 +393,67 @@ export async function getVendorPlayHistory(
 }
 
 /**
+ * Get aggregated play history summary: grouped by date + state + drawTime.
+ */
+export async function getVendorPlayHistorySummary(
+  vendorId: string,
+  filters?: { dateFrom?: string; dateTo?: string; drawState?: string; drawTime?: string }
+): Promise<any[]> {
+  let whereClause = 'lt.vendor_id = $1';
+  const params: any[] = [vendorId];
+  let paramIdx = 2;
+
+  if (filters?.dateFrom) {
+    whereClause += ` AND lt.created_at >= $${paramIdx}::date`;
+    params.push(filters.dateFrom);
+    paramIdx++;
+  }
+  if (filters?.dateTo) {
+    whereClause += ` AND lt.created_at < ($${paramIdx}::date + INTERVAL '1 day')`;
+    params.push(filters.dateTo);
+    paramIdx++;
+  }
+  if (filters?.drawState) {
+    whereClause += ` AND lt.draw_state = $${paramIdx}`;
+    params.push(filters.drawState);
+    paramIdx++;
+  }
+  if (filters?.drawTime) {
+    whereClause += ` AND lr.draw_time = $${paramIdx}`;
+    params.push(filters.drawTime);
+    paramIdx++;
+  }
+
+  const result = await query(
+    `SELECT lt.created_at::date as play_date,
+            lt.draw_state,
+            lr.draw_time,
+            COUNT(DISTINCT lt.player_id) as player_count,
+            COUNT(lt.id) as ticket_count,
+            SUM(lt.bet_amount) as total_amount,
+            SUM(CASE WHEN lt.status = 'won' THEN lt.win_amount ELSE 0 END) as total_winnings,
+            lt.currency
+     FROM lottery_tickets lt
+     LEFT JOIN lottery_rounds lr ON lr.id = lt.round_id
+     WHERE ${whereClause}
+     GROUP BY lt.created_at::date, lt.draw_state, lr.draw_time, lt.currency
+     ORDER BY play_date DESC, lt.draw_state, lr.draw_time`,
+    params
+  );
+
+  return result.rows.map((r: any) => ({
+    date: r.play_date,
+    drawState: r.draw_state,
+    drawTime: r.draw_time || 'midday',
+    playerCount: parseInt(r.player_count),
+    ticketCount: parseInt(r.ticket_count),
+    totalAmount: parseFloat(r.total_amount),
+    totalWinnings: parseFloat(r.total_winnings),
+    currency: r.currency,
+  }));
+}
+
+/**
  * Get vendor reviews.
  */
 export async function getVendorReviews(vendorId: string) {
@@ -589,4 +650,130 @@ export async function updatePayoutMultipliers(
   );
 
   return cleaned;
+}
+
+// ─── Draw Schedules ────────────────────────────────────────
+
+export interface DrawSchedule {
+  id: string;
+  vendorId: string;
+  drawState: string;
+  drawTime: string;
+  openTime: string;
+  closeTime: string;
+  isActive: boolean;
+}
+
+export async function getDrawSchedules(vendorId: string): Promise<DrawSchedule[]> {
+  const result = await query(
+    `SELECT id, vendor_id, draw_state, draw_time, open_time::text, close_time::text, is_active
+     FROM vendor_draw_schedules
+     WHERE vendor_id = $1
+     ORDER BY draw_state, draw_time`,
+    [vendorId]
+  );
+  return result.rows.map((r: any) => ({
+    id: r.id,
+    vendorId: r.vendor_id,
+    drawState: r.draw_state,
+    drawTime: r.draw_time,
+    openTime: r.open_time,
+    closeTime: r.close_time,
+    isActive: r.is_active,
+  }));
+}
+
+export async function upsertDrawSchedule(
+  vendorId: string,
+  drawState: string,
+  drawTime: string,
+  openTime: string,
+  closeTime: string
+): Promise<DrawSchedule> {
+  const validStates = ['NY', 'FL', 'GA', 'TX', 'PA', 'CT', 'TN', 'NJ'];
+  const validDrawTimes = ['morning', 'midday', 'evening'];
+
+  if (!validStates.includes(drawState)) throw new AppError('Invalid draw state', 400);
+  if (!validDrawTimes.includes(drawTime)) throw new AppError('Invalid draw time', 400);
+
+  // Validate time format (HH:MM or HH:MM:SS)
+  const timeRegex = /^\d{2}:\d{2}(:\d{2})?$/;
+  if (!timeRegex.test(openTime) || !timeRegex.test(closeTime)) {
+    throw new AppError('Invalid time format. Use HH:MM', 400);
+  }
+
+  const result = await query(
+    `INSERT INTO vendor_draw_schedules (vendor_id, draw_state, draw_time, open_time, close_time)
+     VALUES ($1, $2, $3, $4::time, $5::time)
+     ON CONFLICT (vendor_id, draw_state, draw_time) DO UPDATE SET
+       open_time = $4::time, close_time = $5::time, updated_at = NOW()
+     RETURNING id, vendor_id, draw_state, draw_time, open_time::text, close_time::text, is_active`,
+    [vendorId, drawState, drawTime, openTime, closeTime]
+  );
+
+  const r = result.rows[0];
+  return {
+    id: r.id,
+    vendorId: r.vendor_id,
+    drawState: r.draw_state,
+    drawTime: r.draw_time,
+    openTime: r.open_time,
+    closeTime: r.close_time,
+    isActive: r.is_active,
+  };
+}
+
+export async function deleteDrawSchedule(vendorId: string, scheduleId: string): Promise<void> {
+  const result = await query(
+    'DELETE FROM vendor_draw_schedules WHERE id = $1 AND vendor_id = $2',
+    [scheduleId, vendorId]
+  );
+  if (result.rowCount === 0) throw new AppError('Schedule not found', 404);
+}
+
+/**
+ * Check if a vendor's draw is currently open based on schedule.
+ * Returns { isOpen, message } for a specific vendor+state+drawTime.
+ */
+export async function checkDrawSchedule(
+  vendorId: string,
+  drawState: string,
+  drawTime: string
+): Promise<{ isOpen: boolean; message?: string; openTime?: string; closeTime?: string }> {
+  const result = await query(
+    `SELECT open_time::text, close_time::text, is_active
+     FROM vendor_draw_schedules
+     WHERE vendor_id = $1 AND draw_state = $2 AND draw_time = $3`,
+    [vendorId, drawState, drawTime]
+  );
+
+  if (result.rows.length === 0) {
+    // No schedule defined — draw is open by default
+    return { isOpen: true };
+  }
+
+  const schedule = result.rows[0];
+  if (!schedule.is_active) {
+    return { isOpen: true }; // Inactive schedule = no restriction
+  }
+
+  // Compare current time (Haiti is UTC-5 / EST)
+  const now = new Date();
+  const haitiOffset = -5 * 60;
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+  const haitiTime = new Date(utcMs + haitiOffset * 60000);
+  const currentMinutes = haitiTime.getHours() * 60 + haitiTime.getMinutes();
+
+  const [openH, openM] = schedule.open_time.split(':').map(Number);
+  const [closeH, closeM] = schedule.close_time.split(':').map(Number);
+  const openMinutes = openH * 60 + openM;
+  const closeMinutes = closeH * 60 + closeM;
+
+  const isOpen = currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
+  return {
+    isOpen,
+    openTime: schedule.open_time,
+    closeTime: schedule.close_time,
+    message: isOpen ? undefined : `This draw is currently closed. Open: ${schedule.open_time} - ${schedule.close_time}`,
+  };
 }

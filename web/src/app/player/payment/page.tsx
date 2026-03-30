@@ -226,11 +226,12 @@ export default function PaymentScreen() {
       <div>
         <label className="text-sm font-semibold text-gray-700 block mb-3">Select Payment Method</label>
         <div className="space-y-3">
-          {/* MonCash */}
+          {/* MonCash — HTG only */}
+          {currency === "HTG" && (
           <button
             onClick={() => setSelectedMethod("moncash")}
             className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${selectedMethod === "moncash"
-              ? "border-blue-500 bg-blue-50"
+              ? "border-red-500 bg-red-50"
               : "border-gray-200 hover:border-gray-300 bg-white"
               }`}
           >
@@ -241,32 +242,35 @@ export default function PaymentScreen() {
               <p className="font-semibold text-gray-900">MonCash</p>
               <p className="text-sm text-gray-500">Digicel mobile money</p>
             </div>
-            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "moncash" ? "border-blue-500" : "border-gray-300"
+            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "moncash" ? "border-red-500" : "border-gray-300"
               }`}>
-              {selectedMethod === "moncash" && <div className="w-3 h-3 rounded-full bg-blue-500" />}
+              {selectedMethod === "moncash" && <div className="w-3 h-3 rounded-full bg-red-500" />}
             </div>
           </button>
+          )}
 
-          {/* PayPal */}
+          {/* PayPal — USD only */}
+          {currency === "USD" && (
           <button
             onClick={() => setSelectedMethod("paypal")}
             className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${selectedMethod === "paypal"
-              ? "border-blue-500 bg-blue-50"
+              ? "border-green-500 bg-green-50"
               : "border-gray-200 hover:border-gray-300 bg-white"
               }`}
           >
-            <div className="bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center">
+            <div className="bg-green-600 w-12 h-12 rounded-full flex items-center justify-center">
               <Globe className="h-6 w-6 text-white" />
             </div>
             <div className="text-left flex-1">
               <p className="font-semibold text-gray-900">{t("paypal") || "PayPal"}</p>
               <p className="text-sm text-gray-500">Pay with PayPal account</p>
             </div>
-            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "paypal" ? "border-blue-500" : "border-gray-300"
+            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "paypal" ? "border-green-500" : "border-gray-300"
               }`}>
-              {selectedMethod === "paypal" && <div className="w-3 h-3 rounded-full bg-blue-500" />}
+              {selectedMethod === "paypal" && <div className="w-3 h-3 rounded-full bg-green-500" />}
             </div>
           </button>
+          )}
 
           {/* Credit/Debit Card - Coming Soon */}
           <button

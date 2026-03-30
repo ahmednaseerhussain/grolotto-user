@@ -60,18 +60,18 @@ export default function SettingsScreen() {
 
   const clearCache = () => {
     Alert.alert(
-      "Clear Cache",
-      "This will clear stored data and may improve performance. Continue?",
+      t("clearCache"),
+      t("clearCacheConfirm"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("cancel"), style: "cancel" },
         { 
-          text: "Clear", 
+          text: t("clearCache"), 
           onPress: async () => {
             try {
               const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
               await AsyncStorage.clear();
-              Alert.alert("Success", "Cache cleared successfully. Restart the app.");
-            } catch { Alert.alert("Error", "Failed to clear cache"); }
+              Alert.alert(t("save"), t("cacheClearedSuccess"));
+            } catch { Alert.alert(t("error"), t("errorOccurred")); }
           }
         }
       ]
@@ -312,7 +312,7 @@ export default function SettingsScreen() {
               <Ionicons name="refresh-outline" size={24} color="#6b7280" />
               <View className="flex-1 ml-3">
                 <Text className="text-base font-medium text-gray-800">
-                  Clear Cache
+                  {t("clearCache")}
                 </Text>
                 <Text className="text-gray-600 text-sm">
                   Free up storage space

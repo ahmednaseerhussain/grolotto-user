@@ -48,6 +48,8 @@ export default function VendorPlayHistory() {
   const [selectedDraw] = useState<string | null>(null);
   const [apiPlays, setApiPlays] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'detail' | 'summary'>('summary');
+  const [summaryData, setSummaryData] = useState<any[]>([]);
   
   const currentVendor = vendors.find(v => (v as any).userId === user?.id) || vendors[0];
 
@@ -80,6 +82,19 @@ export default function VendorPlayHistory() {
       }
     };
     fetchHistory();
+  }, []);
+
+  // Fetch summary data
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const data = await vendorAPI.getPlayHistorySummary();
+        setSummaryData(data || []);
+      } catch (e) {
+        console.warn('Summary fetch error:', getErrorMessage(e));
+      }
+    };
+    fetchSummary();
   }, []);
   
   if (!currentVendor) {
@@ -170,18 +185,30 @@ export default function VendorPlayHistory() {
   // Get unique draws (for future use)
   // const availableDraws = [...new Set(vendorGamePlays.map(game => game.draw))];
 
-  const exportToCSV = () => {
-    // In a real app, this would generate and download a CSV file
-    console.log("Exporting to CSV...");
-    // Mock implementation
-    alert(t("csvReportGenerated"));
+  const exportToCSV = (includeWinners: boolean = false) => {
+    if (filteredGamePlays.length === 0) {
+      alert(t("noDataToExport") || 'No data to export');
+      return;
+    }
+    const headers = includeWinners
+      ? 'Date,State,Game Type,Numbers,Amount,Currency,Status,Win Amount'
+      : 'Date,State,Game Type,Numbers,Amount,Currency';
+    const rows = filteredGamePlays.map((g: any) => {
+      const date = new Date(g.timestamp).toLocaleString();
+      const nums = (g.numbers || []).join('-');
+      const base = `${date},${g.draw},${g.gameType},${nums},${g.betAmount},${g.currency}`;
+      return includeWinners ? `${base},${g.status},${g.winAmount || 0}` : base;
+    });
+    const csv = [headers, ...rows].join('\n');
+    // For React Native, copy to clipboard as export mechanism
+    import('react-native').then(({ Share }) => {
+      Share.share({ message: csv, title: includeWinners ? 'Play History (with results)' : 'Play History (pre-result)' });
+    });
   };
 
   const exportToPDF = () => {
-    // In a real app, this would generate and download a PDF file
-    console.log("Exporting to PDF...");
-    // Mock implementation
-    alert(t("pdfReportGenerated"));
+    // Delegate to CSV with results for now
+    exportToCSV(true);
   };
 
   return (
@@ -192,10 +219,86 @@ export default function VendorPlayHistory() {
           <Ionicons name="arrow-back" size={24} color="#1f2937" />
         </Pressable>
         <Text style={styles.headerTitle}>{t("historyAndReports")}</Text>
-        <Pressable style={styles.exportButton}>
-          <Ionicons name="download" size={20} color="#3b82f6" />
+        <View style={{ flexDirection: 'row' }}>
+          <Pressable style={styles.exportButton} onPress={() => exportToCSV(false)}>
+            <Ionicons name="document-text-outline" size={18} color="#3b82f6" />
+          </Pressable>
+          <Pressable style={[styles.exportButton, { marginLeft: 4 }]} onPress={() => exportToCSV(true)}>
+            <Ionicons name="download" size={20} color="#3b82f6" />
+          </Pressable>
+        </View>
+      </View>
+
+      {/* View Mode Tabs */}
+      <View style={{ flexDirection: 'row', marginHorizontal: 16, marginBottom: 12 }}>
+        <Pressable
+          onPress={() => setViewMode('summary')}
+          style={{ flex: 1, paddingVertical: 10, borderRadius: 10, marginRight: 6, backgroundColor: viewMode === 'summary' ? '#3b82f6' : '#f3f4f6', alignItems: 'center' }}
+        >
+          <Text style={{ fontWeight: '700', fontSize: 13, color: viewMode === 'summary' ? '#fff' : '#6b7280' }}>Summary</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setViewMode('detail')}
+          style={{ flex: 1, paddingVertical: 10, borderRadius: 10, backgroundColor: viewMode === 'detail' ? '#3b82f6' : '#f3f4f6', alignItems: 'center' }}
+        >
+          <Text style={{ fontWeight: '700', fontSize: 13, color: viewMode === 'detail' ? '#fff' : '#6b7280' }}>Detail</Text>
         </Pressable>
       </View>
+
+      {/* Summary View */}
+      {viewMode === 'summary' && (
+        <ScrollView style={{ flex: 1 }}>
+          <View style={{ paddingHorizontal: 16 }}>
+            {summaryData.length === 0 && !loading && (
+              <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+                <Ionicons name="analytics-outline" size={48} color="#d1d5db" />
+                <Text style={{ color: '#9ca3af', marginTop: 8 }}>No play data yet</Text>
+              </View>
+            )}
+            {summaryData.map((item: any, idx: number) => (
+              <View key={idx} style={{ backgroundColor: '#fff', borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: '#e5e7eb' }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <Text style={{ fontWeight: '700', fontSize: 14, color: '#1f2937' }}>
+                    {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ backgroundColor: '#dbeafe', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginRight: 4 }}>
+                      <Text style={{ fontSize: 11, fontWeight: '600', color: '#1d4ed8' }}>{item.drawState}</Text>
+                    </View>
+                    <View style={{ backgroundColor: '#fef3c7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
+                      <Text style={{ fontSize: 11, fontWeight: '600', color: '#92400e', textTransform: 'capitalize' }}>{item.drawTime}</Text>
+                    </View>
+                  </View>
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <View>
+                    <Text style={{ fontSize: 11, color: '#6b7280' }}>Players</Text>
+                    <Text style={{ fontWeight: '700', fontSize: 16, color: '#1f2937' }}>{item.playerCount}</Text>
+                  </View>
+                  <View>
+                    <Text style={{ fontSize: 11, color: '#6b7280' }}>Tickets</Text>
+                    <Text style={{ fontWeight: '700', fontSize: 16, color: '#1f2937' }}>{item.ticketCount}</Text>
+                  </View>
+                  <View>
+                    <Text style={{ fontSize: 11, color: '#6b7280' }}>Total Amount</Text>
+                    <Text style={{ fontWeight: '700', fontSize: 16, color: '#10b981' }}>
+                      {item.currency === 'HTG' ? 'G' : '$'}{item.totalAmount.toFixed(2)}
+                    </Text>
+                  </View>
+                  <View>
+                    <Text style={{ fontSize: 11, color: '#6b7280' }}>Winnings</Text>
+                    <Text style={{ fontWeight: '700', fontSize: 16, color: '#ef4444' }}>
+                      {item.currency === 'HTG' ? 'G' : '$'}{item.totalWinnings.toFixed(2)}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
+      )}
+
+      {viewMode === 'detail' && <>
 
       {/* Stats Summary */}
       <View style={styles.statsContainer}>
@@ -420,17 +523,19 @@ export default function VendorPlayHistory() {
       {/* Export Options */}
       {filteredGamePlays.length > 0 && (
         <View style={styles.exportContainer}>
-          <Pressable style={styles.exportOption} onPress={exportToCSV}>
+          <Pressable style={styles.exportOption} onPress={() => exportToCSV(false)}>
             <Ionicons name="document-text" size={20} color="#10b981" />
-            <Text style={styles.exportOptionText}>{t("exportCSV")}</Text>
+            <Text style={styles.exportOptionText}>{t("exportCSV") || "Pre-Result CSV"}</Text>
           </Pressable>
           
-          <Pressable style={styles.exportOption} onPress={exportToPDF}>
+          <Pressable style={styles.exportOption} onPress={() => exportToCSV(true)}>
             <Ionicons name="document" size={20} color="#ef4444" />
-            <Text style={styles.exportOptionText}>{t("exportPDF")}</Text>
+            <Text style={styles.exportOptionText}>{t("exportPDF") || "Post-Result CSV"}</Text>
           </Pressable>
         </View>
       )}
+
+      </>}
     </SafeAreaView>
   );
 }

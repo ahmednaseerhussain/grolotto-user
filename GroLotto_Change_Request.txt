@@ -1,0 +1,967 @@
+GROLOTTO PLATFORM – COMPLETE DETAILED CHANGE REQUEST AND FIX DOCUMENT
+
+Purpose of this document
+This document explains in detail all requested changes, corrections, improvements, and missing
+logic for the GroLotto platform, including:
+• Vendor App
+• Player App
+• Admin App / Admin Panel
+• Shared platform-wide behavior
+
+This document must be used by the development team as a feature correction and
+implementation guide. The goal is to make sure the platform behaves exactly as requested, with
+proper currency separation, approval flow, payout flow, notifications, multilingual support, and
+better performance.
+
+
+================================================================================
+1. VENDOR APP – DETAILED REQUIREMENTS
+================================================================================
+
+1.1 Vendor type and currency separation
+
+Requirement
+There are 2 types of vendors on the platform:
+• HTG Vendor
+• USD Vendor
+
+A vendor must belong to only one currency type.
+
+Expected behavior
+• A vendor registered as HTG must only operate as an HTG vendor.
+• A vendor registered as USD must only operate as a USD vendor.
+• The same vendor must not be shown in both HTG and USD environments.
+• Players should only see vendors matching the player's selected currency.
+
+Important rule
+Vendor currency is not only a display option. It controls:
+• visibility
+• wallet color
+• withdrawal methods
+• player access
+• available payout methods
+• gift card and payment compatibility
+
+Developer note
+The system should store vendor currency as a required field at signup and use it as a filter
+throughout the platform.
+
+
+1.2 Vendor wallet display color
+
+Requirement
+Vendor wallet balance must visually reflect the selected currency.
+
+Expected behavior
+• Vendor Wallet Balance HTG must be displayed in red
+• Vendor Wallet Balance USD must be displayed in green
+
+Purpose
+This is to make the currency visually obvious and prevent confusion between HTG and USD
+accounts.
+
+Developer note
+This should apply consistently:
+• dashboard
+• wallet page
+• transaction screens
+• withdrawal screens
+• any summary cards showing balance
+
+
+1.3 Vendor visibility by currency
+
+Requirement
+Vendors should only be visible to players of the same currency.
+
+Expected behavior
+• HTG vendors must only be visible to HTG players
+• USD vendors must only be visible to USD players
+• A vendor must not appear in both vendor lists
+• Currency mismatch should never happen
+
+Example
+If Player A uses USD:
+• Player A should only see USD vendors
+If Player B uses HTG:
+• Player B should only see HTG vendors
+
+Developer note
+This must be enforced in:
+• vendor search
+• vendor list
+• vendor profile view
+• player selection screens
+
+
+1.4 Vendor signup approval workflow
+
+Requirement
+Vendors cannot become active immediately after signup.
+A vendor must wait for Admin approval.
+
+Expected signup flow
+1. Vendor completes signup form
+2. Vendor selects currency type
+3. Vendor uploads required documents
+4. Account is created with status = Pending
+5. Vendor cannot fully access the app until Admin decision
+6. Admin reviews account
+7. Admin either approves or denies
+
+Required vendor status flow
+• Pending
+• Approved
+• Denied
+• Suspended
+
+Expected behavior after signup
+After signing up as vendor:
+• the application must remain in pending status
+• vendor should not be treated as approved automatically
+• vendor should see a clear message that the application is under review
+
+Required message while pending
+A vendor in pending status should see something like:
+"Your account is pending Admin approval. You will receive a notification once a
+decision has been made."
+
+If approved
+Vendor should:
+• receive notification
+• gain full vendor access
+• become visible to eligible players in the same currency
+
+If denied
+Vendor should:
+• receive notification
+• receive explanation for denial
+• remain blocked from vendor access until corrected or resubmitted
+
+Required denial behavior
+The denial notification must not just say "Denied".
+It must include a reason, for example:
+• missing document
+• invalid ID
+• business license issue
+• incomplete information
+• duplicate submission
+• unsupported business type
+
+Developer note
+The denial reason must be stored and displayed in the vendor notification and/or status page.
+
+
+1.5 Vendor document upload requirement
+
+Requirement
+Uploading documents is required during vendor signup, unless Admin intentionally bypasses it.
+
+Required documents
+At minimum:
+• ID card
+• business document / license
+
+Expected behavior
+• Signup form should not be completed without required documents
+• Validation must block submission if required documents are missing
+• Admin must have a manual override / bypass option when needed
+
+Special case
+If Admin bypasses document upload:
+• vendor can still proceed to review
+• vendor approval is still controlled by Admin
+
+Developer note
+This should be configurable per vendor by Admin, not by vendor.
+
+
+1.6 Vendor withdrawals
+
+Requirement
+Vendors must be able to withdraw funds using multiple methods depending on the vendor's
+currency type.
+
+Required withdrawal methods
+For USD vendors:
+• Bank Transfer
+• PayPal
+
+For HTG vendors:
+• MonCash
+
+Important rule
+Withdrawal methods shown to the vendor must depend on the vendor's currency.
+
+Expected behavior
+• USD vendor should not see MonCash as a primary currency-incompatible method unless
+  intentionally configured by Admin
+• HTG vendor should not see USD-only methods if not supported for HTG
+
+Additional requirement
+The app must explain clearly how much the vendor can withdraw and to which method.
+
+Recommended UI behavior
+Each withdrawal option should show:
+• method name
+• available limit
+• processing note if needed
+• selected currency
+
+Developer note
+Withdrawal method availability should be controlled by Admin configuration and vendor currency.
+
+
+1.7 Vendor draw schedule – automatic open and close timer
+
+This is one of the most important features and needs to be very explicit.
+
+Purpose
+Allow vendors to define the exact times when betting is open and closed for each state and each
+draw time. This must automate betting availability so players cannot place bets outside allowed
+hours.
+
+Required UI fields
+
+Draw State
+Dropdown field to select the state.
+Example:
+• NY
+• FL
+• GA
+• CT
+• PA
+• TX
+• TN
+• NJ
+
+Draw Time
+Dropdown field to select the draw session.
+Example:
+• Morning
+• Midday
+• Evening
+
+Open Time
+Custom input made of:
+• hour box
+• minute box
+• AM/PM selector
+Example: [06] [30] [AM]
+
+Close Time
+Custom input made of:
+• hour box
+• minute box
+• AM/PM selector
+Example: [11] [30] [AM]
+
+Example layout:
+  Draw State:  [ NY ▼ ]
+  Draw Time:   [ Morning ▼ ]
+  Open:        [ 06 ] [ 30 ] [ AM ]
+  Close:       [ 11 ] [ 30 ] [ AM ]
+               [ Save Schedule ]
+
+Required logic
+For each state and draw time, vendor should be able to save one schedule entry.
+Example:
+• NY + Morning = 06:30 AM to 11:30 AM
+• NY + Midday  = 12:00 PM to 06:00 PM
+• NY + Evening = 06:30 PM to 10:00 PM
+
+System behavior
+If current time is within the allowed schedule:
+• betting is open
+If current time is outside the allowed schedule:
+• betting is closed
+
+Required player-side impact
+The Player app must respect this schedule automatically.
+If a vendor schedule says the draw is closed:
+• player must not be allowed to play
+• play button should be disabled or blocked
+• message should appear such as: "This draw is currently closed."
+
+Validation rules
+• Draw State is required
+• Draw Time is required
+• Open hour is required
+• Open minute is required
+• Open AM/PM is required
+• Close hour is required
+• Close minute is required
+• Close AM/PM is required
+• Open time must be before close time
+
+Additional developer note
+This feature should support separate schedule records per:
+• vendor
+• state
+• draw time
+
+
+1.8 Vendor play history
+
+Requirement
+Play history must contain more useful reporting information.
+
+Required fields in play history
+• Date
+• Draw Time
+• Draw State
+• Number of players
+• Total amount for all players together
+
+Explanation
+This is not just a simple list of plays.
+The vendor should be able to understand:
+• when the plays were made
+• what draw they belong to
+• how many players are involved
+• how much total money is in that draw set
+
+Example:
+  Date: March 26, 2026
+  State: NY
+  Draw Time: Morning
+  Number of Players: 25
+  Total Amount: 4,500 HTG
+
+
+1.9 Vendor play history export before results
+
+Requirement
+The vendor must be able to upload or export the play history file before results are known.
+
+Purpose
+This file may be sent to another party as a report before winners are determined.
+
+What the pre-result file must include
+• all plays entered
+• player entries
+• amounts
+• date
+• draw state
+• draw time
+• number groupings if needed
+
+What it must NOT include
+• winners
+• winning amounts
+Because results are not known yet.
+
+Explanation
+This is a reporting file used before outcome calculation.
+
+
+1.10 Vendor play history after results
+
+Requirement
+After results are entered, the uploaded / exported file should reflect winners and total winning
+amount.
+
+What the post-result file must include
+• all original plays
+• matching winners
+• total winning amount
+• filters for easier search
+
+Required filters
+At minimum:
+• by date
+• by amount
+• by draw state
+• by draw time
+• by winner / non-winner if possible
+
+Purpose
+This allows proper post-result reporting and payout tracking.
+
+
+================================================================================
+2. PLAYER APP – DETAILED REQUIREMENTS
+================================================================================
+
+2.1 Player vendor visibility by currency
+
+Requirement
+A player must only see vendors matching the player's selected currency.
+
+Expected behavior
+• USD players see USD vendors only
+• HTG players see HTG vendors only
+
+Purpose
+To maintain strict separation between HTG and USD ecosystems.
+
+
+2.2 Player wallet color
+
+Requirement
+Player wallet color must match currency.
+
+Expected behavior
+• HTG wallet = red
+• USD wallet = green
+
+Additional UI note
+On top of the Player app, the dollar sign should be removed for HTG to avoid confusion.
+• HTG should not use $
+• USD can keep $
+
+
+2.3 Player shortcut buttons
+
+Current shortcut list
+• Wallet
+• Tchala
+• Results
+• History
+
+Requested change
+Replace Wallet shortcut with Withdraw
+
+Expected new shortcut list
+• Withdraw
+• Tchala
+• Results
+• History
+
+Behavior
+When player clicks Withdraw:
+• app should take the player to withdrawal options
+
+
+2.4 Wallet usage rule for gameplay
+
+Critical rule
+Players can only pay to play using the App Wallet.
+
+This rule must be enforced everywhere
+Players must NOT be able to:
+• play directly with bank transfer
+• play directly with Zelle
+• play directly with CashApp
+• play directly with PayPal
+• play directly with debit card
+• play directly with MonCash
+
+Correct flow
+1. Player adds money to wallet
+2. Wallet balance increases
+3. Player places bets using wallet balance only
+
+Purpose
+This keeps wallet accounting and payouts consistent.
+
+
+2.5 Player wallet recharge methods
+
+Requirement
+The wallet recharge system needs more recharge options.
+
+HTG player recharge options
+• MonCash
+• HTG Gift Cards
+
+USD player recharge options
+• Bank Transfer
+• Zelle
+• CashApp
+• PayPal
+• Debit Card
+• USD Gift Cards
+
+Important logic
+Recharge options shown to the player must depend on the selected currency.
+
+
+2.6 Gift card buying flow
+
+Requirement
+Players should be able to buy gift cards from the website.
+
+Important clarification
+Gift cards are not purchased inside the app itself.
+The app should redirect the player to the website to buy the correct gift card.
+
+Required UI behavior in wallet
+Under Gift Card option, there should be 2 choices:
+• Buy
+• Redeem
+
+If player clicks Buy
+The app should open the website directly.
+
+Currency-specific behavior
+• If player is using HTG currency, Buy should redirect to HTG gift card page
+• If player is using USD currency, Buy should redirect to USD gift card page
+
+Gift card purchase methods
+For HTG gift cards:
+• pay with MonCash
+
+For USD gift cards:
+• pay with Zelle
+• CashApp
+• PayPal
+• Debit Card
+
+Delivery after purchase
+After successful gift card purchase, the PIN should be delivered by:
+• Email
+or
+• WhatsApp
+
+
+2.7 Gift card redeem flow
+
+Requirement
+Players must be able to redeem a gift card PIN inside the app.
+
+Required behavior
+When player clicks Redeem:
+• show PIN entry field
+• validate the PIN
+• if valid, add money to wallet
+• if invalid, show error message
+
+Required success behavior
+If PIN is correct:
+• wallet balance updates immediately
+• transaction is recorded
+• gift card marked as used
+
+Required error message
+If PIN is incorrect:
+"Incorrect PIN"
+
+Additional developer note
+PINs must not be reusable after successful redemption.
+
+
+2.8 Player payout / withdrawal options
+
+Requirement
+The same methods can be used for payout as well, but with limited amount.
+
+Required behavior
+When the player opens a withdrawal method:
+• app should show how much can be withdrawn to that method
+• amount limit should be visible before confirmation
+
+Example
+If PayPal payout limit is $200:
+• player should see that maximum allowed amount before submitting
+
+Purpose
+To avoid confusion and failed payout requests.
+
+
+2.9 Player app crash on vendor list
+
+Reported problem
+Every time the player opens vendor list, the app crashes.
+
+Required fix
+This must be investigated and fixed completely.
+
+Expected behavior after fix
+• vendor list opens normally
+• vendors load based on player currency
+• no crash
+• no freeze
+• no forced app close
+
+
+2.10 Help section language problem
+
+Reported problem
+In the Help section, the language stays in English only.
+
+Required fix
+Help section must follow the selected app language.
+
+Supported languages
+• Haitian Creole
+• English
+• French
+• Spanish
+
+Expected behavior
+If user selects French, Help must appear in French.
+If user selects Haitian Creole, Help must appear in Haitian Creole.
+
+
+2.11 Tchala not reflecting on Player App
+
+Reported problem
+Tchala is not reflected / not showing properly on Player App.
+
+Required fix
+Tchala must be visible and functional in the Player app.
+
+Expected behavior
+• shortcut opens correctly
+• content loads correctly
+• searchable if search exists
+• displayed in current selected language where applicable
+
+
+2.12 Banner ads behavior
+
+Requirement
+Banner ads should slide:
+• manually
+• automatically
+
+Expected behavior
+• user can swipe left or right
+• banners can also auto-slide on their own
+• the experience should feel smooth
+• no lag or broken transitions
+
+
+================================================================================
+3. ADMIN PANEL – DETAILED REQUIREMENTS
+================================================================================
+
+3.1 Admin payout shortcut not working
+
+Reported problem
+The payout shortcut option is not working.
+
+Required fix
+The Admin payout shortcut must open the payout area correctly and allow intended payout
+actions.
+
+Expected behavior
+Clicking payout should:
+• open payout page
+• show payout controls
+• allow correct processing depending on account type
+
+
+3.2 Remove draw management page and simplify results
+
+Requirement
+The Draw Management page is not necessary if Add Results is simplified.
+
+Requested change
+Remove or stop depending on Draw Management page and use a simpler results input system.
+
+Required Add New Results structure
+
+Draw State
+Dropdown
+Example options:
+• NY
+• FL
+• TX
+
+Draw Time
+Dropdown
+Example options:
+• Morning
+• Midday
+• Evening
+
+Date
+Always today's date, already preselected automatically
+
+Draw Numbers
+Input boxes for result numbers
+Example: [ 1 ] [ 22 ] [ 33 ] [ 44 ]
+
+Purpose
+This is a faster and simpler workflow for Admin.
+
+Expected behavior
+Admin selects:
+• state
+• draw time
+• enters result numbers
+• saves result
+Then the result should reflect correctly on the platform as intended.
+
+
+3.3 Tchala not reflected from Admin side
+
+Reported problem
+Tchala changes or content are not reflecting on the Player app.
+
+Required fix
+Any Tchala content managed from Admin should display properly on Player side.
+
+
+3.4 Gift card management not working
+
+Reported problem
+Gift card system is not working yet.
+
+Requirement
+Gift card management must fully work for both currencies:
+• HTG
+• USD
+
+Required transaction details for each currency
+Both HTG and USD gift card sections should have:
+• transaction history
+• current balance
+• number of gift cards generated
+• number of gift cards sold
+• number of gift cards used
+
+Required filters
+• by date
+• by amount
+• by status if possible
+• other useful filters as needed
+
+Purpose
+Admin must be able to monitor gift card lifecycle and financial activity.
+
+
+3.5 Notifications not reflecting on Vendor and Player apps
+
+Reported problem
+When Admin sends a notification, nothing appears on Vendor or Player side.
+
+Required fix
+Notifications sent by Admin must appear properly on the recipient app.
+
+Required cases
+• Admin to Vendor
+• Admin to Player
+
+Expected behavior
+Once a notification is sent:
+• it appears in app notification list
+• it can be seen by the recipient
+• it should not disappear unexpectedly
+• it should be linked to the correct account
+
+
+3.6 Admin notifications page not working
+
+Reported problem
+Admin's own notification page does not work when clicked.
+
+Required fix
+Admin notification section must open and function correctly.
+
+
+3.7 Ads editor needs more design options
+
+Requirement
+Ads editing should allow more variety of:
+• background colors
+• fonts
+• design customization
+
+Purpose
+Admin should be able to create better looking promotional banners and announcements.
+
+
+3.8 Transaction history must support both currencies
+
+Requirement
+Transaction history should have two separate currencies:
+• HTG
+• USD
+
+Important rule
+All transactions in the whole platform must respect currency separation.
+
+Expected behavior
+Admin should be able to clearly distinguish:
+• HTG transactions
+• USD transactions
+
+This should apply in:
+• transaction lists
+• summaries
+• filters
+• reports
+• payouts
+• deposits
+• gift cards
+
+
+3.9 Admin roles and permissions
+
+Requirement
+Super Admin must be able to assign roles and create accounts with different access levels.
+
+Required behavior
+Each role should have:
+• its own login
+• its own permission limits
+
+Super Admin rights
+Only Super Admin should have full access to:
+• create role
+• modify role
+• delete role
+• create admin user
+• modify admin user
+• delete admin user
+• assign permissions
+• access everything
+
+Other admin roles
+Other roles should have limited access based on permission settings.
+
+Purpose
+To control staff access and avoid giving everybody full power.
+
+
+3.10 Admin settings page crash
+
+Reported problem
+The Admin app settings crashes every time it is clicked, and after crashing the app cannot be
+reopened unless reinstalled.
+
+Required fix
+This is a critical bug and must be treated as high priority.
+
+Expected behavior after fix
+• settings page opens normally
+• app does not crash
+• app remains usable after leaving settings
+• app can reopen normally after closing
+
+
+3.11 Admin payments option logic
+
+Requirement
+Admin Payments should support two kinds of vendor-related actions:
+• Receive Payment from vendors
+• Payout to vendors
+
+For Players:
+• only payout
+• players do not send money to Admin in the same way vendors do
+
+Important explanation
+Vendor and Player payment logic must not be treated the same.
+
+
+3.12 Account suspension logic
+
+Requirement
+If Admin suspends an account, either Vendor or Player, that account should not have access to
+anything until resumed by Admin.
+
+Expected suspended behavior
+Suspended user should not be able to:
+• log in normally
+• access dashboard
+• see platform data
+• continue operations
+
+When resumed
+Access is restored only when Admin reactivates the account.
+
+
+================================================================================
+4. PLATFORM-WIDE / GLOBAL REQUIREMENTS
+================================================================================
+
+4.1 Orthography and text formatting fixes
+
+Requirement
+All spelling and text display issues must be corrected.
+
+Example
+Instead of:
+• playerresults
+It should show:
+• Player Results
+
+Expected behavior
+All labels, titles, menu items, and page names must be properly spaced and capitalized.
+
+
+4.2 Full multilingual translation
+
+Requirement
+Everything on the platform should be able to translate into:
+• Haitian Creole
+• French
+• Spanish
+• English
+
+Important rule
+When a user chooses a language, everything should translate to that language.
+
+This includes
+• menus
+• buttons
+• help section
+• notifications
+• wallet text
+• forms
+• results
+• Tchala content where applicable
+• admin content where applicable
+
+Required fix
+No page should remain partially English when another language is selected.
+
+
+4.3 Platform speed and crash problems
+
+Reported problem
+The platform is running slowly, and sometimes crashes.
+
+Requirement
+Performance needs to be improved, and capacity must be increased.
+
+Purpose
+The platform should support:
+• faster loading
+• better stability
+• photo uploads
+• banner image uploads
+• smoother navigation
+
+Expected behavior after improvement
+• fewer crashes
+• faster page opening
+• stable image upload handling
+• better overall reliability
+
+
+4.4 Currency separation across the full platform
+
+Requirement
+All transactions and financial actions across the platform must respect the 2 separate currencies:
+• HTG
+• USD
+
+This rule applies to
+• wallets
+• vendors
+• players
+• gift cards
+• payouts
+• transaction history
+• admin summaries
+• reports
+
+Purpose
+To avoid mixing HTG and USD and to keep the system financially clear.
+
+
+================================================================================
+5. DOCUMENTS TO BE ADDED LATER
+================================================================================
+
+You said you will send:
+• About
+• Privacy Policy
+
+These should later be integrated into the platform and matched with the multilingual system if
+needed.

@@ -9,6 +9,16 @@ import { vendorAPI, getErrorMessage } from "../api/apiClient";
 
 const PAYOUT_METHODS_BASE = [
   {
+    key: "moncash" as PayoutMethodType,
+    name: "MonCash",
+    icon: "phone-portrait",
+    color: "#ef4444",
+    descriptionKey: "moncashDesc",
+    fee: "0%",
+    minAmount: 500,
+    currencies: ["HTG"] as string[],
+  },
+  {
     key: "bank_transfer" as PayoutMethodType,
     name: "Bank Transfer",
     icon: "business",
@@ -16,6 +26,17 @@ const PAYOUT_METHODS_BASE = [
     descriptionKey: "bankTransferDesc",
     fee: "1%",
     minAmount: 10,
+    currencies: ["USD", "HTG"] as string[],
+  },
+  {
+    key: "paypal" as PayoutMethodType,
+    name: "PayPal",
+    icon: "globe",
+    color: "#16a34a",
+    descriptionKey: "paypalDesc",
+    fee: "2.5%",
+    minAmount: 5,
+    currencies: ["USD"] as string[],
   },
 ];
 
@@ -30,15 +51,20 @@ export default function PayoutManagement() {
   const language = useAppStore(s => s.language);
   const t = (key: string) => getTranslation(key as any, language);
 
-  const PAYOUT_METHODS = PAYOUT_METHODS_BASE.map(m => ({ ...m, description: t(m.descriptionKey) }));
+  const PAYOUT_METHODS = PAYOUT_METHODS_BASE
+    .filter(m => m.currencies.includes(withdrawalCurrency))
+    .map(m => ({ ...m, description: t(m.descriptionKey) }));
 
-  const [selectedMethod, setSelectedMethod] = useState<PayoutMethodType | null>("bank_transfer");
+  const [selectedMethod, setSelectedMethod] = useState<PayoutMethodType | null>(
+    withdrawalCurrency === "HTG" ? "moncash" as PayoutMethodType : "bank_transfer"
+  );
   const [amount, setAmount] = useState("");
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [bankName, setBankName] = useState("");
   const [bankAccountName, setBankAccountName] = useState("");
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [bankRoutingNumber, setBankRoutingNumber] = useState("");
+  const [moncashPhone, setMoncashPhone] = useState("");
 
   const currentVendor = vendors.find(v => v.userId === user?.id);
   const vendorPayouts = payouts.filter(p => p.vendorId === currentVendor?.id);
@@ -73,9 +99,18 @@ export default function PayoutManagement() {
     .reduce((sum, p) => sum + p.amount, 0);
 
   const handleRequestPayout = () => {
-    if (!amount || !bankName.trim() || !bankAccountName.trim() || !bankAccountNumber.trim()) {
-      Alert.alert(t("error"), t("fillBankDetails") || "Please fill in bank details and amount");
-      return;
+    const isMoncash = selectedMethod === 'moncash';
+    
+    if (isMoncash) {
+      if (!amount || !moncashPhone.trim() || moncashPhone.trim().length < 8) {
+        Alert.alert(t("error"), "Please enter amount and a valid MonCash phone number");
+        return;
+      }
+    } else {
+      if (!amount || !bankName.trim() || !bankAccountName.trim() || !bankAccountNumber.trim()) {
+        Alert.alert(t("error"), t("fillBankDetails") || "Please fill in bank details and amount");
+        return;
+      }
     }
 
     const requestAmount = parseFloat(amount);
@@ -95,25 +130,23 @@ export default function PayoutManagement() {
       return;
     }
 
-    requestPayout(currentVendor.id, requestAmountUSD, "bank_transfer" as PayoutMethodType);
+    requestPayout(currentVendor.id, requestAmountUSD, (selectedMethod || "bank_transfer") as PayoutMethodType);
 
     // Submit payout request to backend
     vendorAPI.requestPayout({
       amount: requestAmountUSD,
-      method: "bank_transfer",
+      method: selectedMethod || "bank_transfer",
       currency: withdrawalCurrency,
-      bankName,
-      bankAccountName,
-      bankAccountNumber,
-      bankRoutingNumber,
+      ...(isMoncash ? { moncashPhone } : { bankName, bankAccountName, bankAccountNumber, bankRoutingNumber }),
     } as any).catch(err => {
       Alert.alert(t("error"), getErrorMessage(err));
     });
 
+    const methodLabel = isMoncash ? 'MonCash' : selectedMethod === 'paypal' ? 'PayPal' : 'Bank Transfer';
     const amountDisplay = formatCurrency(requestAmount, withdrawalCurrency);
     Alert.alert(
       t("withdrawalSubmitted"),
-      `${(t("withdrawalSubmittedMsg") || "Withdrawal of {amount} via {method} submitted").replace("{amount}", amountDisplay).replace("{method}", "Bank Transfer")}`,
+      `${(t("withdrawalSubmittedMsg") || "Withdrawal of {amount} via {method} submitted").replace("{amount}", amountDisplay).replace("{method}", methodLabel)}`,
       [{
         text: "OK", onPress: () => {
           setShowRequestForm(false);
@@ -122,6 +155,7 @@ export default function PayoutManagement() {
           setBankAccountName("");
           setBankAccountNumber("");
           setBankRoutingNumber("");
+          setMoncashPhone("");
         }
       }]
     );
@@ -271,7 +305,8 @@ export default function PayoutManagement() {
                   </View>
                 </View>
 
-                {/* Bank Details */}
+                {/* Bank Details — bank_transfer only */}
+                {selectedMethod === 'bank_transfer' && (
                 <View style={{ marginTop: 12, gap: 10 }}>
                   <View>
                     <Text style={styles.amountLabel}>{t("bankName") || "Bank Name"}</Text>
@@ -310,16 +345,50 @@ export default function PayoutManagement() {
                     />
                   </View>
                 </View>
+                )}
+
+                {/* MonCash Details — moncash only */}
+                {selectedMethod === 'moncash' && (
+                <View style={{ marginTop: 12, gap: 10 }}>
+                  <View>
+                    <Text style={styles.amountLabel}>MonCash Phone Number</Text>
+                    <TextInput
+                      style={styles.amountInput}
+                      value={moncashPhone}
+                      onChangeText={setMoncashPhone}
+                      placeholder="+509 XXXX XXXX"
+                      keyboardType="phone-pad"
+                    />
+                  </View>
+                </View>
+                )}
+
+                {/* PayPal Details — paypal only */}
+                {selectedMethod === 'paypal' && (
+                <View style={{ marginTop: 12, gap: 10 }}>
+                  <View>
+                    <Text style={styles.amountLabel}>PayPal Email</Text>
+                    <TextInput
+                      style={styles.amountInput}
+                      value={bankAccountName}
+                      onChangeText={setBankAccountName}
+                      placeholder="your@email.com"
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
+                  </View>
+                </View>
+                )}
               </View>
 
               {/* Submit Button */}
               <Pressable
                 style={[
                   styles.submitButton,
-                  (!amount || !bankName.trim() || !bankAccountName.trim() || !bankAccountNumber.trim()) && styles.submitButtonDisabled
+                  (!amount || (selectedMethod === 'moncash' ? !moncashPhone.trim() : (!bankName.trim() || !bankAccountName.trim() || !bankAccountNumber.trim()))) && styles.submitButtonDisabled
                 ]}
                 onPress={handleRequestPayout}
-                disabled={!amount || !bankName.trim() || !bankAccountName.trim() || !bankAccountNumber.trim()}
+                disabled={!amount || (selectedMethod === 'moncash' ? !moncashPhone.trim() : (!bankName.trim() || !bankAccountName.trim() || !bankAccountNumber.trim()))}
               >
                 <Ionicons name="send" size={16} color="#ffffff" />
                 <Text style={styles.submitButtonText}>{t("submitRequest")}</Text>

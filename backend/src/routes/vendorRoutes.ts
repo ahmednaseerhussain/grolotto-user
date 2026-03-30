@@ -11,6 +11,13 @@ router.get('/', ctrl.getActiveVendors);
 router.get('/me', authenticate, authorize('vendor'), ctrl.getMyVendorProfile);
 router.get('/me/stats', authenticate, authorize('vendor'), ctrl.getMyVendorStats);
 router.get('/me/history', authenticate, authorize('vendor'), ctrl.getPlayHistory);
+router.get('/me/history/summary', authenticate, authorize('vendor'), ctrl.getPlayHistorySummary);
+
+// Draw schedules (vendor self-management) — must be before /:id routes
+router.get('/me/schedules', authenticate, authorize('vendor'), ctrl.getDrawSchedules);
+router.put('/me/schedules', authenticate, authorize('vendor'), ctrl.upsertDrawSchedule);
+router.delete('/me/schedules/:scheduleId', authenticate, authorize('vendor'), validateUUIDParams('scheduleId'), ctrl.deleteDrawSchedule);
+
 router.get('/:id', validateUUIDParams('id'), ctrl.getVendorById);
 router.get('/:id/reviews', validateUUIDParams('id'), ctrl.getReviews);
 
@@ -33,6 +40,9 @@ router.put('/me/payout-multipliers', authenticate, authorize('vendor'), ctrl.upd
 
 // Public: vendor payout rates (for player Results popup)
 router.get('/:id/payout-multipliers', validateUUIDParams('id'), ctrl.getPublicPayoutMultipliers);
+
+// Public: check vendor draw schedule (for player bet flow)
+router.get('/:vendorId/schedule', validateUUIDParams('vendorId'), ctrl.checkDrawScheduleStatus);
 
 // Vendor lottery rounds (read-only — admin publishes results globally)
 router.get('/me/rounds', authenticate, authorize('vendor'), ctrl.getMyRounds);

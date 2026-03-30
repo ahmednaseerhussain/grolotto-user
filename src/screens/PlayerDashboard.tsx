@@ -248,11 +248,12 @@ export default function PlayerDashboard() {
   };
 
   const getEnabledGames = (vendor: any) => {
+    if (!vendor.draws) return [];
     const games: string[] = [];
     Object.entries(vendor.draws).forEach(([state, settings]: [string, any]) => {
-      if (settings.enabled) {
-        Object.entries(settings.games).forEach(([gameType, gameSettings]: [string, any]) => {
-          if (gameSettings.enabled && !games.includes(gameType.toUpperCase())) {
+      if (settings?.enabled) {
+        Object.entries(settings.games || {}).forEach(([gameType, gameSettings]: [string, any]) => {
+          if (gameSettings?.enabled && !games.includes(gameType.toUpperCase())) {
             games.push(gameType.toUpperCase());
           }
         });
@@ -262,8 +263,9 @@ export default function PlayerDashboard() {
   };
 
   const getVendorStates = (vendor: any) => {
+    if (!vendor.draws) return '';
     return Object.entries(vendor.draws)
-      .filter(([, settings]: [string, any]) => settings.enabled)
+      .filter(([, settings]: [string, any]) => settings?.enabled)
       .map(([state]) => state)
       .join(", ");
   };
@@ -280,9 +282,9 @@ export default function PlayerDashboard() {
   };
 
   const getGameTypeRange = (vendor: any, gameType: string) => {
-    // Find the first enabled draw with this game type to get pricing
+    if (!vendor.draws) return '';
     for (const [, settings] of Object.entries(vendor.draws) as [string, any][]) {
-      if (settings.enabled && settings.games[gameType.toLowerCase()]?.enabled) {
+      if (settings?.enabled && settings.games?.[gameType.toLowerCase()]?.enabled) {
         const game = settings.games[gameType.toLowerCase()];
         return `G${game.minAmount}-${game.maxAmount}`;
       }
@@ -291,13 +293,14 @@ export default function PlayerDashboard() {
   };
 
   const getVendorPriceRange = (vendor: any) => {
+    if (!vendor.draws) return 'N/A';
     let minPrice = Infinity;
     let maxPrice = 0;
 
     Object.entries(vendor.draws).forEach(([, settings]: [string, any]) => {
-      if (settings.enabled) {
-        Object.entries(settings.games).forEach(([, gameSettings]: [string, any]) => {
-          if (gameSettings.enabled) {
+      if (settings?.enabled) {
+        Object.entries(settings.games || {}).forEach(([, gameSettings]: [string, any]) => {
+          if (gameSettings?.enabled) {
             minPrice = Math.min(minPrice, gameSettings.minAmount);
             maxPrice = Math.max(maxPrice, gameSettings.maxAmount);
           }
@@ -365,17 +368,17 @@ export default function PlayerDashboard() {
 
           {/* USD Wallet (PayPal) */}
           <Pressable
-            style={[styles.balanceCard, { flex: 1, marginHorizontal: 0, marginTop: 0, marginBottom: 0, backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe' }]}
+            style={[styles.balanceCard, { flex: 1, marginHorizontal: 0, marginTop: 0, marginBottom: 0, backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0' }]}
             onPress={() => {
               useAppStore.getState().setCurrency('USD');
               setShowPaymentModal(true);
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-              <View style={{ backgroundColor: '#3b82f6', width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+              <View style={{ backgroundColor: '#16a34a', width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
                 <Ionicons name="logo-paypal" size={14} color="#fff" />
               </View>
-              <Text style={{ fontSize: 12, fontWeight: '600', color: '#1e40af' }}>PayPal</Text>
+              <Text style={{ fontSize: 12, fontWeight: '600', color: '#166534' }}>PayPal</Text>
             </View>
             <Text style={{ fontSize: 11, color: '#6b7280' }}>USD Balance</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
@@ -386,7 +389,7 @@ export default function PlayerDashboard() {
                 <Ionicons name={showBalance ? 'eye' : 'eye-off'} size={16} color="#6b7280" />
               </Pressable>
             </View>
-            <Text style={{ fontSize: 10, color: '#3b82f6', marginTop: 4, fontWeight: '500' }}>+ Add USD</Text>
+            <Text style={{ fontSize: 10, color: '#16a34a', marginTop: 4, fontWeight: '500' }}>+ Add USD</Text>
           </Pressable>
         </View>
 
@@ -401,15 +404,6 @@ export default function PlayerDashboard() {
 
         {/* Quick Actions */}
         <View style={styles.quickActions}>
-          <Pressable
-            style={[styles.actionCard, { backgroundColor: "#3b82f6" }]}
-            onPress={() => (navigation as any).navigate("PaymentScreen")}
-          >
-            <Ionicons name="wallet" size={32} color="#ffffff" />
-            <Text style={styles.actionTitle}>Wallet</Text>
-            <Text style={styles.actionSubtitle}>Add Funds</Text>
-          </Pressable>
-
           <Pressable
             style={[styles.actionCard, { backgroundColor: "#ef4444" }]}
             onPress={() => (navigation as any).navigate("PlayerWithdrawalScreen")}
@@ -594,7 +588,7 @@ export default function PlayerDashboard() {
                     </Text>
                     <View style={styles.vendorRating}>
                       <Ionicons name="star" size={14} color="#f59e0b" />
-                      <Text style={styles.ratingText}>{vendor.rating.toFixed(1)}</Text>
+                      <Text style={styles.ratingText}>{(vendor.rating ?? 5.0).toFixed(1)}</Text>
                       <Text style={styles.statusText}>{t("active")}</Text>
                     </View>
                     <View style={styles.vendorLocation}>
@@ -633,7 +627,7 @@ export default function PlayerDashboard() {
                     <Text style={styles.viewProfileButtonText}>{t("viewProfile")}</Text>
                   </Pressable>
                   <Text style={styles.reviewsHint}>
-                    {vendor.rating.toFixed(1)} ⭐ • {t("tapToRate")}
+                    {(vendor.rating ?? 5.0).toFixed(1)} ⭐ • {t("tapToRate")}
                   </Text>
                 </View>
               </Pressable>

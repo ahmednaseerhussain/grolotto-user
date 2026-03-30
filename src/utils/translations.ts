@@ -3073,6 +3073,192 @@ export const translations = {
     en: "Excellent - Outstanding service!",
     fr: "Excellent - Service exceptionnel !",
     es: "Excelente - ¡Servicio excepcional!"
+  },
+
+  // Notifications
+  notifications: {
+    ht: "Notifikasyon yo",
+    en: "Notifications",
+    fr: "Notifications",
+    es: "Notificaciones"
+  },
+  noNotifications: {
+    ht: "Pa gen notifikasyon",
+    en: "No notifications yet",
+    fr: "Pas de notifications",
+    es: "Sin notificaciones"
+  },
+  markAllRead: {
+    ht: "Make tout li",
+    en: "Mark all read",
+    fr: "Tout marquer lu",
+    es: "Marcar todo leído"
+  },
+
+  // Withdrawal limits & Gift Card redirect
+  maxAmount: {
+    ht: "Montan maksimòm",
+    en: "Max amount",
+    fr: "Montant maximum",
+    es: "Monto máximo"
+  },
+  buyGiftCardsOnline: {
+    ht: "Achte Kat Kado sou Entènèt",
+    en: "Buy Gift Cards Online",
+    fr: "Acheter des Cartes Cadeaux en Ligne",
+    es: "Comprar Tarjetas de Regalo en Línea"
+  },
+  giftCardPaymentMethods: {
+    ht: "Metòd peman disponib: MonCash pou HTG, Zelle/CashApp/PayPal pou USD",
+    en: "Payment methods: MonCash for HTG, Zelle/CashApp/PayPal for USD",
+    fr: "Méthodes de paiement : MonCash pour HTG, Zelle/CashApp/PayPal pour USD",
+    es: "Métodos de pago: MonCash para HTG, Zelle/CashApp/PayPal para USD"
+  },
+  goToWebsite: {
+    ht: "Ale sou Sit Entènèt la",
+    en: "Go to Website to Buy",
+    fr: "Aller sur le Site pour Acheter",
+    es: "Ir al Sitio Web para Comprar"
+  },
+  giftCardPinDelivery: {
+    ht: "Yo voye kòd PIN pa Imèl oswa WhatsApp",
+    en: "PIN code delivered via Email or WhatsApp",
+    fr: "Code PIN livré par Email ou WhatsApp",
+    es: "Código PIN entregado por Email o WhatsApp"
+  },
+
+  // Schedule
+  morning: {
+    ht: "Maten",
+    en: "Morning",
+    fr: "Matin",
+    es: "Mañana"
+  },
+  midday: {
+    ht: "Midi",
+    en: "Midday",
+    fr: "Midi",
+    es: "Mediodía"
+  },
+  evening: {
+    ht: "Aswè",
+    en: "Evening",
+    fr: "Soir",
+    es: "Noche"
+  },
+
+  // Help & Support
+  help: {
+    ht: "Èd",
+    en: "Help",
+    fr: "Aide",
+    es: "Ayuda"
+  },
+  support: {
+    ht: "Sipò",
+    en: "Support",
+    fr: "Support",
+    es: "Soporte"
+  },
+  contactUs: {
+    ht: "Kontakte Nou",
+    en: "Contact Us",
+    fr: "Contactez-nous",
+    es: "Contáctenos"
+  },
+  faq: {
+    ht: "Kesyon Souvan",
+    en: "FAQ",
+    fr: "FAQ",
+    es: "Preguntas Frecuentes"
+  },
+
+  // Tchala screen
+  howItWorks: {
+    ht: "Kijan sa fonksyone:",
+    en: "How it works:",
+    fr: "Comment ça marche :",
+    es: "Cómo funciona:"
+  },
+  tchalaDescription: {
+    ht: "Chèche objè, moun, oswa evènman nan rèv ou. Tchala ap montre w nimewo tradisyonèl ayisyen ki asosye ak yo.",
+    en: "Search for objects, people, or events from your dreams. Tchala will show you the traditional Haitian lucky numbers associated with them.",
+    fr: "Cherchez des objets, des personnes ou des événements de vos rêves. Tchala vous montrera les numéros chanceux haïtiens traditionnels associés.",
+    es: "Busque objetos, personas o eventos de sus sueños. Tchala le mostrará los números de la suerte haitianos tradicionales asociados."
+  },
+  searchYourDream: {
+    ht: "Chèche rèv ou... (egz. maryaj, dlo, koulèv)",
+    en: "Search your dream... (e.g., wedding, water, snake)",
+    fr: "Cherchez votre rêve... (ex. mariage, eau, serpent)",
+    es: "Busque su sueño... (ej. boda, agua, serpiente)"
+  },
+  clearSearch: {
+    ht: "Efase rechèch",
+    en: "Clear search",
+    fr: "Effacer la recherche",
+    es: "Borrar búsqueda"
+  },
+  foundResults: {
+    ht: "Jwenn {count} rezilta:",
+    en: "Found {count} result(s):",
+    fr: "{count} résultat(s) trouvé(s) :",
+    es: "{count} resultado(s) encontrado(s):"
+  },
+  luckyNumbers: {
+    ht: "Nimewo Chans:",
+    en: "Lucky Numbers:",
+    fr: "Numéros Chanceux :",
+    es: "Números de la Suerte:"
+  },
+  noResultsFound: {
+    ht: "Pa gen rezilta",
+    en: "No results found",
+    fr: "Aucun résultat trouvé",
+    es: "No se encontraron resultados"
+  },
+  tryDifferentSearch: {
+    ht: "Eseye chèche lòt eleman rèv tankou \"lajan\", \"chen\", oswa \"kay\"",
+    en: "Try searching for different dream elements like \"money\", \"dog\", or \"house\"",
+    fr: "Essayez de chercher d'autres éléments comme \"argent\", \"chien\" ou \"maison\"",
+    es: "Intente buscar otros elementos como \"dinero\", \"perro\" o \"casa\""
+  },
+  welcomeToTchala: {
+    ht: "Byenveni nan Tchala",
+    en: "Welcome to Tchala",
+    fr: "Bienvenue dans Tchala",
+    es: "Bienvenido a Tchala"
+  },
+  tchalaWelcomeDescription: {
+    ht: "Chèche eleman nan rèv ou pou dekouvri nimewo chans ou yo",
+    en: "Search for elements from your dreams to discover your lucky numbers",
+    fr: "Cherchez des éléments de vos rêves pour découvrir vos numéros chanceux",
+    es: "Busque elementos de sus sueños para descubrir sus números de la suerte"
+  },
+  popularSearches: {
+    ht: "Rechèch popilè:",
+    en: "Popular searches:",
+    fr: "Recherches populaires :",
+    es: "Búsquedas populares:"
+  },
+
+  // Settings screen alerts
+  clearCache: {
+    ht: "Efase Kach",
+    en: "Clear Cache",
+    fr: "Vider le Cache",
+    es: "Borrar Caché"
+  },
+  clearCacheConfirm: {
+    ht: "Sa ap efase done ki estoke e ka amelyore pèfòmans. Kontinye?",
+    en: "This will clear stored data and may improve performance. Continue?",
+    fr: "Cela supprimera les données stockées et peut améliorer les performances. Continuer ?",
+    es: "Esto borrará los datos almacenados y puede mejorar el rendimiento. ¿Continuar?"
+  },
+  cacheClearedSuccess: {
+    ht: "Kach efase avèk siksè. Redemarage aplikasyon an.",
+    en: "Cache cleared successfully. Restart the app.",
+    fr: "Cache vidé avec succès. Redémarrez l'application.",
+    es: "Caché borrado exitosamente. Reinicie la aplicación."
   }
 };
 

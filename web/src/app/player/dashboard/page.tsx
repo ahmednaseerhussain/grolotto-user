@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/common/empty-state";
 import {
   Wallet, Search, Trophy, Clock, Star, ChevronRight, Eye, EyeOff,
-  Plus, Sparkles, User, SlidersHorizontal
+  Plus, Sparkles, User, SlidersHorizontal, ArrowDownCircle
 } from "lucide-react";
 import { formatCurrency, GAME_LABELS, DRAW_STATES } from "@/lib/utils";
 
@@ -243,21 +243,25 @@ export default function PlayerDashboard() {
         </div>
       )}
 
-      {/* ── Section 3: Wallet Banner (compact green) ── */}
+      {/* ── Section 3: Wallet Banner (currency-specific color) ── */}
       <div
-        className="bg-gradient-to-r from-green-700 to-green-600 rounded-2xl px-5 py-4 cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+        className={`rounded-2xl px-5 py-4 cursor-pointer shadow-sm hover:shadow-md transition-shadow ${
+          currency === "HTG"
+            ? "bg-gradient-to-r from-red-700 to-red-600"
+            : "bg-gradient-to-r from-green-700 to-green-600"
+        }`}
         onClick={() => router.push("/player/payment")}
       >
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-green-200 font-medium">{t("availableBalance") || "Available Balance"}</p>
+            <p className={`text-xs font-medium ${currency === "HTG" ? "text-red-200" : "text-green-200"}`}>{t("availableBalance") || "Available Balance"}</p>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-2xl font-extrabold text-white">
                 {showBalance ? formatCurrency(balance, currency) : "••••••"}
               </span>
               <button
                 onClick={(e) => { e.stopPropagation(); setShowBalance(!showBalance); }}
-                className="text-green-200 hover:text-white p-0.5"
+                className={`${currency === "HTG" ? "text-red-200 hover:text-white" : "text-green-200 hover:text-white"} p-0.5`}
               >
                 {showBalance ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
               </button>
@@ -281,7 +285,7 @@ export default function PlayerDashboard() {
       {/* ── Section 4: Quick Actions 2x2 Grid ── */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { icon: Wallet, label: t("wallet") || "Wallet", subtitle: t("addFunds") || "Add Funds", gradient: "from-blue-500 to-blue-600", href: "/player/payment" },
+          { icon: ArrowDownCircle, label: t("withdraw") || "Withdraw", subtitle: t("cashOut") || "Cash Out", gradient: "from-red-500 to-red-600", href: "/player/withdraw" },
           { icon: Sparkles, label: t("tchala") || "Tchala", subtitle: t("dreamNumbers") || "Dream Numbers", gradient: "from-amber-500 to-orange-500", href: "/player/tchala" },
           { icon: Trophy, label: t("results") || "Results", subtitle: "& " + (t("offers") || "Offers"), gradient: "from-emerald-500 to-green-600", href: "/player/results" },
           { icon: Clock, label: t("history") || "History", subtitle: t("pastPlays") || "Past Plays", gradient: "from-violet-500 to-purple-600", href: "/player/history" },

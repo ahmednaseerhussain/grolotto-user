@@ -96,6 +96,44 @@ export async function placeBet(input: PlaceBetInput) {
       throw new AppError('This draw is not available from this vendor', 400, 'DRAW_UNAVAILABLE');
     }
 
+    // 3b. Check vendor draw schedule (if one is set)
+    const scheduleCheck = await client.query(
+      `SELECT open_time, close_time, is_active
+       FROM vendor_draw_schedules
+       WHERE vendor_id = $1 AND draw_state = $2 AND draw_time = $3 AND is_active = TRUE`,
+      [vendorId, drawState, drawTime]
+    );
+
+    if (scheduleCheck.rows.length > 0) {
+      const sched = scheduleCheck.rows[0];
+      const now = new Date();
+      const etFormatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: false,
+      });
+      const etParts = etFormatter.formatToParts(now);
+      const etHour = parseInt(etParts.find(p => p.type === 'hour')?.value || '0', 10);
+      const etMin = parseInt(etParts.find(p => p.type === 'minute')?.value || '0', 10);
+      const currentMinutes = etHour * 60 + etMin;
+
+      const [openH, openM] = sched.open_time.split(':').map(Number);
+      const [closeH, closeM] = sched.close_time.split(':').map(Number);
+      const openMinutes = openH * 60 + openM;
+      const closeMinutes = closeH * 60 + closeM;
+
+      if (currentMinutes < openMinutes || currentMinutes > closeMinutes) {
+        const openStr = sched.open_time.slice(0, 5);
+        const closeStr = sched.close_time.slice(0, 5);
+        throw new AppError(
+          `This draw is currently closed. Open: ${openStr} - ${closeStr} ET`,
+          400,
+          'DRAW_CLOSED'
+        );
+      }
+    }
+
     // 4. Check game type is enabled with proper min/max
     const gameCheck = await client.query(
       `SELECT enabled, min_amount, max_amount

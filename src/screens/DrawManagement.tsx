@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView, Switch, TextInput, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,6 +18,38 @@ const DRAWS = [
   { code: "TN", name: "Tennessee", flag: "🎸" },
   { code: "NJ", name: "New Jersey", flag: "🏙️" },
 ];
+
+const DRAW_TIMES = [
+  { key: "morning", label: "Morning" },
+  { key: "midday", label: "Midday" },
+  { key: "evening", label: "Evening" },
+];
+
+const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
+const MINUTES = ['00', '15', '30', '45'];
+
+interface ScheduleEntry {
+  id?: string;
+  drawState: string;
+  drawTime: string;
+  openTime: string;
+  closeTime: string;
+  isActive: boolean;
+}
+
+function parseTime12h(time24: string): { hour: string; minute: string; ampm: 'AM' | 'PM' } {
+  const [h, m] = time24.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return { hour: String(hour12).padStart(2, '0'), minute: String(m).padStart(2, '0'), ampm };
+}
+
+function to24h(hour: string, minute: string, ampm: 'AM' | 'PM'): string {
+  let h = parseInt(hour, 10);
+  if (ampm === 'PM' && h !== 12) h += 12;
+  if (ampm === 'AM' && h === 12) h = 0;
+  return `${String(h).padStart(2, '0')}:${minute}`;
+}
 
 const GAMES = [
   { key: "senp", name: "Senp", description: "1 numéro (0-99)", mandatory: true },
@@ -40,6 +72,82 @@ export default function DrawManagement() {
   const [expandedDraw, setExpandedDraw] = useState<string | null>(null);
   const [editingLimits, setEditingLimits] = useState<{drawCode: string, gameKey: string} | null>(null);
   const [tempLimits, setTempLimits] = useState<{min: string, max: string}>({min: "", max: ""});
+  
+  // ─── Draw Schedules ───
+  const [schedules, setSchedules] = useState<ScheduleEntry[]>([]);
+  const [showScheduleEditor, setShowScheduleEditor] = useState<string | null>(null); // drawCode
+  const [scheduleDrawTime, setScheduleDrawTime] = useState('midday');
+  const [openHour, setOpenHour] = useState('06');
+  const [openMinute, setOpenMinute] = useState('00');
+  const [openAmPm, setOpenAmPm] = useState<'AM' | 'PM'>('AM');
+  const [closeHour, setCloseHour] = useState('11');
+  const [closeMinute, setCloseMinute] = useState('30');
+  const [closeAmPm, setCloseAmPm] = useState<'AM' | 'PM'>('AM');
+  const [savingSchedule, setSavingSchedule] = useState(false);
+
+  const loadSchedules = useCallback(async () => {
+    try {
+      const data = await vendorAPI.getDrawSchedules();
+      setSchedules(data);
+    } catch (e) {
+      // Silent — schedules are optional
+    }
+  }, []);
+
+  useEffect(() => { loadSchedules(); }, [loadSchedules]);
+
+  const getSchedulesForState = (drawState: string) =>
+    schedules.filter(s => s.drawState === drawState);
+
+  const saveSchedule = async (drawState: string) => {
+    const openTime24 = to24h(openHour, openMinute, openAmPm);
+    const closeTime24 = to24h(closeHour, closeMinute, closeAmPm);
+
+    // Validate open < close
+    if (openTime24 >= closeTime24) {
+      Alert.alert(t("error"), "Open time must be before close time");
+      return;
+    }
+
+    setSavingSchedule(true);
+    try {
+      await vendorAPI.upsertDrawSchedule({
+        drawState,
+        drawTime: scheduleDrawTime,
+        openTime: openTime24,
+        closeTime: closeTime24,
+      });
+      await loadSchedules();
+      setShowScheduleEditor(null);
+      Alert.alert("Success", "Schedule saved");
+    } catch (e: any) {
+      Alert.alert(t("error"), e?.response?.data?.message || "Failed to save schedule");
+    } finally {
+      setSavingSchedule(false);
+    }
+  };
+
+  const removeSchedule = async (scheduleId: string) => {
+    try {
+      await vendorAPI.deleteDrawSchedule(scheduleId);
+      await loadSchedules();
+    } catch (e: any) {
+      Alert.alert(t("error"), e?.message || "Failed to delete schedule");
+    }
+  };
+
+  const editExistingSchedule = (schedule: ScheduleEntry) => {
+    setShowScheduleEditor(schedule.drawState);
+    setScheduleDrawTime(schedule.drawTime);
+    const open = parseTime12h(schedule.openTime);
+    const close = parseTime12h(schedule.closeTime);
+    setOpenHour(open.hour);
+    setOpenMinute(open.minute);
+    setOpenAmPm(open.ampm);
+    setCloseHour(close.hour);
+    setCloseMinute(close.minute);
+    setCloseAmPm(close.ampm);
+  };
   
   const currentVendor = vendors.find(v => v.userId === user?.id);
   
@@ -419,6 +527,164 @@ export default function DrawManagement() {
                       <Ionicons name="eye-outline" size={16} color="#3b82f6" />
                       <Text style={styles.previewButtonText}>{t("previewForPlayers")}</Text>
                     </Pressable>
+
+                    {/* ─── Draw Schedules Section ─── */}
+                    <View style={{ marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#e5e7eb' }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Ionicons name="time-outline" size={18} color="#f59e0b" />
+                          <Text style={{ fontWeight: '700', fontSize: 15, color: '#1f2937', marginLeft: 6 }}>
+                            Draw Schedule
+                          </Text>
+                        </View>
+                        <Pressable
+                          onPress={() => {
+                            setShowScheduleEditor(showScheduleEditor === draw.code ? null : draw.code);
+                            setScheduleDrawTime('midday');
+                            setOpenHour('06'); setOpenMinute('00'); setOpenAmPm('AM');
+                            setCloseHour('11'); setCloseMinute('30'); setCloseAmPm('AM');
+                          }}
+                          style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fef3c7', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}
+                        >
+                          <Ionicons name="add-circle-outline" size={16} color="#d97706" />
+                          <Text style={{ color: '#d97706', fontWeight: '600', fontSize: 12, marginLeft: 4 }}>Add</Text>
+                        </Pressable>
+                      </View>
+
+                      {/* Existing schedules for this state */}
+                      {getSchedulesForState(draw.code).map((sched) => {
+                        const open = parseTime12h(sched.openTime);
+                        const close = parseTime12h(sched.closeTime);
+                        return (
+                          <View key={sched.id || `${sched.drawTime}`} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f9fafb', padding: 10, borderRadius: 8, marginBottom: 8, borderWidth: 1, borderColor: '#e5e7eb' }}>
+                            <View style={{ flex: 1 }}>
+                              <Text style={{ fontWeight: '600', fontSize: 13, color: '#374151', textTransform: 'capitalize' }}>{sched.drawTime}</Text>
+                              <Text style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
+                                {open.hour}:{open.minute} {open.ampm} — {close.hour}:{close.minute} {close.ampm}
+                              </Text>
+                            </View>
+                            <Pressable onPress={() => editExistingSchedule(sched)} style={{ padding: 6 }}>
+                              <Ionicons name="create-outline" size={18} color="#3b82f6" />
+                            </Pressable>
+                            <Pressable
+                              onPress={() => {
+                                Alert.alert("Delete Schedule", `Remove ${sched.drawTime} schedule?`, [
+                                  { text: "Cancel" },
+                                  { text: "Delete", style: 'destructive', onPress: () => sched.id && removeSchedule(sched.id) },
+                                ]);
+                              }}
+                              style={{ padding: 6, marginLeft: 4 }}
+                            >
+                              <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                            </Pressable>
+                          </View>
+                        );
+                      })}
+                      {getSchedulesForState(draw.code).length === 0 && (
+                        <Text style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', paddingVertical: 8 }}>
+                          No schedules set — betting is always open
+                        </Text>
+                      )}
+
+                      {/* Schedule Editor */}
+                      {showScheduleEditor === draw.code && (
+                        <View style={{ backgroundColor: '#fffbeb', padding: 14, borderRadius: 12, marginTop: 8, borderWidth: 1, borderColor: '#fde68a' }}>
+                          <Text style={{ fontWeight: '700', fontSize: 14, color: '#92400e', marginBottom: 10 }}>Set Schedule</Text>
+                          
+                          {/* Draw Time selector */}
+                          <Text style={{ fontSize: 12, fontWeight: '600', color: '#6b7280', marginBottom: 4 }}>Draw Time</Text>
+                          <View style={{ flexDirection: 'row', marginBottom: 12 }}>
+                            {DRAW_TIMES.map((dt) => (
+                              <Pressable
+                                key={dt.key}
+                                onPress={() => setScheduleDrawTime(dt.key)}
+                                style={{
+                                  flex: 1, paddingVertical: 8, borderRadius: 8, marginRight: 6,
+                                  backgroundColor: scheduleDrawTime === dt.key ? '#f59e0b' : '#fff',
+                                  borderWidth: 1, borderColor: scheduleDrawTime === dt.key ? '#f59e0b' : '#d1d5db',
+                                  alignItems: 'center',
+                                }}
+                              >
+                                <Text style={{ fontSize: 12, fontWeight: '600', color: scheduleDrawTime === dt.key ? '#fff' : '#374151' }}>
+                                  {dt.label}
+                                </Text>
+                              </Pressable>
+                            ))}
+                          </View>
+
+                          {/* Open Time */}
+                          <Text style={{ fontSize: 12, fontWeight: '600', color: '#6b7280', marginBottom: 4 }}>Open Time</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                            <TextInput
+                              style={{ width: 44, height: 38, borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, textAlign: 'center', backgroundColor: '#fff', fontSize: 16, fontWeight: '600' }}
+                              value={openHour}
+                              onChangeText={(v) => { const n = parseInt(v); if (!v || (n >= 1 && n <= 12)) setOpenHour(v.slice(0,2)); }}
+                              keyboardType="numeric"
+                              maxLength={2}
+                            />
+                            <Text style={{ fontSize: 18, fontWeight: '700', marginHorizontal: 4 }}>:</Text>
+                            <TextInput
+                              style={{ width: 44, height: 38, borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, textAlign: 'center', backgroundColor: '#fff', fontSize: 16, fontWeight: '600' }}
+                              value={openMinute}
+                              onChangeText={(v) => { const n = parseInt(v); if (!v || (n >= 0 && n <= 59)) setOpenMinute(v.slice(0,2)); }}
+                              keyboardType="numeric"
+                              maxLength={2}
+                            />
+                            <Pressable
+                              onPress={() => setOpenAmPm(openAmPm === 'AM' ? 'PM' : 'AM')}
+                              style={{ marginLeft: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, backgroundColor: openAmPm === 'AM' ? '#dbeafe' : '#fce7f3' }}
+                            >
+                              <Text style={{ fontWeight: '700', fontSize: 14, color: openAmPm === 'AM' ? '#1d4ed8' : '#be185d' }}>{openAmPm}</Text>
+                            </Pressable>
+                          </View>
+
+                          {/* Close Time */}
+                          <Text style={{ fontSize: 12, fontWeight: '600', color: '#6b7280', marginBottom: 4 }}>Close Time</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
+                            <TextInput
+                              style={{ width: 44, height: 38, borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, textAlign: 'center', backgroundColor: '#fff', fontSize: 16, fontWeight: '600' }}
+                              value={closeHour}
+                              onChangeText={(v) => { const n = parseInt(v); if (!v || (n >= 1 && n <= 12)) setCloseHour(v.slice(0,2)); }}
+                              keyboardType="numeric"
+                              maxLength={2}
+                            />
+                            <Text style={{ fontSize: 18, fontWeight: '700', marginHorizontal: 4 }}>:</Text>
+                            <TextInput
+                              style={{ width: 44, height: 38, borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, textAlign: 'center', backgroundColor: '#fff', fontSize: 16, fontWeight: '600' }}
+                              value={closeMinute}
+                              onChangeText={(v) => { const n = parseInt(v); if (!v || (n >= 0 && n <= 59)) setCloseMinute(v.slice(0,2)); }}
+                              keyboardType="numeric"
+                              maxLength={2}
+                            />
+                            <Pressable
+                              onPress={() => setCloseAmPm(closeAmPm === 'AM' ? 'PM' : 'AM')}
+                              style={{ marginLeft: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, backgroundColor: closeAmPm === 'AM' ? '#dbeafe' : '#fce7f3' }}
+                            >
+                              <Text style={{ fontWeight: '700', fontSize: 14, color: closeAmPm === 'AM' ? '#1d4ed8' : '#be185d' }}>{closeAmPm}</Text>
+                            </Pressable>
+                          </View>
+
+                          {/* Save / Cancel */}
+                          <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+                            <Pressable
+                              onPress={() => setShowScheduleEditor(null)}
+                              style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, marginRight: 8 }}
+                            >
+                              <Text style={{ color: '#6b7280', fontWeight: '600' }}>{t("cancel")}</Text>
+                            </Pressable>
+                            <Pressable
+                              onPress={() => saveSchedule(draw.code)}
+                              disabled={savingSchedule}
+                              style={{ paddingHorizontal: 20, paddingVertical: 8, borderRadius: 8, backgroundColor: '#f59e0b', opacity: savingSchedule ? 0.6 : 1 }}
+                            >
+                              <Text style={{ color: '#fff', fontWeight: '700' }}>
+                                {savingSchedule ? 'Saving...' : 'Save Schedule'}
+                              </Text>
+                            </Pressable>
+                          </View>
+                        </View>
+                      )}
+                    </View>
                   </View>
                 )}
               </View>

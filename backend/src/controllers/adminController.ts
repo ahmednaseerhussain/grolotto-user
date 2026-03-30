@@ -277,7 +277,18 @@ export async function redeemGiftCard(req: Request, res: Response, next: NextFunc
 export async function broadcastNotification(req: Request, res: Response, next: NextFunction) {
   try {
     const { title, message, type, targetAudience } = req.body;
-    const result = await adminService.broadcastNotification(title, message, type || 'info', targetAudience || 'all');
+    const result = await adminService.broadcastNotification(title, message, type || 'info', targetAudience || 'all', req.user?.id);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getBroadcastHistory(req: Request, res: Response, next: NextFunction) {
+  try {
+    const limit = parseInt(req.query.limit as string) || 50;
+    const offset = parseInt(req.query.offset as string) || 0;
+    const result = await adminService.getBroadcastHistory(limit, offset);
     res.json(result);
   } catch (error) {
     next(error);
@@ -329,8 +340,8 @@ export async function updateVendorPayoutMultipliers(req: Request, res: Response,
 
 export async function createAdminUser(req: Request, res: Response, next: NextFunction) {
   try {
-    const { email, name, password } = req.body;
-    const user = await adminService.createAdminUser(email, name, password);
+    const { email, name, password, adminRole } = req.body;
+    const user = await adminService.createAdminUser(email, name, password, adminRole);
     res.status(201).json(user);
   } catch (error) {
     next(error);
@@ -340,8 +351,8 @@ export async function createAdminUser(req: Request, res: Response, next: NextFun
 export async function updateAdminUser(req: Request, res: Response, next: NextFunction) {
   try {
     // Whitelist allowed fields to prevent mass assignment
-    const { name, email, isActive } = req.body;
-    await adminService.updateAdminUser(req.params.userId, { name, email, isActive });
+    const { name, email, isActive, adminRole } = req.body;
+    await adminService.updateAdminUser(req.params.userId, { name, email, isActive, adminRole });
     res.json({ message: 'Admin user updated' });
   } catch (error) {
     next(error);

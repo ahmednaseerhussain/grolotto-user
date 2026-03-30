@@ -71,6 +71,22 @@ export async function getPlayHistory(req: Request, res: Response, next: NextFunc
   }
 }
 
+export async function getPlayHistorySummary(req: Request, res: Response, next: NextFunction) {
+  try {
+    const vendor = await vendorService.getVendorByUserId(req.user!.id);
+    const filters = {
+      dateFrom: req.query.dateFrom as string,
+      dateTo: req.query.dateTo as string,
+      drawState: req.query.drawState as string,
+      drawTime: req.query.drawTime as string,
+    };
+    const summary = await vendorService.getVendorPlayHistorySummary(vendor.id, filters);
+    res.json(summary);
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function getReviews(req: Request, res: Response, next: NextFunction) {
   try {
     const vendorId = req.params.id;
@@ -189,6 +205,54 @@ export async function getPublicPayoutMultipliers(req: Request, res: Response, ne
   try {
     const multipliers = await vendorService.getPayoutMultipliers(req.params.id);
     res.json(multipliers);
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ─── Draw Schedules ────────────────────────────────────────
+
+export async function getDrawSchedules(req: Request, res: Response, next: NextFunction) {
+  try {
+    const vendor = await vendorService.getVendorByUserId(req.user!.id);
+    const schedules = await vendorService.getDrawSchedules(vendor.id);
+    res.json(schedules);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function upsertDrawSchedule(req: Request, res: Response, next: NextFunction) {
+  try {
+    const vendor = await vendorService.getVendorByUserId(req.user!.id);
+    const { drawState, drawTime, openTime, closeTime } = req.body;
+    const schedule = await vendorService.upsertDrawSchedule(vendor.id, drawState, drawTime, openTime, closeTime);
+    res.json(schedule);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteDrawSchedule(req: Request, res: Response, next: NextFunction) {
+  try {
+    const vendor = await vendorService.getVendorByUserId(req.user!.id);
+    await vendorService.deleteDrawSchedule(vendor.id, req.params.scheduleId);
+    res.json({ message: 'Schedule deleted' });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function checkDrawScheduleStatus(req: Request, res: Response, next: NextFunction) {
+  try {
+    const vendorId = req.params.vendorId;
+    const drawState = req.query.state as string;
+    const drawTime = req.query.drawTime as string;
+    if (!drawState || !drawTime) {
+      return res.status(400).json({ error: 'state and drawTime are required' });
+    }
+    const result = await vendorService.checkDrawSchedule(vendorId, drawState, drawTime);
+    res.json(result);
   } catch (error) {
     next(error);
   }

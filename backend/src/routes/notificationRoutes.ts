@@ -8,5 +8,7 @@ router.get('/', authenticate, ctrl.getNotifications);
 router.get('/unread-count', authenticate, ctrl.getUnreadCount);
 router.put('/:id/read', authenticate, ctrl.markAsRead);
 router.put('/read-all', authenticate, ctrl.markAllAsRead);
+router.post('/device-token', authenticate, ctrl.registerPushToken);
+router.delete('/device-token', authenticate, ctrl.removePushToken);
 
 export default router;

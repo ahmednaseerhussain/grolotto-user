@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-    ArrowLeft, Wallet, Banknote, CheckCircle, HelpCircle, Loader2
+    ArrowLeft, Wallet, Banknote, CheckCircle, HelpCircle, Loader2, Smartphone, Globe
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -27,6 +27,10 @@ export default function PlayerWithdrawPage() {
     }, []);
 
     const [amount, setAmount] = useState("");
+    const [withdrawMethod, setWithdrawMethod] = useState<"moncash" | "bank_transfer">(
+        currency === "HTG" ? "moncash" : "bank_transfer"
+    );
+    const [moncashPhone, setMoncashPhone] = useState("");
     const [bankName, setBankName] = useState("");
     const [accountHolderName, setAccountHolderName] = useState("");
     const [accountNumber, setAccountNumber] = useState("");
@@ -39,7 +43,17 @@ export default function PlayerWithdrawPage() {
         ? (wallet?.balanceHtg ?? wallet?.balance ?? 0)
         : (wallet?.balanceUsd ?? wallet?.balance ?? 0);
 
-    const canSubmit = parseFloat(amount) > 0 && bankName.trim() && accountHolderName.trim() && accountNumber.trim();
+    const methodLimits: Record<string, { min: number; max: number }> = {
+        moncash: { min: 500, max: 250000 },
+        bank_transfer: currency === "HTG" ? { min: 500, max: 500000 } : { min: 5, max: 5000 },
+    };
+    const limits = methodLimits[withdrawMethod] || methodLimits.bank_transfer;
+
+    const canSubmit = parseFloat(amount) > 0 && (
+        withdrawMethod === "moncash"
+            ? moncashPhone.trim().length >= 8
+            : bankName.trim() && accountHolderName.trim() && accountNumber.trim()
+    );
 
     const handleSubmit = async () => {
         if (!canSubmit) return;
@@ -48,8 +62,12 @@ export default function PlayerWithdrawPage() {
             toast.error(t("insufficientBalance") || "Insufficient balance");
             return;
         }
-        if (amt < (currency === "HTG" ? 500 : 5)) {
-            toast.error(`Minimum withdrawal: ${formatCurrency(currency === "HTG" ? 500 : 5, currency)}`);
+        if (amt < limits.min) {
+            toast.error(`Minimum withdrawal: ${formatCurrency(limits.min, currency)}`);
+            return;
+        }
+        if (amt > limits.max) {
+            toast.error(`Maximum withdrawal: ${formatCurrency(limits.max, currency)}`);
             return;
         }
         setProcessing(true);
@@ -57,11 +75,10 @@ export default function PlayerWithdrawPage() {
             await walletAPI.requestWithdrawal({
                 amount: amt,
                 currency,
-                method: "bank_transfer",
-                bankName,
-                accountHolderName,
-                accountNumber,
-                routingNumber,
+                method: withdrawMethod,
+                ...(withdrawMethod === "moncash"
+                    ? { moncashPhone }
+                    : { bankName, accountHolderName, accountNumber, routingNumber }),
                 notes,
             });
             setShowSuccess(true);
@@ -131,11 +148,87 @@ export default function PlayerWithdrawPage() {
                     />
                 </div>
                 <p className="text-xs text-gray-400 mt-1">
-                    {t("available") || "Available"}: {formatCurrency(balance, currency)} · Min: {formatCurrency(currency === "HTG" ? 500 : 5, currency)}
+                    {t("available") || "Available"}: {formatCurrency(balance, currency)} · Min: {formatCurrency(limits.min, currency)} · Max: {formatCurrency(limits.max, currency)}
                 </p>
             </div>
 
-            {/* Bank Details */}
+            {/* Withdrawal Method Selector */}
+            <div>
+                <label className="text-sm font-semibold text-gray-700 block mb-3">Withdrawal Method</label>
+                <div className="space-y-3">
+                    {currency === "HTG" && (
+                        <button
+                            onClick={() => setWithdrawMethod("moncash")}
+                            className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${withdrawMethod === "moncash"
+                                ? "border-red-500 bg-red-50"
+                                : "border-gray-200 hover:border-gray-300 bg-white"
+                            }`}
+                        >
+                            <div className="bg-red-500 w-10 h-10 rounded-full flex items-center justify-center">
+                                <Smartphone className="h-5 w-5 text-white" />
+                            </div>
+                            <div className="text-left flex-1">
+                                <p className="font-semibold text-gray-900">MonCash</p>
+                                <p className="text-sm text-gray-500">Receive via Digicel mobile money</p>
+                            </div>
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${withdrawMethod === "moncash" ? "border-red-500" : "border-gray-300"}`}>
+                                {withdrawMethod === "moncash" && <div className="w-2.5 h-2.5 rounded-full bg-red-500" />}
+                            </div>
+                        </button>
+                    )}
+                    <button
+                        onClick={() => setWithdrawMethod("bank_transfer")}
+                        className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${withdrawMethod === "bank_transfer"
+                            ? "border-amber-500 bg-amber-50"
+                            : "border-gray-200 hover:border-gray-300 bg-white"
+                        }`}
+                    >
+                        <div className="bg-amber-500 w-10 h-10 rounded-full flex items-center justify-center">
+                            <Banknote className="h-5 w-5 text-white" />
+                        </div>
+                        <div className="text-left flex-1">
+                            <p className="font-semibold text-gray-900">Bank Transfer</p>
+                            <p className="text-sm text-gray-500">Direct transfer to your bank account</p>
+                        </div>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${withdrawMethod === "bank_transfer" ? "border-amber-500" : "border-gray-300"}`}>
+                            {withdrawMethod === "bank_transfer" && <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />}
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            {/* MonCash Details (HTG) */}
+            {withdrawMethod === "moncash" && (
+                <Card>
+                    <CardContent className="p-4 space-y-4">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Smartphone className="h-5 w-5 text-red-600" />
+                            <h3 className="font-semibold">MonCash Details</h3>
+                        </div>
+                        <div>
+                            <label className="text-sm text-gray-600">MonCash Phone Number</label>
+                            <Input
+                                value={moncashPhone}
+                                onChange={(e) => setMoncashPhone(e.target.value)}
+                                placeholder="+509 XXXX XXXX"
+                                className="mt-1"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm text-gray-600">{t("additionalNotes") || "Additional Notes"} ({t("optional") || "optional"})</label>
+                            <Input
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                placeholder="Any special instructions"
+                                className="mt-1"
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Bank Details (USD / optional for HTG) */}
+            {withdrawMethod === "bank_transfer" && (
             <Card>
                 <CardContent className="p-4 space-y-4">
                     <div className="flex items-center gap-2 mb-1">
@@ -194,6 +287,7 @@ export default function PlayerWithdrawPage() {
                     </div>
                 </CardContent>
             </Card>
+            )}
 
             {/* Submit Button */}
             <Button

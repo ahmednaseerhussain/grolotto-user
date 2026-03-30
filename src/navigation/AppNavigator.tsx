@@ -49,6 +49,7 @@ import ReportsAnalytics from "../screens/ReportsAnalytics";
 import TchalaManager from "../screens/TchalaManager";
 
 import { authAPI, tokenStorage } from "../api/apiClient";
+import { registerForPushNotifications, unregisterPushNotifications } from "../utils/pushNotifications";
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -128,6 +129,18 @@ export default function AppNavigator() {
     };
     restoreSession();
   }, []);
+
+  // Register for push notifications when authenticated
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      registerForPushNotifications().catch(() => {});
+    }
+    return () => {
+      if (isAuthenticated) {
+        unregisterPushNotifications().catch(() => {});
+      }
+    };
+  }, [isAuthenticated]);
 
   const handleSplashComplete = () => {
     setShowSplash(false);

@@ -93,7 +93,7 @@ const NotificationsScreen = () => {
     return `${days}d ago`;
   };
 
-  const renderNotification = ({ item }: { item: Notification }) => {
+  const renderNotification = useCallback(({ item }: { item: Notification }) => {
     const visual = notifIconMap[item.type] || notifIconMap.system;
     return (
       <Pressable
@@ -116,7 +116,7 @@ const NotificationsScreen = () => {
         </View>
       </Pressable>
     );
-  };
+  }, []);
 
   return (
     <SafeAreaView style={styles.notifContainer}>
@@ -124,7 +124,7 @@ const NotificationsScreen = () => {
         <Text style={styles.notifScreenTitle}>{t("notifications")}</Text>
         {unreadCount > 0 && (
           <Pressable onPress={handleMarkAllRead} style={styles.markAllButton}>
-            <Text style={styles.markAllText}>Mark all read</Text>
+            <Text style={styles.markAllText}>{t("markAllRead")}</Text>
           </Pressable>
         )}
       </View>
@@ -149,9 +149,9 @@ const NotificationsScreen = () => {
           ListEmptyComponent={
             <View style={styles.notifEmptyContent}>
               <Ionicons name="notifications-off-outline" size={64} color="#d1d5db" />
-              <Text style={styles.notifEmptyTitle}>No Notifications</Text>
+              <Text style={styles.notifEmptyTitle}>{t("noNotifications")}</Text>
               <Text style={styles.notifEmptySubtitle}>
-                You're all caught up! Notifications will appear here.
+                {t("noNotifications")}
               </Text>
             </View>
           }

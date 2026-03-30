@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, Pressable, FlatList, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,12 +10,19 @@ import { tchalaAPI, getErrorMessage } from "../api/apiClient";
 
 export default function TchalaScreen() {
   const navigation = useNavigation();
-  const { searchResults, searchDream, clearSearch } = useTchalaStore();
+  const { searchResults, searchDream, clearSearch, fetchDictionary, isLoaded } = useTchalaStore();
   const language = useAppStore(s => s.language);
   const [searchQuery, setSearchQuery] = useState("");
   const [apiResults, setApiResults] = useState<any[]>([]);
   
   const t = (key: string) => getTranslation(key as any, language);
+
+  // Fetch latest dictionary from backend on mount
+  useEffect(() => {
+    if (!isLoaded) {
+      fetchDictionary(language);
+    }
+  }, [language]);
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -75,10 +82,10 @@ export default function TchalaScreen() {
         {/* Info Section */}
         <View className="bg-purple-50 px-6 py-4">
           <Text className="text-purple-800 font-medium mb-2">
-            How it works:
+            {t("howItWorks")}
           </Text>
           <Text className="text-purple-700 text-sm leading-5">
-            Search for objects, people, or events from your dreams. Tchala will show you the traditional Haitian lucky numbers associated with them.
+            {t("tchalaDescription")}
           </Text>
         </View>
 
@@ -88,7 +95,7 @@ export default function TchalaScreen() {
             <TextInput
               value={searchQuery}
               onChangeText={handleSearch}
-              placeholder="Search your dream... (e.g., wedding, water, snake)"
+              placeholder={t("searchYourDream")}
               className="bg-gray-100 rounded-2xl px-4 py-4 pr-12 text-lg"
               autoCapitalize="none"
               autoCorrect={false}
@@ -104,7 +111,7 @@ export default function TchalaScreen() {
               className="flex-row items-center self-start"
             >
               <Ionicons name="close-circle" size={16} color="#6b7280" />
-              <Text className="text-gray-600 ml-1">Clear search</Text>
+              <Text className="text-gray-600 ml-1">{t("clearSearch")}</Text>
             </Pressable>
           )}
         </View>
@@ -114,7 +121,7 @@ export default function TchalaScreen() {
           {searchResults.length > 0 ? (
             <>
               <Text className="text-lg font-semibold text-gray-800 mb-4">
-                Found {searchResults.length} result(s):
+                {t("foundResults").replace("{count}", String(searchResults.length))}
               </Text>
               <FlatList
                 data={searchResults}
@@ -139,7 +146,7 @@ export default function TchalaScreen() {
                         
                         <View className="flex-row items-center">
                           <Text className="text-sm text-purple-600 font-medium mr-2">
-                            Lucky Numbers:
+                            {t("luckyNumbers")}
                           </Text>
                           {item.numbers.map((number, index) => (
                             <View
@@ -166,10 +173,10 @@ export default function TchalaScreen() {
                 <Ionicons name="search" size={32} color="#6b7280" />
               </View>
               <Text className="text-xl font-medium text-gray-800 mb-2">
-                No results found
+                {t("noResultsFound")}
               </Text>
               <Text className="text-gray-600 text-center">
-                Try searching for different dream elements like "money", "dog", or "house"
+                {t("tryDifferentSearch")}
               </Text>
             </View>
           ) : (
@@ -178,15 +185,15 @@ export default function TchalaScreen() {
                 <Ionicons name="moon" size={32} color="#7c3aed" />
               </View>
               <Text className="text-xl font-medium text-gray-800 mb-2">
-                Welcome to Tchala
+                {t("welcomeToTchala")}
               </Text>
               <Text className="text-gray-600 text-center mb-6 px-4">
-                Search for elements from your dreams to discover your lucky numbers
+                {t("tchalaWelcomeDescription")}
               </Text>
               
               <View className="w-full">
                 <Text className="text-sm font-medium text-gray-700 mb-3">
-                  Popular searches:
+                  {t("popularSearches")}
                 </Text>
                 <View className="flex-row flex-wrap">
                   {["wedding", "money", "water", "dog", "house", "snake"].map((keyword) => (

@@ -23,7 +23,7 @@ export const publicAPI = {
 
 export const tchalaAPI = {
   async search(keyword: string): Promise<Array<{ keyword: string; numbers: number[]; description?: string }>> {
-    const response = await apiClient.get("/tchala/search", { params: { keyword } });
+    const response = await apiClient.get("/tchala/search", { params: { q: keyword } });
     return response.data.data || response.data;
   },
 

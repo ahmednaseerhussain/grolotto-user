@@ -3303,6 +3303,74 @@ export const translations = {
     en: "Search Vendors...",
     fr: "Rechercher Vendeurs...",
     es: "Buscar Vendedores..."
+  },
+
+  // Withdrawal limits
+  maxAmount: {
+    ht: "Montan maksimòm",
+    en: "Max amount",
+    fr: "Montant maximum",
+    es: "Monto máximo"
+  },
+
+  // Notifications
+  noNotifications: {
+    ht: "Pa gen notifikasyon",
+    en: "No notifications yet",
+    fr: "Pas de notifications",
+    es: "Sin notificaciones"
+  },
+  markAllRead: {
+    ht: "Make tout li",
+    en: "Mark all read",
+    fr: "Tout marquer lu",
+    es: "Marcar todo leído"
+  },
+
+  // Schedule times
+  morning: {
+    ht: "Maten",
+    en: "Morning",
+    fr: "Matin",
+    es: "Mañana"
+  },
+  midday: {
+    ht: "Midi",
+    en: "Midday",
+    fr: "Midi",
+    es: "Mediodía"
+  },
+  evening: {
+    ht: "Aswè",
+    en: "Evening",
+    fr: "Soir",
+    es: "Noche"
+  },
+
+  // Help & Support
+  help: {
+    ht: "Èd",
+    en: "Help",
+    fr: "Aide",
+    es: "Ayuda"
+  },
+  support: {
+    ht: "Sipò",
+    en: "Support",
+    fr: "Support",
+    es: "Soporte"
+  },
+  contactUs: {
+    ht: "Kontakte Nou",
+    en: "Contact Us",
+    fr: "Contactez-nous",
+    es: "Contáctenos"
+  },
+  faq: {
+    ht: "Kesyon Souvan",
+    en: "FAQ",
+    fr: "FAQ",
+    es: "Preguntas Frecuentes"
   }
 };
 

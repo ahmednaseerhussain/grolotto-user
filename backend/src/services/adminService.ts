@@ -605,11 +605,14 @@ export async function redeemGiftCard(pinCode: string, userId: string) {
 // Broadcast Notifications
 // ──────────────────────────────────────────────────────────
 
+import { sendPushToRole } from './notificationService';
+
 export async function broadcastNotification(
   title: string,
   message: string,
   type: string,
-  targetAudience: 'players' | 'vendors' | 'all'
+  targetAudience: 'players' | 'vendors' | 'all',
+  sentBy?: string
 ) {
   const targets: string[] = [];
   if (targetAudience === 'players' || targetAudience === 'all') targets.push('player');
@@ -625,9 +628,6 @@ export async function broadcastNotification(
 
     const table = role === 'vendor' ? 'vendor_notifications' : 'player_notifications';
     const fkColumn = role === 'vendor' ? 'vendor_id' : 'user_id';
-    const idSource = role === 'vendor'
-      ? `SELECT v.id FROM vendors v WHERE v.user_id = ANY($1::uuid[])`
-      : null;
 
     if (role === 'vendor') {
       const userIds = usersResult.rows.map((r: any) => r.id);
@@ -652,9 +652,49 @@ export async function broadcastNotification(
         totalSent++;
       }
     }
+
+    // Send push notifications for this role
+    sendPushToRole(role as 'player' | 'vendor', title, message, { type }).catch((err) => {
+      console.error(`Push notification failed for ${role}:`, err);
+    });
+  }
+
+  // Log broadcast to history
+  try {
+    await query(
+      `INSERT INTO broadcast_history (title, message, type, target_audience, total_sent, sent_by)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [title, message, type, targetAudience, totalSent, sentBy || null]
+    );
+  } catch (err) {
+    console.error('Failed to log broadcast history:', err);
   }
 
   return { totalSent, targetAudience };
+}
+
+export async function getBroadcastHistory(limit = 50, offset = 0) {
+  const result = await query(
+    `SELECT bh.*, u.email as sent_by_email
+     FROM broadcast_history bh
+     LEFT JOIN users u ON u.id = bh.sent_by
+     ORDER BY bh.created_at DESC LIMIT $1 OFFSET $2`,
+    [limit, offset]
+  );
+  const countResult = await query(`SELECT COUNT(*) FROM broadcast_history`);
+  return {
+    broadcasts: result.rows.map((r: any) => ({
+      id: r.id,
+      title: r.title,
+      message: r.message,
+      type: r.type,
+      targetAudience: r.target_audience,
+      totalSent: r.total_sent,
+      sentByEmail: r.sent_by_email,
+      createdAt: r.created_at,
+    })),
+    total: parseInt(countResult.rows[0].count),
+  };
 }
 
 // ──────────────────────────────────────────────────────────
@@ -710,17 +750,19 @@ export async function getTransactions(page: number = 1, limit: number = 50, filt
 // Admin User CRUD
 // ──────────────────────────────────────────────────────────
 
-export async function createAdminUser(email: string, name: string, password: string) {
+export async function createAdminUser(email: string, name: string, password: string, adminRole: string = 'admin') {
+  const validRoles = ['super_admin', 'admin', 'moderator', 'viewer'];
+  const role = validRoles.includes(adminRole) ? adminRole : 'admin';
   const passwordHash = await bcrypt.hash(password, 12);
   const result = await query(
-    `INSERT INTO users (email, name, password_hash, role, is_active, is_verified)
-     VALUES ($1, $2, $3, 'admin', TRUE, TRUE) RETURNING id, email, name, role, is_active, created_at`,
-    [email, name, passwordHash]
+    `INSERT INTO users (email, name, password_hash, role, admin_role, is_active, is_verified)
+     VALUES ($1, $2, $3, 'admin', $4, TRUE, TRUE) RETURNING id, email, name, role, admin_role, is_active, created_at`,
+    [email, name, passwordHash, role]
   );
   return result.rows[0];
 }
 
-export async function updateAdminUser(userId: string, updates: { name?: string; email?: string; isActive?: boolean }) {
+export async function updateAdminUser(userId: string, updates: { name?: string; email?: string; isActive?: boolean; adminRole?: string }) {
   const setClauses: string[] = [];
   const values: any[] = [];
   let idx = 1;
@@ -728,6 +770,13 @@ export async function updateAdminUser(userId: string, updates: { name?: string; 
   if (updates.name !== undefined) { setClauses.push(`name = $${idx++}`); values.push(updates.name); }
   if (updates.email !== undefined) { setClauses.push(`email = $${idx++}`); values.push(updates.email); }
   if (updates.isActive !== undefined) { setClauses.push(`is_active = $${idx++}`); values.push(updates.isActive); }
+  if (updates.adminRole !== undefined) {
+    const validRoles = ['super_admin', 'admin', 'moderator', 'viewer'];
+    if (validRoles.includes(updates.adminRole)) {
+      setClauses.push(`admin_role = $${idx++}`);
+      values.push(updates.adminRole);
+    }
+  }
 
   if (setClauses.length === 0) return;
 

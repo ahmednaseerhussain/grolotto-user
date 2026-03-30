@@ -213,6 +213,11 @@ export const vendorAPI = {
     return res.data;
   },
 
+  async getPlayHistorySummary(filters?: { dateFrom?: string; dateTo?: string; drawState?: string; drawTime?: string }) {
+    const res = await api.get('/vendors/me/history/summary', { params: filters });
+    return res.data;
+  },
+
   async updateDrawSettings(drawState: string, settings: object) {
     const res = await api.put(`/vendors/draws/${drawState}`, settings);
     return res.data;
@@ -269,6 +274,27 @@ export const vendorAPI = {
 
   async getMyRoundDetails(roundId: string) {
     const res = await api.get(`/vendors/me/rounds/${roundId}`);
+    return res.data;
+  },
+
+  // ─── Draw Schedules ─────────────────
+  async getDrawSchedules() {
+    const res = await api.get('/vendors/me/schedules');
+    return res.data;
+  },
+
+  async upsertDrawSchedule(data: { drawState: string; drawTime: string; openTime: string; closeTime: string }) {
+    const res = await api.put('/vendors/me/schedules', data);
+    return res.data;
+  },
+
+  async deleteDrawSchedule(scheduleId: string) {
+    const res = await api.delete(`/vendors/me/schedules/${scheduleId}`);
+    return res.data;
+  },
+
+  async checkDrawSchedule(vendorId: string, state: string, drawTime: string) {
+    const res = await api.get(`/vendors/${vendorId}/schedule`, { params: { state, drawTime } });
     return res.data;
   },
 };
@@ -515,6 +541,16 @@ export const notificationsAPI = {
 
   async markAllAsRead() {
     const res = await api.put('/notifications/read-all');
+    return res.data;
+  },
+
+  async registerPushToken(token: string, platform: string) {
+    const res = await api.post('/notifications/device-token', { token, platform });
+    return res.data;
+  },
+
+  async removePushToken(token: string) {
+    const res = await api.delete('/notifications/device-token', { data: { token } });
     return res.data;
   },
 };

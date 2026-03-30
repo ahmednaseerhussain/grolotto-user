@@ -35,6 +35,7 @@ export default function PlayerWithdrawalScreen() {
 
     const currencySymbol = currency === "HTG" ? "G" : "$";
     const minAmount = currency === "HTG" ? 500 : 5;
+    const maxAmount = currency === "HTG" ? 250000 : 5000;
 
     const formatCurrency = (amt: number) => {
         return `${currencySymbol}${amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -51,6 +52,10 @@ export default function PlayerWithdrawalScreen() {
         }
         if (amt < minAmount) {
             Alert.alert(t("error") || "Error", `Minimum withdrawal: ${formatCurrency(minAmount)}`);
+            return;
+        }
+        if (amt > maxAmount) {
+            Alert.alert(t("error") || "Error", `Maximum withdrawal: ${formatCurrency(maxAmount)}`);
             return;
         }
         setProcessing(true);
@@ -149,7 +154,7 @@ export default function PlayerWithdrawalScreen() {
                         />
                     </View>
                     <Text style={{ fontSize: 11, color: '#9ca3af', marginTop: 4 }}>
-                        {t("available") || "Available"}: {formatCurrency(balance)} · Min: {formatCurrency(minAmount)}
+                        {t("available") || "Available"}: {formatCurrency(balance)} · Min: {formatCurrency(minAmount)} · Max: {formatCurrency(maxAmount)}
                     </Text>
                 </Animated.View>
 
