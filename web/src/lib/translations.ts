@@ -1178,7 +1178,7 @@ export const translations = {
     ht: "Kesyon Souvan",
     en: "FAQ",
     fr: "FAQ",
-    es: "FAQ"
+    es: "Preguntas Frecuentes"
   },
 
   // Transaction related
@@ -3348,29 +3348,11 @@ export const translations = {
   },
 
   // Help & Support
-  help: {
-    ht: "Èd",
-    en: "Help",
-    fr: "Aide",
-    es: "Ayuda"
-  },
   support: {
     ht: "Sipò",
     en: "Support",
     fr: "Support",
     es: "Soporte"
-  },
-  contactUs: {
-    ht: "Kontakte Nou",
-    en: "Contact Us",
-    fr: "Contactez-nous",
-    es: "Contáctenos"
-  },
-  faq: {
-    ht: "Kesyon Souvan",
-    en: "FAQ",
-    fr: "FAQ",
-    es: "Preguntas Frecuentes"
   }
 };
 
