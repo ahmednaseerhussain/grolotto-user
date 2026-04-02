@@ -39,7 +39,7 @@ export const authenticate = async (
 
     // Verify user still exists and is active
     const result = await query(
-      'SELECT id, email, role, admin_role, is_active FROM users WHERE id = $1',
+      'SELECT id, email, role, is_active FROM users WHERE id = $1',
       [decoded.id]
     );
 
@@ -57,7 +57,6 @@ export const authenticate = async (
       id: result.rows[0].id,
       email: result.rows[0].email,
       role: result.rows[0].role,
-      adminRole: result.rows[0].admin_role,
     };
 
     next();

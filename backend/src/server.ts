@@ -65,6 +65,18 @@ async function runStartupMigrations() {
       END $$;
     `);
 
+    // Migration 005b2: add admin_role column to users (for future admin role granularity)
+    await query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'users' AND column_name = 'admin_role'
+        ) THEN
+          ALTER TABLE users ADD COLUMN admin_role VARCHAR(50) DEFAULT 'admin';
+        END IF;
+      END $$;
+    `);
+
     // Migration 005c: add payout_multipliers JSONB column to vendors
     await query(`
       DO $$ BEGIN
@@ -430,9 +442,13 @@ app.use(errorHandler);
 
 // ─── Start server ────────────────────────────────────────
 const PORT = config.port;
-app.listen(PORT, async () => {
+
+async function startServer() {
+  // Run migrations BEFORE accepting requests to ensure all columns exist
   await runStartupMigrations();
-  console.log(`
+
+  app.listen(PORT, () => {
+    console.log(`
 ╔══════════════════════════════════════════════════╗
 ║           GROLOTTO API SERVER                    ║
 ║──────────────────────────────────────────────────║
@@ -440,7 +456,13 @@ app.listen(PORT, async () => {
 ║  Environment: ${(config.nodeEnv === 'production' ? 'production' : 'development').padEnd(34)}║
 ║  Database:    ${config.db.host.padEnd(34)}║
 ╚══════════════════════════════════════════════════╝
-  `);
+    `);
+  });
+}
+
+startServer().catch((err) => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
 });
 
 export default app;
