@@ -59,7 +59,7 @@ export default function NotificationsScreen() {
       setNotifications(
         notifications.map((n: any) => n.id === id ? { ...n, isRead: true } : n)
       );
-    } catch {}
+    } catch { }
   };
 
   const unreadCount = notifications.filter((n: any) => !n.isRead).length;
@@ -104,9 +104,8 @@ export default function NotificationsScreen() {
             return (
               <Card
                 key={notif.id}
-                className={`hover:shadow-sm transition-shadow cursor-pointer ${
-                  !notif.isRead ? "border-l-4 border-l-emerald-500" : ""
-                }`}
+                className={`hover:shadow-sm transition-shadow cursor-pointer ${!notif.isRead ? "border-l-4 border-l-emerald-500" : ""
+                  }`}
                 onClick={() => handleMarkRead(notif.id)}
               >
                 <CardContent className="p-4 flex items-start gap-3">
