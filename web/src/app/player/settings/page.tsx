@@ -216,13 +216,19 @@ export default function SettingsScreen() {
               <span className="text-sm">Clear Cache</span>
             </div>
           </button>
-          <div className="flex items-center justify-between p-2">
+          <button
+            onClick={() => router.push("/player/about")}
+            className="w-full flex items-center justify-between p-2 rounded hover:bg-gray-50"
+          >
             <div className="flex items-center gap-2">
               <Info className="h-4 w-4 text-gray-400" />
               <span className="text-sm">About GROLOTTO</span>
             </div>
-            <span className="text-xs text-gray-400">v1.0.0</span>
-          </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400">v1.0.0</span>
+              <ChevronRight className="h-4 w-4 text-gray-400" />
+            </div>
+          </button>
         </CardContent>
       </Card>
 
