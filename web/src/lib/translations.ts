@@ -366,6 +366,66 @@ export const translations = {
     fr: "Actions Rapides",
     es: "Acciones Rápidas"
   },
+  vendorEstimates: {
+    ht: "Estimasyon Vandè",
+    en: "Vendor Estimates",
+    fr: "Estimations Vendeur",
+    es: "Estimaciones del Vendedor"
+  },
+  totalSales: {
+    ht: "Total Vant yo",
+    en: "Total Sales",
+    fr: "Ventes Totales",
+    es: "Ventas Totales"
+  },
+  netIncome: {
+    ht: "Revni Nèt",
+    en: "Net Income",
+    fr: "Revenu Net",
+    es: "Ingreso Neto"
+  },
+  totalProfit: {
+    ht: "Total Pwofi",
+    en: "Total Profit",
+    fr: "Profit Total",
+    es: "Ganancia Total"
+  },
+  totalLoss: {
+    ht: "Total Pèt",
+    en: "Total Loss",
+    fr: "Perte Totale",
+    es: "Pérdida Total"
+  },
+  totalPlayerWin: {
+    ht: "Total Jwè Genyen",
+    en: "Total Player Win",
+    fr: "Total Gains Joueurs",
+    es: "Total Ganado por Jugadores"
+  },
+  pricingLimits: {
+    ht: "Limit Pri yo",
+    en: "Pricing & Limits",
+    fr: "Prix & Limites",
+    es: "Precios y Límites"
+  },
+  todayPlayersWinners: {
+    ht: "Jwè ak Gayan Jodi a",
+    en: "Today's Players",
+    fr: "Joueurs du Jour",
+    es: "Jugadores de Hoy"
+  },
+  buyGiftCardFromDebitCard: {
+    ht: "Achte Kat Kado ak Kat Debi",
+    en: "Buy Gift Card from Debit Card",
+    fr: "Acheter Carte Cadeau par Carte de Débit",
+    es: "Comprar Tarjeta de Regalo con Tarjeta de Débito"
+  },
+  payWithDebitCard: {
+    ht: "Peye ak kat debi ou",
+    en: "Pay with your debit card",
+    fr: "Payer avec votre carte de débit",
+    es: "Paga con tu tarjeta de débito"
+  },
   
   // Draw Management
   drawManagement: {

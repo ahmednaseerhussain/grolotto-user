@@ -472,6 +472,8 @@ export default function PlayScreen() {
               {selectedGame === "senp" ? (
                 <input
                   type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={numbers[0] || ""}
                   onChange={(e) => {
                     const val = e.target.value.replace(/\D/g, "").slice(0, 2);
@@ -485,6 +487,8 @@ export default function PlayScreen() {
                 <div className="flex items-center gap-3">
                   <input
                     type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={numbers[0] || ""}
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, "").slice(0, 2);
@@ -501,6 +505,8 @@ export default function PlayScreen() {
                   <input
                     id="maryaj-num-2"
                     type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={numbers[1] || ""}
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, "").slice(0, 2);
@@ -516,6 +522,8 @@ export default function PlayScreen() {
                   <input
                     key={idx}
                     type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={num}
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, "").slice(0, 1);

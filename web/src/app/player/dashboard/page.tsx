@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/common/empty-state";
 import {
   Wallet, Search, Trophy, Clock, Star, ChevronRight, Eye, EyeOff,
-  Plus, Sparkles, User, SlidersHorizontal, ArrowDownCircle
+  Plus, Sparkles, User, SlidersHorizontal, ArrowDownCircle, CreditCard
 } from "lucide-react";
 import { formatCurrency, GAME_LABELS, DRAW_STATES } from "@/lib/utils";
 
@@ -302,6 +302,21 @@ export default function PlayerDashboard() {
           </button>
         ))}
       </div>
+
+      {/* ── Buy Gift Card from Debit Card ── */}
+      <button
+        onClick={() => window.open("https://grolotto.com/buy-gift-card", "_blank", "noopener,noreferrer")}
+        className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-500 text-white hover:opacity-90 transition-all shadow-md"
+      >
+        <div className="bg-white/20 p-3 rounded-xl">
+          <CreditCard className="h-6 w-6" />
+        </div>
+        <div className="text-left flex-1">
+          <span className="text-base font-bold block">{t("buyGiftCardFromDebitCard") || "Buy Gift Card from Debit Card"}</span>
+          <span className="text-xs opacity-80">{t("payWithDebitCard") || "Pay with your debit card"}</span>
+        </div>
+        <ChevronRight className="h-5 w-5 opacity-70" />
+      </button>
 
       {/* ── Section 5: Latest Results ── */}
       <div>
