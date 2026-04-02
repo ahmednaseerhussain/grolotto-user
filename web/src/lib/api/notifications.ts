@@ -4,12 +4,14 @@ import type { Notification } from "@/types";
 export const notificationsAPI = {
   async getNotifications(): Promise<Notification[]> {
     const response = await apiClient.get("/notifications");
-    return response.data.data || response.data;
+    const data = response.data.data || response.data;
+    // Backend returns { notifications: [...], total: N } or just an array
+    return Array.isArray(data) ? data : data.notifications || [];
   },
 
   async getUnreadCount(): Promise<number> {
     const response = await apiClient.get("/notifications/unread-count");
-    return response.data.data?.count || response.data.count || 0;
+    return response.data.data?.unreadCount || response.data.unreadCount || response.data.data?.count || response.data.count || 0;
   },
 
   async markAsRead(id: string): Promise<void> {

@@ -77,6 +77,15 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
+    // Handle suspended accounts
+    if (error.response?.status === 403) {
+      const data = error.response?.data as any;
+      if (data?.code === 'ACCOUNT_SUSPENDED') {
+        await tokenStorage.clearTokens();
+        return Promise.reject(new Error('Your account has been suspended. Please contact support.'));
+      }
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -495,12 +504,12 @@ export const adminAPI = {
 // ═════════════════════════════════════════════════════════
 export const tchalaAPI = {
   async searchDreams(query: string, language = 'en') {
-    const res = await api.get('/tchala/search', { params: { q: query, language } });
+    const res = await api.get('/tchala/search', { params: { q: query, lang: language } });
     return res.data;
   },
 
   async getAllDreams(language = 'en') {
-    const res = await api.get('/tchala/all', { params: { language } });
+    const res = await api.get('/tchala/all', { params: { lang: language } });
     return res.data;
   },
 };

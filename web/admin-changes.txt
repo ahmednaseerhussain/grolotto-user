@@ -1,0 +1,172 @@
+3. ADMIN PANEL – DETAILED
+REQUIREMENTS
+3.1 Admin payout shortcut not working
+Reported problem
+The payout shortcut option is not working.
+Required fix
+The Admin payout shortcut must open the payout area correctly and allow intended payout
+actions.
+Expected behavior
+Clicking payout should:
+• open payout page
+• show payout controls
+• allow correct processing depending on account type
+3.2 Remove draw management page and simplify results
+Requirement
+The Draw Management page is not necessary if Add Results is simplified.
+Requested change
+Remove or stop depending on Draw Management page and use a simpler results input system.
+Required Add New Results structure
+Draw State
+Dropdown
+Example options:
+• NY
+• FL
+• TX
+Draw Time
+Dropdown
+Example options:
+• Morning
+• Midday
+• Evening
+Date
+Always today’s date, already preselected automatically
+Draw Numbers
+Input boxes for result numbers
+Example:
+[ 1 ] [ 22 ] [ 33 ] [ 44 ]
+Purpose
+This is a faster and simpler workflow for Admin.
+Expected behavior
+Admin selects:
+• state
+• draw time
+• enters result numbers
+• saves result
+Then the result should reflect correctly on the platform as intended.
+3.3 Tchala not reflected from Admin side
+Reported problem
+Tchala changes or content are not reflecting on the Player app.
+Required fix
+Any Tchala content managed from Admin should display properly on Player side.
+3.4 Gift card management not working
+Reported problem
+Gift card system is not working yet.
+Requirement
+Gift card management must fully work for both currencies:
+• HTG
+• USD
+Required transaction details for each currency
+Both HTG and USD gift card sections should have:
+• transaction history
+• current balance
+• number of gift cards generated
+• number of gift cards sold
+• number of gift cards used
+Required filters
+• by date
+• by amount
+• by status if possible
+• other useful filters as needed
+Purpose
+Admin must be able to monitor gift card lifecycle and financial activity.
+3.5 Notifications not reflecting on Vendor and Player apps
+Reported problem
+When Admin sends a notification, nothing appears on Vendor or Player side.
+Required fix
+Notifications sent by Admin must appear properly on the recipient app.
+Required cases
+• Admin to Vendor
+• Admin to Player
+Expected behavior
+Once a notification is sent:
+• it appears in app notification list
+• it can be seen by the recipient
+• it should not disappear unexpectedly
+• it should be linked to the correct account
+3.6 Admin notifications page not working
+Reported problem
+Admin’s own notification page does not work when clicked.
+Required fix
+Admin notification section must open and function correctly.
+3.7 Ads editor needs more design options
+Requirement
+Ads editing should allow more variety of:
+• background colors
+• fonts
+• design customization
+Purpose
+Admin should be able to create better looking promotional banners and announcements.
+3.8 Transaction history must support both currencies
+Requirement
+Transaction history should have two separate currencies:
+• HTG
+• USD
+Important rule
+All transactions in the whole platform must respect currency separation.
+Expected behavior
+Admin should be able to clearly distinguish:
+• HTG transactions
+• USD transactions
+This should apply in:
+• transaction lists
+• summaries
+• filters
+• reports
+• payouts
+• deposits
+• gift cards
+3.9 Admin roles and permissions
+Requirement
+Super Admin must be able to assign roles and create accounts with different access levels.
+Required behavior
+Each role should have:
+• its own login
+• its own permission limits
+Super Admin rights
+Only Super Admin should have full access to:
+• create role
+• modify role
+• delete role
+• create admin user
+• modify admin user
+• delete admin user
+• assign permissions
+• access everything
+Other admin roles
+Other roles should have limited access based on permission settings.
+Purpose
+To control staff access and avoid giving everybody full power.
+3.10 Admin settings page crash
+Reported problem
+The Admin app settings crashes every time it is clicked, and after crashing the app cannot be
+reopened unless reinstalled.
+Required fix
+This is a critical bug and must be treated as high priority.
+Expected behavior after fix
+• settings page opens normally
+• app does not crash
+• app remains usable after leaving settings
+• app can reopen normally after closing
+3.11 Admin payments option logic
+Requirement
+Admin Payments should support two kinds of vendor-related actions:
+• Receive Payment from vendors
+• Payout to vendors
+For Players:
+• only payout
+• players do not send money to Admin in the same way vendors do
+Important explanation
+Vendor and Player payment logic must not be treated the same.
+3.12 Account suspension logic
+Requirement
+If Admin suspends an account, either Vendor or Player, that account should not have access to
+anything until resumed by Admin.
+Expected suspended behavior
+Suspended user should not be able to:
+• log in normally
+• access dashboard
+• see platform data
+• continue operations
+When resumed
+Access is restored only when Admin reactivates the account.

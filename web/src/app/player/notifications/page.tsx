@@ -46,7 +46,7 @@ export default function NotificationsScreen() {
     try {
       await notificationsAPI.markAllAsRead();
       setNotifications(
-        notifications.map((n: any) => ({ ...n, read: true }))
+        notifications.map((n: any) => ({ ...n, isRead: true }))
       );
     } catch (err) {
       console.error(err);
@@ -57,12 +57,12 @@ export default function NotificationsScreen() {
     try {
       await notificationsAPI.markAsRead(id);
       setNotifications(
-        notifications.map((n: any) => n.id === id ? { ...n, read: true } : n)
+        notifications.map((n: any) => n.id === id ? { ...n, isRead: true } : n)
       );
     } catch {}
   };
 
-  const unreadCount = notifications.filter((n: any) => !n.read).length;
+  const unreadCount = notifications.filter((n: any) => !n.isRead).length;
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
@@ -105,7 +105,7 @@ export default function NotificationsScreen() {
               <Card
                 key={notif.id}
                 className={`hover:shadow-sm transition-shadow cursor-pointer ${
-                  !notif.read ? "border-l-4 border-l-emerald-500" : ""
+                  !notif.isRead ? "border-l-4 border-l-emerald-500" : ""
                 }`}
                 onClick={() => handleMarkRead(notif.id)}
               >
@@ -114,7 +114,7 @@ export default function NotificationsScreen() {
                     <IconComp className="h-4 w-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm ${!notif.read ? "font-semibold" : "text-gray-700"}`}>
+                    <p className={`text-sm ${!notif.isRead ? "font-semibold" : "text-gray-700"}`}>
                       {notif.title}
                     </p>
                     <p className="text-xs text-gray-500 mt-0.5">{notif.message || notif.body}</p>
@@ -124,7 +124,7 @@ export default function NotificationsScreen() {
                         : ""}
                     </p>
                   </div>
-                  {!notif.read && <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 mt-2" />}
+                  {!notif.isRead && <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 mt-2" />}
                 </CardContent>
               </Card>
             );

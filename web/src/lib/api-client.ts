@@ -87,6 +87,15 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Handle suspended accounts
+    if (error.response?.status === 403) {
+      const data = error.response?.data;
+      if (data?.code === 'ACCOUNT_SUSPENDED') {
+        forceLogout();
+        return Promise.reject(new Error('Your account has been suspended. Please contact support.'));
+      }
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
