@@ -198,6 +198,22 @@ async function seed() {
       { keyword: 'manman', numbers: [14, 67], desc: 'Nurturing, protection, wisdom', lang: 'ht' },
       { keyword: 'rain', numbers: [26, 94], desc: 'Cleansing, renewal, blessing', lang: 'en' },
       { keyword: 'lapli', numbers: [26, 94], desc: 'Cleansing, renewal, blessing', lang: 'ht' },
+      // Spanish translations
+      { keyword: 'boda', numbers: [29, 47], desc: 'Matrimonio, unión, celebración', lang: 'es' },
+      { keyword: 'muerte', numbers: [48, 17], desc: 'Final, transformación', lang: 'es' },
+      { keyword: 'agua', numbers: [25, 63], desc: 'Vida, limpieza, flujo', lang: 'es' },
+      { keyword: 'fuego', numbers: [34, 81], desc: 'Pasión, destrucción, energía', lang: 'es' },
+      { keyword: 'dinero', numbers: [19, 77], desc: 'Riqueza, prosperidad', lang: 'es' },
+      { keyword: 'perro', numbers: [12, 44], desc: 'Lealtad, protección', lang: 'es' },
+      { keyword: 'gato', numbers: [3, 89], desc: 'Independencia, misterio', lang: 'es' },
+      { keyword: 'serpiente', numbers: [15, 92], desc: 'Sabiduría, peligro, transformación', lang: 'es' },
+      { keyword: 'pez', numbers: [28, 56], desc: 'Abundancia, espiritualidad', lang: 'es' },
+      { keyword: 'pájaro', numbers: [7, 73], desc: 'Libertad, mensajes del cielo', lang: 'es' },
+      { keyword: 'casa', numbers: [22, 68], desc: 'Seguridad, familia, fundamento', lang: 'es' },
+      { keyword: 'carro', numbers: [41, 86], desc: 'Viaje, progreso, estatus', lang: 'es' },
+      { keyword: 'bebé', numbers: [5, 52], desc: 'Nuevos comienzos, inocencia', lang: 'es' },
+      { keyword: 'madre', numbers: [14, 67], desc: 'Cariño, protección, sabiduría', lang: 'es' },
+      { keyword: 'lluvia', numbers: [26, 94], desc: 'Limpieza, renovación, bendición', lang: 'es' },
     ];
     for (const d of dreams) {
       await client.query(

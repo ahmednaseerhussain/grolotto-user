@@ -22,13 +22,17 @@ export const publicAPI = {
 };
 
 export const tchalaAPI = {
-  async search(keyword: string): Promise<Array<{ keyword: string; numbers: number[]; description?: string }>> {
-    const response = await apiClient.get("/tchala/search", { params: { q: keyword } });
+  async search(keyword: string, lang?: string): Promise<Array<{ keyword: string; numbers: number[]; description?: string }>> {
+    const params: Record<string, string> = { q: keyword };
+    if (lang) params.lang = lang;
+    const response = await apiClient.get("/tchala/search", { params });
     return response.data.data || response.data;
   },
 
-  async getAll(): Promise<Array<{ id: string; keyword: string; numbers: number[]; description?: string }>> {
-    const response = await apiClient.get("/tchala/all");
+  async getAll(lang?: string): Promise<Array<{ id: string; keyword: string; numbers: number[]; description?: string }>> {
+    const params: Record<string, string> = {};
+    if (lang) params.lang = lang;
+    const response = await apiClient.get("/tchala/all", { params });
     return response.data.data || response.data;
   },
 };

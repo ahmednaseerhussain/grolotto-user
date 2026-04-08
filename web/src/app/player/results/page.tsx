@@ -29,9 +29,15 @@ const STATE_INFO: Record<string, { name: string; color: string; flag: string }> 
 };
 
 const DRAW_TIME_LABELS: Record<string, string> = {
-  morning: "Morning",
-  midday: "Midday",
-  evening: "Evening",
+  morning: "🌅 Morning",
+  midday: "☀️ Midday",
+  evening: "🌙 Evening",
+};
+
+const DRAW_TIME_STYLES: Record<string, { text: string; bg: string; border: string }> = {
+  morning: { text: "text-orange-700", bg: "bg-orange-50", border: "border-orange-300" },
+  midday: { text: "text-amber-700", bg: "bg-amber-50", border: "border-amber-300" },
+  evening: { text: "text-indigo-700", bg: "bg-indigo-50", border: "border-indigo-300" },
 };
 
 const GAME_COLORS: Record<string, { bg: string; text: string; ball: string }> = {
@@ -124,14 +130,14 @@ export default function ResultsScreen() {
     if (!time) return "";
     const lower = time.toLowerCase().trim();
     // Exact match first
-    if (lower === "morning") return "Morning";
-    if (lower === "midday") return "Midday";
-    if (lower === "evening") return "Evening";
+    if (lower === "morning") return "morning";
+    if (lower === "midday") return "midday";
+    if (lower === "evening") return "evening";
     // Keyword match
-    if (lower.includes("morning") || lower.includes("am") || lower.includes("matin")) return "Morning";
-    if (lower.includes("midday") || lower.includes("midi")) return "Midday";
-    if (lower.includes("evening") || lower.includes("soir") || lower.includes("pm")) return "Evening";
-    return time;
+    if (lower.includes("morning") || lower.includes("am") || lower.includes("matin")) return "morning";
+    if (lower.includes("midday") || lower.includes("midi")) return "midday";
+    if (lower.includes("evening") || lower.includes("soir") || lower.includes("pm")) return "evening";
+    return lower;
   };
 
   const parseWinningNumbers = (round: any) => {
@@ -242,6 +248,8 @@ export default function ResultsScreen() {
                     const isCompleted = round.status === "completed" || round.status === "drawn";
                     const isLive = round.status === "open" || round.status === "live";
                     const drawTimeLabel = getDrawTimeLabel(round.drawTime || "");
+                    const drawTimeStyle = DRAW_TIME_STYLES[drawTimeLabel] || DRAW_TIME_STYLES.midday;
+                    const drawTimeDisplay = DRAW_TIME_LABELS[drawTimeLabel] || round.drawTime || "Draw";
 
                     // Get all numbers flat for the header display
                     const allNums = winNums
@@ -250,12 +258,12 @@ export default function ResultsScreen() {
 
                     return (
                       <div key={round.id || idx} className="p-4">
-                        {/* Draw Time Label */}
+                        {/* Draw Time Label — bold with emoji and color */}
                         <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-3.5 w-3.5 text-gray-400" />
-                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                              {drawTimeLabel || round.drawTime || "Draw"} {round.drawTime && !drawTimeLabel.includes(":") ? `• ${round.drawTime}` : ""}
+                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${drawTimeStyle.bg} border ${drawTimeStyle.border}`}>
+                            <Clock className={`h-3.5 w-3.5 ${drawTimeStyle.text}`} />
+                            <span className={`text-sm font-bold ${drawTimeStyle.text} uppercase tracking-wide`}>
+                              {drawTimeDisplay}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
@@ -275,15 +283,24 @@ export default function ResultsScreen() {
 
                         {winNums && Object.keys(winNums).length > 0 ? (
                           <div className="space-y-3">
-                            {/* SENP — 1st / 2nd / 3rd */}
+                            {/* SENP — show 4 numbers: single + 1st/2nd/3rd */}
                             {winNums.senp && Array.isArray(winNums.senp) && winNums.senp.length > 0 && (() => {
                               const gc = GAME_COLORS.senp;
+                              const senpNums = winNums.senp;
+                              // Extract the single digit from loto3[0] if available
+                              const singleDigit = winNums.loto3 && Array.isArray(winNums.loto3) && winNums.loto3.length > 0 ? winNums.loto3[0] : null;
                               const labels = ["1st", "2nd", "3rd"];
                               return (
                                 <div className={`${gc.bg} rounded-lg p-3`}>
                                   <span className={`text-xs font-bold ${gc.text} uppercase tracking-wider block mb-2`}>Senp</span>
                                   <div className="flex items-center gap-4">
-                                    {winNums.senp.map((n: number, i: number) => (
+                                    {singleDigit !== null && (
+                                      <div className="flex flex-col items-center gap-1">
+                                        <span className={`text-[10px] font-semibold text-gray-500`}>&nbsp;</span>
+                                        <NumberBall number={singleDigit} color="bg-gray-500" size="w-10 h-10" />
+                                      </div>
+                                    )}
+                                    {senpNums.map((n: number, i: number) => (
                                       <div key={i} className="flex flex-col items-center gap-1">
                                         <span className={`text-[10px] font-semibold ${gc.text}`}>{labels[i] || ""}</span>
                                         <NumberBall number={n} color={gc.ball} size="w-10 h-10" />

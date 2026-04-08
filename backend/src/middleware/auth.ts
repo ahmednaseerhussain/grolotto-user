@@ -7,7 +7,8 @@ export interface AuthUser {
   id: string;
   email: string;
   role: 'player' | 'vendor' | 'admin';
-  adminRole?: 'super_admin' | 'admin' | 'moderator' | 'viewer';
+  adminRole?: string;
+  permissions?: string[];
 }
 
 declare global {
@@ -16,6 +17,29 @@ declare global {
       user?: AuthUser;
     }
   }
+}
+
+// ─── Role → Permitted Resources Mapping ──────────────────
+// Each admin_role grants access to specific resource groups.
+// super_admin & admin get full access. Specialized roles get limited scopes.
+const ROLE_PERMISSIONS: Record<string, string[]> = {
+  super_admin: ['*'],       // full access to everything
+  admin:       ['*'],       // full access to everything
+  moderator:   ['dashboard', 'players', 'vendors', 'notifications', 'reports', 'transactions'],
+  viewer:      ['dashboard', 'reports', 'transactions'],
+  result_manager: ['dashboard', 'results', 'draws', 'state-lotteries'],
+  payout_manager: ['dashboard', 'payouts', 'payments', 'transactions'],
+  ads_manager:    ['dashboard', 'ads', 'app-management'],
+  player_manager: ['dashboard', 'players', 'notifications', 'gift-cards'],
+};
+
+export function getPermissionsForRole(adminRole: string): string[] {
+  return ROLE_PERMISSIONS[adminRole] || [];
+}
+
+export function hasResourceAccess(adminRole: string, resource: string): boolean {
+  const perms = getPermissionsForRole(adminRole);
+  return perms.includes('*') || perms.includes(resource);
 }
 
 /**
@@ -39,7 +63,7 @@ export const authenticate = async (
 
     // Verify user still exists and is active
     const result = await query(
-      'SELECT id, email, role, is_active FROM users WHERE id = $1',
+      'SELECT id, email, role, admin_role, is_active FROM users WHERE id = $1',
       [decoded.id]
     );
 
@@ -49,7 +73,23 @@ export const authenticate = async (
     }
 
     if (!result.rows[0].is_active) {
-      res.status(403).json({ error: 'Account is suspended. Please contact support.', code: 'ACCOUNT_SUSPENDED' });
+      // Fetch suspension reason if available
+      let suspensionMsg = 'Account is suspended. Please contact support.';
+      try {
+        const reasonResult = await query(
+          `SELECT value FROM app_settings WHERE key = $1`,
+          [`suspension_reason_${result.rows[0].id}`]
+        );
+        if (reasonResult.rows.length > 0) {
+          const val = typeof reasonResult.rows[0].value === 'string'
+            ? JSON.parse(reasonResult.rows[0].value)
+            : reasonResult.rows[0].value;
+          if (val?.reason) {
+            suspensionMsg = `Account suspended: ${val.reason}`;
+          }
+        }
+      } catch { /* non-critical */ }
+      res.status(403).json({ error: suspensionMsg, code: 'ACCOUNT_SUSPENDED' });
       return;
     }
 
@@ -57,6 +97,10 @@ export const authenticate = async (
       id: result.rows[0].id,
       email: result.rows[0].email,
       role: result.rows[0].role,
+      adminRole: result.rows[0].admin_role || undefined,
+      permissions: result.rows[0].role === 'admin'
+        ? getPermissionsForRole(result.rows[0].admin_role || 'admin')
+        : undefined,
     };
 
     next();
@@ -84,6 +128,26 @@ export const authorize = (...roles: string[]) => {
       return;
     }
 
+    next();
+  };
+};
+
+/**
+ * Require access to a specific admin resource.
+ * Checks the user's admin_role against ROLE_PERMISSIONS.
+ * Must be used AFTER authenticate + authorize('admin').
+ */
+export const authorizeResource = (resource: string) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+    const adminRole = req.user.adminRole || 'admin';
+    if (!hasResourceAccess(adminRole, resource)) {
+      res.status(403).json({ error: `Access denied: you do not have permission to manage ${resource}` });
+      return;
+    }
     next();
   };
 };

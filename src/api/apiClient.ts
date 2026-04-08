@@ -82,7 +82,9 @@ api.interceptors.response.use(
       const data = error.response?.data as any;
       if (data?.code === 'ACCOUNT_SUSPENDED') {
         await tokenStorage.clearTokens();
-        return Promise.reject(new Error('Your account has been suspended. Please contact support.'));
+        // Use the detailed reason from the server if available
+        const msg = data?.error || 'Your account has been suspended. Please contact support.';
+        return Promise.reject(new Error(msg));
       }
     }
 

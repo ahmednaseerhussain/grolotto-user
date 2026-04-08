@@ -279,6 +279,34 @@ async function runStartupMigrations() {
       CREATE INDEX IF NOT EXISTS idx_broadcast_history_date ON broadcast_history(created_at DESC);
     `);
 
+    // Migration 015: Seed Spanish dream dictionary entries
+    const esCount = await query(`SELECT COUNT(*) FROM dream_dictionary WHERE language = 'es'`);
+    if (parseInt(esCount.rows[0].count) === 0) {
+      const spanishDreams = [
+        { keyword: 'boda', numbers: [29, 47], desc: 'Matrimonio, unión, celebración' },
+        { keyword: 'muerte', numbers: [48, 17], desc: 'Final, transformación' },
+        { keyword: 'agua', numbers: [25, 63], desc: 'Vida, limpieza, flujo' },
+        { keyword: 'fuego', numbers: [34, 81], desc: 'Pasión, destrucción, energía' },
+        { keyword: 'dinero', numbers: [19, 77], desc: 'Riqueza, prosperidad' },
+        { keyword: 'perro', numbers: [12, 44], desc: 'Lealtad, protección' },
+        { keyword: 'gato', numbers: [3, 89], desc: 'Independencia, misterio' },
+        { keyword: 'serpiente', numbers: [15, 92], desc: 'Sabiduría, peligro, transformación' },
+        { keyword: 'pez', numbers: [28, 56], desc: 'Abundancia, espiritualidad' },
+        { keyword: 'pájaro', numbers: [7, 73], desc: 'Libertad, mensajes del cielo' },
+        { keyword: 'casa', numbers: [22, 68], desc: 'Seguridad, familia, fundamento' },
+        { keyword: 'carro', numbers: [41, 86], desc: 'Viaje, progreso, estatus' },
+        { keyword: 'bebé', numbers: [5, 52], desc: 'Nuevos comienzos, inocencia' },
+        { keyword: 'madre', numbers: [14, 67], desc: 'Cariño, protección, sabiduría' },
+        { keyword: 'lluvia', numbers: [26, 94], desc: 'Limpieza, renovación, bendición' },
+      ];
+      for (const d of spanishDreams) {
+        await query(
+          `INSERT INTO dream_dictionary (keyword, numbers, description, language) VALUES ($1, $2, $3, 'es') ON CONFLICT DO NOTHING`,
+          [d.keyword, d.numbers, d.desc]
+        );
+      }
+    }
+
     console.log('[Migration] Startup migrations applied successfully');
   } catch (err) {
     console.error('[Migration] Startup migration error:', err);
@@ -358,6 +386,10 @@ app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));
 // Note: payment webhook route uses raw() parser, registered in its own route file
 app.use(express.json({ limit: '256kb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// ─── Maintenance mode ────────────────────────────────────
+import { maintenanceGuard } from './middleware/maintenance';
+app.use(maintenanceGuard);
 
 // ─── Health check ────────────────────────────────────────
 app.get('/health', (_req, res) => {

@@ -73,6 +73,93 @@ export async function getSystemStats(date?: string) {
   };
 }
 
+export async function getAnalytics(startDate?: string, endDate?: string) {
+  const end = endDate || new Date().toISOString().split('T')[0];
+  const start = startDate || new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+
+  // Daily revenue trend (USD + HTG separate)
+  const revenueTrend = await query(
+    `SELECT
+       created_at::date as date,
+       currency,
+       SUM(amount) as total
+     FROM transactions
+     WHERE type = 'bet_payment' AND status = 'completed'
+       AND created_at::date BETWEEN $1::date AND $2::date
+     GROUP BY created_at::date, currency
+     ORDER BY date ASC`,
+    [start, end]
+  );
+
+  // Game performance
+  const gamePerformance = await query(
+    `SELECT
+       r.game_type,
+       COUNT(lt.id) as total_plays,
+       COALESCE(SUM(lt.bet_amount), 0) as total_wagered,
+       COUNT(DISTINCT lt.player_id) as unique_players,
+       lt.currency
+     FROM lottery_tickets lt
+     LEFT JOIN lottery_rounds r ON r.id = lt.round_id
+     WHERE lt.created_at::date BETWEEN $1::date AND $2::date
+     GROUP BY r.game_type, lt.currency
+     ORDER BY total_wagered DESC`,
+    [start, end]
+  );
+
+  // Revenue by currency (totals for period)
+  const revenueByCurrency = await query(
+    `SELECT
+       currency,
+       COALESCE(SUM(amount), 0) as total_revenue,
+       COUNT(*) as transaction_count
+     FROM transactions
+     WHERE type = 'bet_payment' AND status = 'completed'
+       AND created_at::date BETWEEN $1::date AND $2::date
+     GROUP BY currency`,
+    [start, end]
+  );
+
+  // Payout totals for period
+  const payoutTotals = await query(
+    `SELECT
+       currency,
+       COALESCE(SUM(amount), 0) as total_payouts,
+       COUNT(*) as payout_count
+     FROM transactions
+     WHERE type = 'winning_payout' AND status = 'completed'
+       AND created_at::date BETWEEN $1::date AND $2::date
+     GROUP BY currency`,
+    [start, end]
+  );
+
+  return {
+    period: { start, end },
+    revenueTrend: revenueTrend.rows.map(r => ({
+      date: r.date,
+      currency: r.currency,
+      total: parseFloat(r.total),
+    })),
+    gamePerformance: gamePerformance.rows.map(r => ({
+      gameType: r.game_type || 'unknown',
+      totalPlays: parseInt(r.total_plays),
+      totalWagered: parseFloat(r.total_wagered),
+      uniquePlayers: parseInt(r.unique_players),
+      currency: r.currency,
+    })),
+    revenueByCurrency: revenueByCurrency.rows.map(r => ({
+      currency: r.currency,
+      totalRevenue: parseFloat(r.total_revenue),
+      transactionCount: parseInt(r.transaction_count),
+    })),
+    payoutTotals: payoutTotals.rows.map(r => ({
+      currency: r.currency,
+      totalPayouts: parseFloat(r.total_payouts),
+      payoutCount: parseInt(r.payout_count),
+    })),
+  };
+}
+
 export async function getAllUsers(role?: string, page: number = 1, limit: number = 50) {
   const conditions: string[] = [];
   const values: any[] = [];
@@ -199,14 +286,53 @@ export async function suspendUser(userId: string, reason?: string) {
     [userId]
   );
   // Store suspension reason in app_settings as a log entry
-  if (reason) {
-    try {
-      await query(
-        `INSERT INTO app_settings (key, value, description) VALUES ($1, $2, $3) ON CONFLICT (key) DO UPDATE SET value = $2`,
-        [`suspension_reason_${userId}`, JSON.stringify({ reason, date: new Date().toISOString() }), `Suspension reason for user ${userId}`]
-      );
-    } catch { /* non-critical, don't fail the suspension */ }
-  }
+  const reasonText = reason || 'Your account has been suspended by an administrator.';
+  try {
+    await query(
+      `INSERT INTO app_settings (key, value, description) VALUES ($1, $2, $3) ON CONFLICT (key) DO UPDATE SET value = $2`,
+      [`suspension_reason_${userId}`, JSON.stringify({ reason: reasonText, date: new Date().toISOString() }), `Suspension reason for user ${userId}`]
+    );
+  } catch { /* non-critical, don't fail the suspension */ }
+
+  // Create a player notification so the player sees the reason
+  try {
+    // Check if player_notifications table exists and insert
+    const userRow = await query(`SELECT role FROM users WHERE id = $1`, [userId]);
+    const userRole = userRow.rows[0]?.role || 'player';
+    const notifTable = userRole === 'vendor' ? 'vendor_notifications' : 'player_notifications';
+    await query(
+      `INSERT INTO ${notifTable} (id, user_id, type, title, message, metadata, created_at)
+       VALUES (gen_random_uuid(), $1, 'account_suspension', 'Account Suspended', $2, $3, NOW())`,
+      [
+        userId,
+        `Your account has been suspended. Reason: ${reasonText}. Please contact support if you believe this is an error.`,
+        JSON.stringify({ reason: reasonText, date: new Date().toISOString() }),
+      ]
+    );
+  } catch { /* non-critical */ }
+
+  // Send push notification
+  try {
+    const tokensResult = await query(
+      `SELECT token FROM push_device_tokens WHERE user_id = $1 AND is_active = TRUE`,
+      [userId]
+    );
+    if (tokensResult.rows.length > 0) {
+      const messages = tokensResult.rows.map((row: any) => ({
+        to: row.token,
+        sound: 'default',
+        title: 'Account Suspended',
+        body: `Your account has been suspended. Reason: ${reasonText}`,
+        data: { type: 'account_suspension', reason: reasonText },
+      }));
+      // Fire-and-forget push (Expo)
+      fetch('https://exp.host/--/api/v2/push/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(messages),
+      }).catch(() => {});
+    }
+  } catch { /* non-critical */ }
 }
 
 export async function activateUser(userId: string) {
@@ -486,11 +612,11 @@ export async function deleteDrawConfig(id: string) {
 function generatePin(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let pin = '';
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 16; i++) {
     pin += chars.charAt(Math.floor(Math.random() * chars.length));
-    if (i === 3 || i === 7) pin += '-';
+    if (i === 3 || i === 7 || i === 11) pin += '-';
   }
-  return pin;
+  return pin; // XXXX-XXXX-XXXX-XXXX
 }
 
 export async function generateGiftCardBatch(quantity: number, amount: number, currency: string, createdBy: string) {
@@ -601,6 +727,24 @@ export async function redeemGiftCard(pinCode: string, userId: string) {
   };
 }
 
+export async function deactivateGiftCard(cardId: number) {
+  const result = await query(
+    `UPDATE gift_cards SET status = 'deactivated' WHERE id = $1 AND is_redeemed = FALSE RETURNING id`,
+    [cardId]
+  );
+  if (result.rows.length === 0) throw new AppError('Gift card not found or already redeemed', 404);
+  return { success: true };
+}
+
+export async function deleteGiftCard(cardId: number) {
+  const result = await query(
+    `DELETE FROM gift_cards WHERE id = $1 AND is_redeemed = FALSE RETURNING id`,
+    [cardId]
+  );
+  if (result.rows.length === 0) throw new AppError('Gift card not found or already redeemed (cannot delete redeemed cards)', 404);
+  return { success: true };
+}
+
 // ──────────────────────────────────────────────────────────
 // Broadcast Notifications
 // ──────────────────────────────────────────────────────────
@@ -701,13 +845,14 @@ export async function getBroadcastHistory(limit = 50, offset = 0) {
 // Transactions (admin view)
 // ──────────────────────────────────────────────────────────
 
-export async function getTransactions(page: number = 1, limit: number = 50, filters?: { type?: string; userId?: string }) {
+export async function getTransactions(page: number = 1, limit: number = 50, filters?: { type?: string; userId?: string; paymentMethod?: string }) {
   const conditions: string[] = [];
   const values: any[] = [];
   let idx = 1;
 
   if (filters?.type) { conditions.push(`t.type = $${idx++}`); values.push(filters.type); }
   if (filters?.userId) { conditions.push(`t.user_id = $${idx++}`); values.push(filters.userId); }
+  if (filters?.paymentMethod) { conditions.push(`t.payment_method = $${idx++}`); values.push(filters.paymentMethod); }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
   const offset = (page - 1) * limit;
@@ -718,9 +863,10 @@ export async function getTransactions(page: number = 1, limit: number = 50, filt
   const total = parseInt(countResult.rows[0].total);
 
   const result = await query(
-    `SELECT t.*, u.name as user_name, u.email as user_email
+    `SELECT t.*, u.name as user_name, u.email as user_email, v.business_name as vendor_name
      FROM transactions t
      LEFT JOIN users u ON u.id = t.user_id
+     LEFT JOIN vendors v ON v.id = t.vendor_id
      ${whereClause}
      ORDER BY t.created_at DESC
      LIMIT $${idx++} OFFSET $${idx}`,
@@ -733,11 +879,15 @@ export async function getTransactions(page: number = 1, limit: number = 50, filt
       userId: r.user_id,
       userName: r.user_name,
       userEmail: r.user_email,
+      vendorName: r.vendor_name || null,
       type: r.type,
       amount: parseFloat(r.amount),
       currency: r.currency,
+      paymentMethod: r.payment_method || null,
       status: r.status,
       description: r.description,
+      ticketId: r.ticket_id || null,
+      metadata: r.metadata || null,
       createdAt: r.created_at,
     })),
     total,
@@ -751,7 +901,7 @@ export async function getTransactions(page: number = 1, limit: number = 50, filt
 // ──────────────────────────────────────────────────────────
 
 export async function createAdminUser(email: string, name: string, password: string, adminRole: string = 'admin') {
-  const validRoles = ['super_admin', 'admin', 'moderator', 'viewer'];
+  const validRoles = ['super_admin', 'admin', 'moderator', 'viewer', 'result_manager', 'payout_manager', 'ads_manager', 'player_manager'];
   const role = validRoles.includes(adminRole) ? adminRole : 'admin';
   const passwordHash = await bcrypt.hash(password, 12);
   const result = await query(
@@ -771,7 +921,7 @@ export async function updateAdminUser(userId: string, updates: { name?: string; 
   if (updates.email !== undefined) { setClauses.push(`email = $${idx++}`); values.push(updates.email); }
   if (updates.isActive !== undefined) { setClauses.push(`is_active = $${idx++}`); values.push(updates.isActive); }
   if (updates.adminRole !== undefined) {
-    const validRoles = ['super_admin', 'admin', 'moderator', 'viewer'];
+    const validRoles = ['super_admin', 'admin', 'moderator', 'viewer', 'result_manager', 'payout_manager', 'ads_manager', 'player_manager'];
     if (validRoles.includes(updates.adminRole)) {
       setClauses.push(`admin_role = $${idx++}`);
       values.push(updates.adminRole);

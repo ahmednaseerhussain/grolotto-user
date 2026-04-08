@@ -4,6 +4,7 @@ import { query, withTransaction } from '../database/pool';
 import config from '../config';
 import { AppError } from '../middleware/errorHandler';
 import * as rewardService from './rewardService';
+import { getPermissionsForRole } from '../middleware/auth';
 
 const SALT_ROUNDS = 12;
 
@@ -133,7 +134,7 @@ export async function login(input: LoginInput): Promise<{ user: UserProfile; tok
   } catch { hasBruteForceColumns = false; }
 
   const baseSelect = `SELECT u.id, u.email, u.name, u.role, u.password_hash, u.phone, u.date_of_birth,
-            u.address, u.city, u.country, u.is_verified, u.is_active, u.created_at,
+            u.address, u.city, u.country, u.is_verified, u.is_active, u.created_at, u.admin_role,
             ${hasBruteForceColumns ? 'u.failed_login_attempts, u.last_failed_login,' : ''}
             w.balance_usd
      FROM users u
@@ -194,6 +195,8 @@ export async function login(input: LoginInput): Promise<{ user: UserProfile; tok
       email: user.email,
       name: user.name,
       role: user.role,
+      adminRole: user.role === 'admin' ? (user.admin_role || 'admin') : undefined,
+      permissions: user.role === 'admin' ? getPermissionsForRole(user.admin_role || 'admin') : undefined,
       phone: user.phone,
       dateOfBirth: user.date_of_birth,
       address: user.address,

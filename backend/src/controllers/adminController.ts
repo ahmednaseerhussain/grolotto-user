@@ -12,6 +12,17 @@ export async function getSystemStats(req: Request, res: Response, next: NextFunc
   }
 }
 
+export async function getAnalytics(req: Request, res: Response, next: NextFunction) {
+  try {
+    const startDate = req.query.startDate as string | undefined;
+    const endDate = req.query.endDate as string | undefined;
+    const data = await adminService.getAnalytics(startDate, endDate);
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function getAllUsers(req: Request, res: Response, next: NextFunction) {
   try {
     const role = req.query.role as string;
@@ -270,6 +281,24 @@ export async function redeemGiftCard(req: Request, res: Response, next: NextFunc
   }
 }
 
+export async function deactivateGiftCard(req: Request, res: Response, next: NextFunction) {
+  try {
+    const result = await adminService.deactivateGiftCard(parseInt(req.params.cardId));
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteGiftCard(req: Request, res: Response, next: NextFunction) {
+  try {
+    const result = await adminService.deleteGiftCard(parseInt(req.params.cardId));
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
 // ──────────────────────────────────────────────────────────
 // Broadcast Notifications
 // ──────────────────────────────────────────────────────────
@@ -305,7 +334,8 @@ export async function getTransactions(req: Request, res: Response, next: NextFun
     const limit = parseInt(req.query.limit as string) || 50;
     const type = req.query.type as string | undefined;
     const userId = req.query.userId as string | undefined;
-    const result = await adminService.getTransactions(page, limit, { type, userId });
+    const paymentMethod = req.query.paymentMethod as string | undefined;
+    const result = await adminService.getTransactions(page, limit, { type, userId, paymentMethod });
     res.json(result);
   } catch (error) {
     next(error);

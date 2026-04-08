@@ -67,7 +67,7 @@ export default function TchalaScreen() {
     setSearched(true);
     setLoading(true);
     try {
-      const res = await tchalaAPI.search(q);
+      const res = await tchalaAPI.search(q, language);
       const items = Array.isArray(res) ? res : [];
       if (items.length > 0) {
         setResults(items);
