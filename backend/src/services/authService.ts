@@ -33,6 +33,8 @@ export interface UserProfile {
   email: string;
   name: string;
   role: string;
+  adminRole?: string;
+  permissions?: string[];
   phone: string | null;
   dateOfBirth: string | null;
   address: string | null;
