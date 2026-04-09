@@ -111,10 +111,15 @@ export async function purchaseGiftCard(
  */
 export async function redeemGiftCard(userId: string, code: string) {
   const normalizedCode = code.toUpperCase().replace(/[^A-Z0-9]/g, '');
-  // Re-format: XXXX-XXXX-XXXX
-  const formattedCode = normalizedCode.length === 12
-    ? `${normalizedCode.slice(0, 4)}-${normalizedCode.slice(4, 8)}-${normalizedCode.slice(8, 12)}`
-    : code.toUpperCase().trim();
+  // Re-format based on length: XXXX-XXXX-XXXX-XXXX (16) or XXXX-XXXX-XXXX (12 legacy)
+  let formattedCode: string;
+  if (normalizedCode.length === 16) {
+    formattedCode = `${normalizedCode.slice(0, 4)}-${normalizedCode.slice(4, 8)}-${normalizedCode.slice(8, 12)}-${normalizedCode.slice(12, 16)}`;
+  } else if (normalizedCode.length === 12) {
+    formattedCode = `${normalizedCode.slice(0, 4)}-${normalizedCode.slice(4, 8)}-${normalizedCode.slice(8, 12)}`;
+  } else {
+    formattedCode = code.toUpperCase().trim();
+  }
 
   return withTransaction(async (client) => {
     // Find the gift card

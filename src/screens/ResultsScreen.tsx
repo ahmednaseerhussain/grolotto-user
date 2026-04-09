@@ -9,6 +9,26 @@ import { lotteryAPI, getErrorMessage } from '../api/apiClient';
 
 const { width } = Dimensions.get('window');
 
+const DRAW_TIME_LABELS: Record<string, string> = {
+  morning: '🌅 Morning',
+  midday: '☀️ Midday',
+  evening: '🌙 Evening',
+};
+
+const DRAW_TIME_COLORS: Record<string, { badge: string; text: string }> = {
+  morning: { badge: '#fed7aa', text: '#9a3412' },
+  midday: { badge: '#fef3c7', text: '#92400e' },
+  evening: { badge: '#e0e7ff', text: '#3730a3' },
+};
+
+const getDrawTimeKey = (drawTime: string): string => {
+  const dt = (drawTime || '').toLowerCase();
+  if (dt.includes('morning') || dt.includes('am') || dt.includes('matin')) return 'morning';
+  if (dt.includes('midday') || dt.includes('midi') || dt.includes('noon')) return 'midday';
+  if (dt.includes('evening') || dt.includes('pm') || dt.includes('soir') || dt.includes('night')) return 'evening';
+  return 'midday';
+};
+
 interface DailyResult {
   id: string;
   gameType: 'FL' | 'NY' | 'GA' | 'TX';
@@ -28,7 +48,7 @@ export default function ResultsScreen() {
   const language = useAppStore(s => s.language);
   const user = useAppStore(s => s.user);
   const vendors = useAppStore(s => s.vendors);
-  
+
   const [currentResultIndex, setCurrentResultIndex] = useState(0);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -69,21 +89,21 @@ export default function ResultsScreen() {
   // Build results from API data, fallback to empty
   const dailyResults: DailyResult[] = lotteryRounds.length > 0
     ? lotteryRounds.map((round: any, idx: number) => ({
-        id: round.id || String(idx),
-        gameType: (round.drawState || round.state || 'FL') as DailyResult['gameType'],
-        gameTypeDisplay: `${round.drawState || round.state || 'FL'} ${round.session || ''}`.trim(),
-        time: round.session || round.drawTime || '',
-        numbers: Array.isArray(round.winningNumbers)
+      id: round.id || String(idx),
+      gameType: (round.drawState || round.state || 'FL') as DailyResult['gameType'],
+      gameTypeDisplay: `${round.drawState || round.state || 'FL'} ${round.session || ''}`.trim(),
+      time: round.session || round.drawTime || '',
+      numbers: Array.isArray(round.winningNumbers)
+        ? Object.values(round.winningNumbers).flat().join(' ')
+        : typeof round.winningNumbers === 'object' && round.winningNumbers
           ? Object.values(round.winningNumbers).flat().join(' ')
-          : typeof round.winningNumbers === 'object' && round.winningNumbers
-            ? Object.values(round.winningNumbers).flat().join(' ')
-            : String(round.winningNumbers || 'Pending'),
-        drawTime: round.drawTime || '',
-        date: round.date || 'Today',
-        jackpot: round.jackpot ? String(round.jackpot) : undefined,
-        winners: round.winnersCount || 0,
-        status: round.status === 'completed' ? 'final' : 'live',
-      }))
+          : String(round.winningNumbers || 'Pending'),
+      drawTime: round.drawTime || '',
+      date: round.date || 'Today',
+      jackpot: round.jackpot ? String(round.jackpot) : undefined,
+      winners: round.winnersCount || 0,
+      status: round.status === 'completed' ? 'final' : 'live',
+    }))
     : [];
 
   // Auto-slide functionality for results
@@ -137,7 +157,7 @@ export default function ResultsScreen() {
   const slideToNext = () => {
     if (dailyResults.length === 0) return;
     const nextIndex = (currentResultIndex + 1) % dailyResults.length;
-    
+
     // Fade out current result
     Animated.timing(fadeAnim, {
       toValue: 0,
@@ -146,7 +166,7 @@ export default function ResultsScreen() {
     }).start(() => {
       // Update index
       setCurrentResultIndex(nextIndex);
-      
+
       // Slide animation
       Animated.sequence([
         Animated.timing(slideAnim, {
@@ -198,7 +218,7 @@ export default function ResultsScreen() {
               Ready to play today?
             </Text>
           </View>
-          
+
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Pressable onPress={() => navigation.navigate("SettingsScreen" as never)} style={{ marginRight: 16 }}>
               <Ionicons name="settings-outline" size={24} color="#6b7280" />
@@ -211,14 +231,14 @@ export default function ResultsScreen() {
       </View>
 
       {/* Wallet Balance - matching screenshot */}
-      <View style={{ 
-        backgroundColor: '#ffffff', 
-        marginHorizontal: 20, 
-        marginVertical: 16, 
-        borderRadius: 16, 
-        padding: 20, 
-        flexDirection: 'row', 
-        justifyContent: 'space-between', 
+      <View style={{
+        backgroundColor: '#ffffff',
+        marginHorizontal: 20,
+        marginVertical: 16,
+        borderRadius: 16,
+        padding: 20,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
@@ -234,31 +254,31 @@ export default function ResultsScreen() {
             {getCurrencySymbol()}{user?.balance?.toFixed(2) || '0.00'}
           </Text>
         </View>
-        <Pressable 
+        <Pressable
           onPress={() => navigation.navigate("PaymentScreen" as never)}
-          style={{ 
-          backgroundColor: '#3b82f6', 
-          flexDirection: 'row', 
-          alignItems: 'center', 
-          paddingHorizontal: 20, 
-          paddingVertical: 12, 
-          borderRadius: 12 
-        }}>
+          style={{
+            backgroundColor: '#3b82f6',
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: 20,
+            paddingVertical: 12,
+            borderRadius: 12
+          }}>
           <Ionicons name="add" size={20} color="#ffffff" />
           <Text style={{ color: '#ffffff', fontWeight: '600', marginLeft: 8 }}>
             Add Funds
           </Text>
         </Pressable>
       </View>
-      
-      <Pressable 
+
+      <Pressable
         onPress={() => navigation.navigate("TransactionHistory" as never)}
-        style={{ 
-        flexDirection: 'row', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        marginBottom: 16 
-      }}>
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 16
+        }}>
         <Text style={{ color: '#3b82f6', fontSize: 16, fontWeight: '500', marginRight: 4 }}>
           View Transaction History
         </Text>
@@ -267,23 +287,23 @@ export default function ResultsScreen() {
 
       <ScrollView style={{ flex: 1, paddingHorizontal: 20 }} showsVerticalScrollIndicator={false}>
         {/* Quick Actions - 2x2 grid matching screenshot */}
-        <View style={{ 
-          flexDirection: 'row', 
-          flexWrap: 'wrap', 
-          gap: 12, 
-          marginBottom: 20 
+        <View style={{
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          gap: 12,
+          marginBottom: 20
         }}>
-          <Pressable 
+          <Pressable
             onPress={() => navigation.navigate("PaymentScreen" as never)}
             style={[{
-            width: (width - 60) / 2,
-            backgroundColor: '#3b82f6',
-            borderRadius: 16,
-            padding: 20,
-            alignItems: 'center',
-            minHeight: 120,
-            justifyContent: 'center'
-          }]}>
+              width: (width - 60) / 2,
+              backgroundColor: '#3b82f6',
+              borderRadius: 16,
+              padding: 20,
+              alignItems: 'center',
+              minHeight: 120,
+              justifyContent: 'center'
+            }]}>
             <Ionicons name="wallet" size={24} color="#ffffff" />
             <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '600', marginTop: 8, textAlign: 'center' }}>
               Wallet
@@ -292,18 +312,18 @@ export default function ResultsScreen() {
               Add Funds
             </Text>
           </Pressable>
-          
-          <Pressable 
+
+          <Pressable
             onPress={() => navigation.navigate("Tchala" as never)}
             style={[{
-            width: (width - 60) / 2,
-            backgroundColor: '#f59e0b',
-            borderRadius: 16,
-            padding: 20,
-            alignItems: 'center',
-            minHeight: 120,
-            justifyContent: 'center'
-          }]}>
+              width: (width - 60) / 2,
+              backgroundColor: '#f59e0b',
+              borderRadius: 16,
+              padding: 20,
+              alignItems: 'center',
+              minHeight: 120,
+              justifyContent: 'center'
+            }]}>
             <Ionicons name="moon" size={24} color="#ffffff" />
             <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '600', marginTop: 8, textAlign: 'center' }}>
               Tchala
@@ -312,18 +332,18 @@ export default function ResultsScreen() {
               Dream Numbers
             </Text>
           </Pressable>
-          
-          <Pressable 
-            onPress={() => {}} // Already on Results screen
+
+          <Pressable
+            onPress={() => { }} // Already on Results screen
             style={[{
-            width: (width - 60) / 2,
-            backgroundColor: '#10b981',
-            borderRadius: 16,
-            padding: 20,
-            alignItems: 'center',
-            minHeight: 120,
-            justifyContent: 'center'
-          }]}>
+              width: (width - 60) / 2,
+              backgroundColor: '#10b981',
+              borderRadius: 16,
+              padding: 20,
+              alignItems: 'center',
+              minHeight: 120,
+              justifyContent: 'center'
+            }]}>
             <Ionicons name="document-text" size={24} color="#ffffff" />
             <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '600', marginTop: 8, textAlign: 'center' }}>
               Results
@@ -332,18 +352,18 @@ export default function ResultsScreen() {
               Latest Draws
             </Text>
           </Pressable>
-          
-          <Pressable 
+
+          <Pressable
             onPress={() => navigation.navigate("HistoryScreen" as never)}
             style={[{
-            width: (width - 60) / 2,
-            backgroundColor: '#8b5cf6',
-            borderRadius: 16,
-            padding: 20,
-            alignItems: 'center',
-            minHeight: 120,
-            justifyContent: 'center'
-          }]}>
+              width: (width - 60) / 2,
+              backgroundColor: '#8b5cf6',
+              borderRadius: 16,
+              padding: 20,
+              alignItems: 'center',
+              minHeight: 120,
+              justifyContent: 'center'
+            }]}>
             <Ionicons name="time" size={24} color="#ffffff" />
             <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '600', marginTop: 8, textAlign: 'center' }}>
               History
@@ -356,87 +376,106 @@ export default function ResultsScreen() {
 
         {/* Today Results - cycling through actual results */}
         {currentResult ? (
-        <Animated.View style={{
-          backgroundColor: '#fbbf24',
-          borderRadius: 20,
-          padding: 20,
-          marginBottom: 20,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.15,
-          shadowRadius: 12,
-          elevation: 8,
-          transform: [{ translateX: slideAnim }],
-          opacity: fadeAnim
-        }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#3b82f6' }}>
-              Today results {currentResult.time}
-            </Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              {currentResult.status === 'live' && (
-                <Animated.View 
-                  style={[
-                    { 
-                      width: 8, 
-                      height: 8, 
-                      backgroundColor: '#ef4444', 
-                      borderRadius: 4,
-                      marginRight: 4,
-                      transform: [{ scale: pulseAnim }]
-                    }
-                  ]} 
-                />
-              )}
-              <Text style={{ fontSize: 12, color: '#ef4444', fontWeight: 'bold' }}>
-                {currentResult.status === 'live' ? 'LIVE' : 'FINAL'}
-              </Text>
-            </View>
-          </View>
-          
-          <View style={{
-            backgroundColor: '#1f2937',
-            borderRadius: 16,
+          <Animated.View style={{
+            backgroundColor: '#fbbf24',
+            borderRadius: 20,
             padding: 20,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between'
+            marginBottom: 20,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.15,
+            shadowRadius: 12,
+            elevation: 8,
+            transform: [{ translateX: slideAnim }],
+            opacity: fadeAnim
           }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#3b82f6' }}>
+                Today results
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {(() => {
+                  const dtKey = getDrawTimeKey(currentResult.drawTime || currentResult.time);
+                  const dtColors = DRAW_TIME_COLORS[dtKey] || DRAW_TIME_COLORS.midday;
+                  return (
+                    <View style={{ backgroundColor: dtColors.badge, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginRight: 8 }}>
+                      <Text style={{ fontSize: 12, fontWeight: '700', color: dtColors.text }}>
+                        {DRAW_TIME_LABELS[dtKey] || currentResult.time}
+                      </Text>
+                    </View>
+                  );
+                })()}
+                {currentResult.status === 'live' && (
+                  <Animated.View
+                    style={[
+                      {
+                        width: 8,
+                        height: 8,
+                        backgroundColor: '#ef4444',
+                        borderRadius: 4,
+                        marginRight: 4,
+                        transform: [{ scale: pulseAnim }]
+                      }
+                    ]}
+                  />
+                )}
+                <Text style={{ fontSize: 12, color: '#ef4444', fontWeight: 'bold' }}>
+                  {currentResult.status === 'live' ? 'LIVE' : 'FINAL'}
+                </Text>
+              </View>
+            </View>
+
             <View style={{
-              backgroundColor: getGameTypeColor(currentResult.gameType),
-              paddingHorizontal: 16,
-              paddingVertical: 8,
-              borderRadius: 8
+              backgroundColor: '#1f2937',
+              borderRadius: 16,
+              padding: 20,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between'
             }}>
-              <Text style={{ color: '#ffffff', fontSize: 18, fontWeight: 'bold' }}>
-                {currentResult.gameType}
+              <View style={{
+                backgroundColor: getGameTypeColor(currentResult.gameType),
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                borderRadius: 8
+              }}>
+                <Text style={{ color: '#ffffff', fontSize: 18, fontWeight: 'bold' }}>
+                  {currentResult.gameType}
+                </Text>
+              </View>
+
+              <Text style={{
+                fontSize: 36,
+                fontWeight: 'bold',
+                color: '#ffffff',
+                textAlign: 'center',
+                flex: 1,
+                marginHorizontal: 20
+              }}>
+                {currentResult.numbers}
               </Text>
             </View>
-            
-            <Text style={{
-              fontSize: 36,
-              fontWeight: 'bold',
-              color: '#ffffff',
-              textAlign: 'center',
-              flex: 1,
-              marginHorizontal: 20
-            }}>
-              {currentResult.numbers}
-            </Text>
-          </View>
-          
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 16, paddingHorizontal: 4 }}>
-            <Text style={{ color: '#1f2937', fontSize: 12 }}>
-              {currentResult.drawTime}
-            </Text>
-            <Text style={{ color: '#1f2937', fontSize: 12, fontWeight: 'bold' }}>
-              ${currentResult.jackpot} jackpot
-            </Text>
-            <Text style={{ color: '#1f2937', fontSize: 12 }}>
-              {currentResult.winners} winners
-            </Text>
-          </View>
-        </Animated.View>
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 16, paddingHorizontal: 4, alignItems: 'center' }}>
+              {(() => {
+                const dtKey = getDrawTimeKey(currentResult.drawTime);
+                const dtColors = DRAW_TIME_COLORS[dtKey] || DRAW_TIME_COLORS.midday;
+                return (
+                  <View style={{ backgroundColor: dtColors.badge, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
+                    <Text style={{ color: dtColors.text, fontSize: 12, fontWeight: '700' }}>
+                      {DRAW_TIME_LABELS[dtKey] || currentResult.drawTime}
+                    </Text>
+                  </View>
+                );
+              })()}
+              <Text style={{ color: '#1f2937', fontSize: 12, fontWeight: 'bold' }}>
+                ${currentResult.jackpot} jackpot
+              </Text>
+              <Text style={{ color: '#1f2937', fontSize: 12 }}>
+                {currentResult.winners} winners
+              </Text>
+            </View>
+          </Animated.View>
         ) : (
           <View style={{ backgroundColor: '#f3f4f6', borderRadius: 20, padding: 30, marginBottom: 20, alignItems: 'center' }}>
             <Ionicons name="hourglass-outline" size={48} color="#9ca3af" />
@@ -468,7 +507,7 @@ export default function ResultsScreen() {
               Live Updates
             </Text>
           </View>
-          
+
           <View style={{ height: 50, overflow: 'hidden' }}>
             <Animated.View
               style={[
@@ -480,9 +519,9 @@ export default function ResultsScreen() {
             >
               {slidingMessages.map((message, index) => (
                 <View key={index} style={{ width: width - 72, justifyContent: 'center', paddingHorizontal: 10 }}>
-                  <Text style={{ 
-                    fontSize: 14, 
-                    color: '#4b5563', 
+                  <Text style={{
+                    fontSize: 14,
+                    color: '#4b5563',
                     textAlign: 'center',
                     lineHeight: 20
                   }}>
@@ -498,7 +537,7 @@ export default function ResultsScreen() {
         <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#1f2937', marginBottom: 16 }}>
           Find Vendors
         </Text>
-        
+
         <View style={{
           backgroundColor: '#f3f4f6',
           borderRadius: 12,
@@ -520,7 +559,7 @@ export default function ResultsScreen() {
             <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#1f2937', marginBottom: 16 }}>
               {t('availableVendors') || 'Available Vendors'} ({vendors.filter((v: any) => v.status === 'active' || v.isActive).length})
             </Text>
-            
+
             {vendors.filter((v: any) => v.status === 'active' || v.isActive).slice(0, 5).map((vendor: any) => (
               <View key={vendor.id} style={{
                 backgroundColor: '#ffffff',

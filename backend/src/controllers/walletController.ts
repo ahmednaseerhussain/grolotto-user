@@ -26,7 +26,7 @@ export async function getTransactions(req: Request, res: Response, next: NextFun
 
 export async function requestWithdrawal(req: Request, res: Response, next: NextFunction) {
   try {
-    const { amount, currency, method, bankName, accountHolderName, accountNumber, routingNumber, notes } = req.body;
+    const { amount, currency, method, bankName, accountHolderName, accountNumber, routingNumber, notes, moncashPhone } = req.body;
 
     if (!amount || amount <= 0) {
       return res.status(400).json({ message: 'Invalid withdrawal amount' });
@@ -34,8 +34,17 @@ export async function requestWithdrawal(req: Request, res: Response, next: NextF
     if (!currency || !['USD', 'HTG'].includes(currency)) {
       return res.status(400).json({ message: 'Invalid currency' });
     }
-    if (!bankName || !accountHolderName || !accountNumber) {
-      return res.status(400).json({ message: 'Bank details are required' });
+
+    const paymentMethod = method || 'bank_transfer';
+
+    if (paymentMethod === 'moncash') {
+      if (!moncashPhone || !/^\+?[0-9]{8,15}$/.test(moncashPhone.replace(/[\s-]/g, ''))) {
+        return res.status(400).json({ message: 'Valid MonCash phone number is required' });
+      }
+    } else {
+      if (!bankName || !accountHolderName || !accountNumber) {
+        return res.status(400).json({ message: 'Bank details are required' });
+      }
     }
 
     const minAmount = currency === 'HTG' ? 500 : 5;
@@ -44,7 +53,9 @@ export async function requestWithdrawal(req: Request, res: Response, next: NextF
     }
 
     const idempotencyKey = `withdraw_${req.user!.id}_${Date.now()}_${uuidv4().slice(0, 8)}`;
-    const description = `Bank withdrawal to ${bankName} - ${accountHolderName}`;
+    const description = paymentMethod === 'moncash'
+      ? `MonCash withdrawal to ${moncashPhone}`
+      : `Bank withdrawal to ${bankName} - ${accountHolderName}`;
 
     const result = await walletService.debitWallet(
       req.user!.id,
@@ -52,17 +63,15 @@ export async function requestWithdrawal(req: Request, res: Response, next: NextF
       currency as 'USD' | 'HTG',
       idempotencyKey,
       description,
-      method || 'bank_transfer'
+      paymentMethod
     );
 
-    // Store bank details in the transaction metadata
-    await walletService.updateWithdrawalMetadata(req.user!.id, idempotencyKey, {
-      bankName,
-      accountHolderName,
-      accountNumber,
-      routingNumber: routingNumber || null,
-      notes: notes || null,
-    });
+    // Store withdrawal details in the transaction metadata
+    const metadata = paymentMethod === 'moncash'
+      ? { moncashPhone, notes: notes || null }
+      : { bankName, accountHolderName, accountNumber, routingNumber: routingNumber || null, notes: notes || null };
+
+    await walletService.updateWithdrawalMetadata(req.user!.id, idempotencyKey, metadata);
 
     res.json({ message: 'Withdrawal request submitted', newBalance: result.newBalance });
   } catch (error) {

@@ -4,7 +4,7 @@ import { query } from './database/pool';
 async function runStartupMigrations() {
   try {
     // Migration 005: draw_configs table + gift_card_batches + admin_commission enum
-    await query(`ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'admin_commission'`).catch(() => {});
+    await query(`ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'admin_commission'`).catch(() => { });
 
     await query(`
       CREATE TABLE IF NOT EXISTS draw_configs (
@@ -127,7 +127,7 @@ async function runStartupMigrations() {
     `);
 
     // Fix: ensure purchased_by is nullable (for admin-created batch cards with no purchaser)
-    await query(`ALTER TABLE gift_cards ALTER COLUMN purchased_by DROP NOT NULL`).catch(() => {});
+    await query(`ALTER TABLE gift_cards ALTER COLUMN purchased_by DROP NOT NULL`).catch(() => { });
 
     // Fix: add missing columns if table was created from old migration
     await query(`
@@ -148,13 +148,13 @@ async function runStartupMigrations() {
     `);
 
     // Fix: ensure code column is nullable (batch cards use pin_code instead)
-    await query(`ALTER TABLE gift_cards ALTER COLUMN code DROP NOT NULL`).catch(() => {});
+    await query(`ALTER TABLE gift_cards ALTER COLUMN code DROP NOT NULL`).catch(() => { });
 
     // Migration 008: extend transaction_type enum for gift cards & refunds
     // ALTER TYPE ADD VALUE cannot run inside a transaction block — run each separately
-    await query(`ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'gift_card_purchase'`).catch(() => {});
-    await query(`ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'gift_card_redeem'`).catch(() => {});
-    await query(`ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'refund'`).catch(() => {});
+    await query(`ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'gift_card_purchase'`).catch(() => { });
+    await query(`ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'gift_card_redeem'`).catch(() => { });
+    await query(`ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'refund'`).catch(() => { });
 
     // Migration 009: bank details on vendor_payouts
     await query(`
@@ -307,6 +307,22 @@ async function runStartupMigrations() {
       }
     }
 
+    // Migration 016: Delete old 12-digit gift cards (replaced by 16-digit format)
+    try {
+      const deleteResult = await query(
+        `DELETE FROM gift_cards WHERE LENGTH(REPLACE(code, '-', '')) != 16 AND status != 'redeemed'`
+      );
+      if (deleteResult.rowCount && deleteResult.rowCount > 0) {
+        console.log(`[Migration 016] Deleted ${deleteResult.rowCount} old non-16-digit gift cards`);
+      }
+    } catch { /* non-critical */ }
+
+    // Migration 017: Add 'bank_transfer' to payout_method_type enum
+    try {
+      await query(`ALTER TYPE payout_method_type ADD VALUE IF NOT EXISTS 'bank_transfer'`);
+      console.log('[Migration 017] Added bank_transfer to payout_method_type enum');
+    } catch { /* already exists or non-critical */ }
+
     console.log('[Migration] Startup migrations applied successfully');
   } catch (err) {
     console.error('[Migration] Startup migration error:', err);
@@ -413,7 +429,7 @@ app.get('/api/settings/public', async (_req, res, next) => {
     const { query: dbQuery } = require('./database/pool');
     const result = await dbQuery(
       `SELECT key, value FROM app_settings
-       WHERE key IN ('allowed_states', 'game_availability', 'win_multipliers', 'min_bet_amount', 'max_bet_amount', 'htg_exchange_rate', 'maintenance_mode')`
+       WHERE key IN ('allowed_states', 'game_availability', 'win_multipliers', 'min_bet_amount', 'max_bet_amount', 'htg_exchange_rate', 'maintenance_mode', 'app_features')`
     );
     const settings: Record<string, any> = {};
     for (const row of result.rows) {

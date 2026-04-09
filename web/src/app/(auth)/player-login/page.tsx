@@ -20,6 +20,7 @@ export default function PlayerLoginPage() {
 
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [suspensionError, setSuspensionError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -56,8 +57,14 @@ export default function PlayerLoginPage() {
       setUser(user);
       toast.success(isLogin ? t("loginSuccess") : t("registrationSuccess"));
       router.push("/player/dashboard");
-    } catch (error) {
-      toast.error(getErrorMessage(error));
+    } catch (error: any) {
+      const msg = getErrorMessage(error);
+      if (msg.toLowerCase().includes('suspend')) {
+        setSuspensionError(msg);
+      } else {
+        setSuspensionError(null);
+        toast.error(msg);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -83,6 +90,18 @@ export default function PlayerLoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {suspensionError && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-300 rounded-lg">
+              <div className="flex items-start gap-3">
+                <span className="text-red-500 text-xl mt-0.5">🚫</span>
+                <div>
+                  <p className="text-sm font-semibold text-red-800">Account Suspended</p>
+                  <p className="text-sm text-red-700 mt-1">{suspensionError}</p>
+                  <p className="text-xs text-red-500 mt-2">Please contact support if you believe this is an error.</p>
+                </div>
+              </div>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div>

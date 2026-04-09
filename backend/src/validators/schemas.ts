@@ -58,7 +58,7 @@ export const placeBetSchema = z.object({
   numbers: z.array(z.number().int().min(0)).min(1).max(5),
   betAmount: z.number().positive('Bet amount must be positive'),
   currency: z.enum(['USD', 'HTG']).default('USD'),
-  drawTime: z.enum(['midday', 'evening']).optional(),
+  drawTime: z.enum(['morning', 'midday', 'evening']).optional(),
 });
 
 export const createPaymentSchema = z.object({
@@ -73,7 +73,7 @@ export const publishResultsSchema = z.object({
     z.array(z.number().int().min(0))
   ),
   drawDate: z.string().optional(),
-  drawTime: z.enum(['midday', 'evening']).optional(),
+  drawTime: z.enum(['morning', 'midday', 'evening']).optional(),
 });
 
 export const vendorRegistrationSchema = z.object({

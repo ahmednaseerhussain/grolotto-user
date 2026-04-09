@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/common/empty-state";
-import { ArrowLeft, Bell, CheckCheck, Loader2, Info, AlertTriangle, Gift, Trophy } from "lucide-react";
+import { ArrowLeft, Bell, CheckCheck, Loader2, Info, AlertTriangle, Gift, Trophy, ShieldBan } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 const NOTIF_ICONS: Record<string, { icon: any; color: string }> = {
@@ -17,6 +17,7 @@ const NOTIF_ICONS: Record<string, { icon: any; color: string }> = {
   warning: { icon: AlertTriangle, color: "text-amber-500 bg-amber-50" },
   reward: { icon: Gift, color: "text-purple-500 bg-purple-50" },
   winning: { icon: Trophy, color: "text-emerald-500 bg-emerald-50" },
+  account_suspension: { icon: ShieldBan, color: "text-red-500 bg-red-50" },
   default: { icon: Bell, color: "text-gray-500 bg-gray-50" },
 };
 

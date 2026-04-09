@@ -77,7 +77,7 @@ export default function GiftCardsPage() {
       try {
         const w = await walletAPI.getBalance();
         if (w) setWallet(w);
-      } catch {}
+      } catch { }
     } catch (err: any) {
       toast.error(err?.response?.data?.error || "Failed to purchase gift card");
     } finally {
@@ -98,7 +98,7 @@ export default function GiftCardsPage() {
       try {
         const w = await walletAPI.getBalance();
         if (w) setWallet(w);
-      } catch {}
+      } catch { }
     } catch (err: any) {
       const errorCode = err?.response?.data?.code;
       const errorMsg = err?.response?.data?.error || err?.response?.data?.message;
@@ -236,11 +236,10 @@ export default function GiftCardsPage() {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-colors ${
-              activeTab === tab.key
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-colors ${activeTab === tab.key
                 ? "bg-amber-500 text-white"
                 : "bg-slate-800 text-slate-400 hover:text-white"
-            }`}
+              }`}
           >
             <tab.icon className="h-4 w-4" />
             {tab.label}
@@ -265,11 +264,10 @@ export default function GiftCardsPage() {
                 <button
                   key={amt}
                   onClick={() => setSelectedAmount(amt)}
-                  className={`py-4 rounded-xl border-2 text-center font-bold text-lg transition-all ${
-                    selectedAmount === amt
+                  className={`py-4 rounded-xl border-2 text-center font-bold text-lg transition-all ${selectedAmount === amt
                       ? "bg-amber-500 border-amber-400 text-white"
                       : "bg-slate-800 border-slate-700 text-slate-300 hover:border-amber-500/50"
-                  }`}
+                    }`}
                 >
                   {formatCurrency(amt, currency)}
                 </button>
@@ -304,11 +302,10 @@ export default function GiftCardsPage() {
           <button
             onClick={handlePurchase}
             disabled={!selectedAmount || processing}
-            className={`w-full py-4 rounded-xl font-bold text-lg text-white transition-colors flex items-center justify-center gap-2 ${
-              selectedAmount && !processing
+            className={`w-full py-4 rounded-xl font-bold text-lg text-white transition-colors flex items-center justify-center gap-2 ${selectedAmount && !processing
                 ? "bg-amber-500 hover:bg-amber-600"
                 : "bg-slate-700 cursor-not-allowed"
-            }`}
+              }`}
           >
             {processing ? (
               <><Loader2 className="h-5 w-5 animate-spin" /> Processing...</>
@@ -327,7 +324,7 @@ export default function GiftCardsPage() {
               <Ticket className="h-10 w-10 text-amber-400" />
             </div>
             <h3 className="text-lg font-bold text-white mb-1">{t("redeemGiftCard") || "Redeem Gift Card"}</h3>
-            <p className="text-slate-400 text-sm">Enter the 12-character code from your gift card</p>
+            <p className="text-slate-400 text-sm">Enter the 16-character code from your gift card</p>
           </div>
 
           <div>
@@ -336,29 +333,29 @@ export default function GiftCardsPage() {
               type="text"
               value={redeemCode}
               onChange={(e) => {
-                // Auto-format: XXXX-XXXX-XXXX
+                // Auto-format: XXXX-XXXX-XXXX-XXXX
                 let val = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, "");
                 const raw = val.replace(/-/g, "");
-                if (raw.length > 12) return;
-                if (raw.length > 8) val = `${raw.slice(0, 4)}-${raw.slice(4, 8)}-${raw.slice(8)}`;
+                if (raw.length > 16) return;
+                if (raw.length > 12) val = `${raw.slice(0, 4)}-${raw.slice(4, 8)}-${raw.slice(8, 12)}-${raw.slice(12)}`;
+                else if (raw.length > 8) val = `${raw.slice(0, 4)}-${raw.slice(4, 8)}-${raw.slice(8)}`;
                 else if (raw.length > 4) val = `${raw.slice(0, 4)}-${raw.slice(4)}`;
                 else val = raw;
                 setRedeemCode(val);
               }}
-              placeholder="XXXX-XXXX-XXXX"
-              maxLength={14}
+              placeholder="XXXX-XXXX-XXXX-XXXX"
+              maxLength={19}
               className="w-full bg-slate-800 border-2 border-slate-700 rounded-xl px-4 py-4 text-white text-2xl font-mono text-center tracking-[0.3em] placeholder:text-slate-600 outline-none focus:border-amber-500"
             />
           </div>
 
           <button
             onClick={handleRedeem}
-            disabled={redeemCode.replace(/-/g, "").length !== 12 || processing}
-            className={`w-full py-4 rounded-xl font-bold text-lg text-white transition-colors flex items-center justify-center gap-2 ${
-              redeemCode.replace(/-/g, "").length === 12 && !processing
+            disabled={redeemCode.replace(/-/g, "").length !== 16 || processing}
+            className={`w-full py-4 rounded-xl font-bold text-lg text-white transition-colors flex items-center justify-center gap-2 ${redeemCode.replace(/-/g, "").length === 16 && !processing
                 ? "bg-green-600 hover:bg-green-700"
                 : "bg-slate-700 cursor-not-allowed"
-            }`}
+              }`}
           >
             {processing ? (
               <><Loader2 className="h-5 w-5 animate-spin" /> Verifying...</>
@@ -389,11 +386,10 @@ export default function GiftCardsPage() {
               <div key={card.id} className="bg-slate-800 rounded-xl p-4 border border-slate-700">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-white font-bold">{formatCurrency(card.amount, card.currency)}</span>
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                    card.status === "active" ? "bg-green-500/20 text-green-400"
-                    : card.status === "redeemed" ? "bg-blue-500/20 text-blue-400"
-                    : "bg-red-500/20 text-red-400"
-                  }`}>
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${card.status === "active" ? "bg-green-500/20 text-green-400"
+                      : card.status === "redeemed" ? "bg-blue-500/20 text-blue-400"
+                        : "bg-red-500/20 text-red-400"
+                    }`}>
                     {card.status}
                   </span>
                 </div>
