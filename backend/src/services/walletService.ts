@@ -190,16 +190,22 @@ export async function getTransactions(
 /**
  * Store bank details metadata on a withdrawal transaction.
  */
+type BankWithdrawalMetadata = {
+  bankName: string;
+  accountHolderName: string;
+  accountNumber: string;
+  routingNumber?: string | null;
+  notes?: string | null;
+};
+type MoncashWithdrawalMetadata = {
+  moncashPhone: string;
+  notes?: string | null;
+};
+
 export async function updateWithdrawalMetadata(
   userId: string,
   idempotencyKey: string,
-  metadata: {
-    bankName: string;
-    accountHolderName: string;
-    accountNumber: string;
-    routingNumber?: string | null;
-    notes?: string | null;
-  }
+  metadata: BankWithdrawalMetadata | MoncashWithdrawalMetadata
 ) {
   await query(
     `UPDATE transactions SET metadata = $1
