@@ -312,18 +312,31 @@ export default function ResultsScreen() {
                             })()}
 
                             {/* MARYAJ — combinations with × */}
-                            {winNums.maryaj && Array.isArray(winNums.maryaj) && winNums.maryaj.length > 0 && (() => {
-                              const gc = GAME_COLORS.maryaj;
-                              const pairs: [number, number][] = [];
-                              const nums = winNums.maryaj as number[];
-                              // Show pairs: maryaj numbers come as pairs sequentially
-                              for (let i = 0; i < nums.length; i += 2) {
-                                if (i + 1 < nums.length) pairs.push([nums[i], nums[i + 1]]);
+                            {(() => {
+                              const senpNums = winNums.senp && Array.isArray(winNums.senp) ? winNums.senp as number[] : [];
+                              const maryajNums = winNums.maryaj && Array.isArray(winNums.maryaj) ? winNums.maryaj as number[] : [];
+                              // Always derive 3 pairs from senp [fp, sp, tp] → fp×sp, fp×tp, sp×tp
+                              let combos: [number, number][] = [];
+                              if (senpNums.length >= 3) {
+                                combos = [
+                                  [senpNums[0], senpNums[1]],
+                                  [senpNums[0], senpNums[2]],
+                                  [senpNums[1], senpNums[2]],
+                                ];
+                              } else if (maryajNums.length >= 6) {
+                                // Fallback: read sequential pairs from maryaj array
+                                for (let i = 0; i + 1 < maryajNums.length; i += 2) {
+                                  combos.push([maryajNums[i], maryajNums[i + 1]]);
+                                }
+                              } else if (senpNums.length >= 2) {
+                                combos = [[senpNums[0], senpNums[1]]];
+                              } else if (maryajNums.length >= 2) {
+                                for (let i = 0; i + 1 < maryajNums.length; i += 2) {
+                                  combos.push([maryajNums[i], maryajNums[i + 1]]);
+                                }
                               }
-                              // Fallback: if odd number, derive combos from senp
-                              const senpNums = winNums.senp && Array.isArray(winNums.senp) ? winNums.senp : [];
-                              const combos = pairs.length > 0 ? pairs : (senpNums.length >= 2 ? [[senpNums[0], senpNums[1]], ...(senpNums.length >= 3 ? [[senpNums[0], senpNums[2]], [senpNums[1], senpNums[2]]] : [])] as [number, number][] : []);
                               if (combos.length === 0) return null;
+                              const gc = GAME_COLORS.maryaj;
                               return (
                                 <div className={`${gc.bg} rounded-lg p-3`}>
                                   <span className={`text-xs font-bold ${gc.text} uppercase tracking-wider block mb-2`}>Maryaj</span>
