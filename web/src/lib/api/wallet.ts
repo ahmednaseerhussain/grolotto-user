@@ -22,6 +22,7 @@ export const walletAPI = {
     currency: string;
     method: string;
     moncashPhone?: string;
+    cashappTag?: string;
     bankName?: string;
     accountHolderName?: string;
     accountNumber?: string;

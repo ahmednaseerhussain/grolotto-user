@@ -323,6 +323,12 @@ async function runStartupMigrations() {
       console.log('[Migration 017] Added bank_transfer to payout_method_type enum');
     } catch { /* already exists or non-critical */ }
 
+    // Migration 018: Add 'cashapp' to payout_method_type enum
+    try {
+      await query(`ALTER TYPE payout_method_type ADD VALUE IF NOT EXISTS 'cashapp'`);
+      console.log('[Migration 018] Added cashapp to payout_method_type enum');
+    } catch { /* already exists or non-critical */ }
+
     console.log('[Migration] Startup migrations applied successfully');
   } catch (err) {
     console.error('[Migration] Startup migration error:', err);

@@ -94,7 +94,7 @@ export async function getAnalytics(startDate?: string, endDate?: string) {
   // Game performance
   const gamePerformance = await query(
     `SELECT
-       r.game_type,
+       lt.game_type,
        COUNT(lt.id) as total_plays,
        COALESCE(SUM(lt.bet_amount), 0) as total_wagered,
        COUNT(DISTINCT lt.player_id) as unique_players,
@@ -102,7 +102,7 @@ export async function getAnalytics(startDate?: string, endDate?: string) {
      FROM lottery_tickets lt
      LEFT JOIN lottery_rounds r ON r.id = lt.round_id
      WHERE lt.created_at::date BETWEEN $1::date AND $2::date
-     GROUP BY r.game_type, lt.currency
+     GROUP BY lt.game_type, lt.currency
      ORDER BY total_wagered DESC`,
     [start, end]
   );

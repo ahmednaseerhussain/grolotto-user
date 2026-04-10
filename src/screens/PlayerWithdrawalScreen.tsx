@@ -16,8 +16,9 @@ export default function PlayerWithdrawalScreen() {
     const t = (key: string) => getTranslation(key as any, language);
 
     const [amount, setAmount] = useState("");
-    const [method, setMethod] = useState<'moncash' | 'bank_transfer'>(currency === 'HTG' ? 'moncash' : 'bank_transfer');
+    const [method, setMethod] = useState<'moncash' | 'cashapp' | 'bank_transfer'>(currency === 'HTG' ? 'moncash' : 'bank_transfer');
     const [moncashPhone, setMoncashPhone] = useState("");
+    const [cashappTag, setCashappTag] = useState("");
     const [bankName, setBankName] = useState("");
     const [accountHolderName, setAccountHolderName] = useState("");
     const [accountNumber, setAccountNumber] = useState("");
@@ -46,6 +47,8 @@ export default function PlayerWithdrawalScreen() {
     const canSubmit = parseFloat(amount) > 0 && (
         method === 'moncash'
             ? moncashPhone.replace(/[\s-]/g, '').length >= 8
+            : method === 'cashapp'
+            ? cashappTag.trim().length >= 2
             : (bankName.trim() && accountHolderName.trim() && accountNumber.trim())
     );
 
@@ -66,15 +69,14 @@ export default function PlayerWithdrawalScreen() {
         }
         setProcessing(true);
         try {
-            await walletAPI.requestWithdrawal({
-                amount: amt,
-                currency,
-                method,
-                ...(method === 'moncash'
-                    ? { moncashPhone }
-                    : { bankName, accountHolderName, accountNumber, routingNumber }),
-                notes,
-            });
+            const base = { amount: amt, currency, notes } as const;
+            if (method === 'moncash') {
+                await walletAPI.requestWithdrawal({ ...base, method: 'moncash', moncashPhone });
+            } else if (method === 'cashapp') {
+                await walletAPI.requestWithdrawal({ ...base, method: 'cashapp', cashappTag });
+            } else {
+                await walletAPI.requestWithdrawal({ ...base, method: 'bank_transfer', bankName, accountHolderName, accountNumber, routingNumber });
+            }
             setShowSuccess(true);
         } catch (err: any) {
             Alert.alert(t("error") || "Error", getErrorMessage(err) || "Failed to submit withdrawal request");
@@ -208,6 +210,25 @@ export default function PlayerWithdrawalScreen() {
                             <Text style={{ marginLeft: 6, fontWeight: '700', color: method === 'bank_transfer' ? '#1e40af' : '#6b7280' }}>Bank Transfer</Text>
                         </Pressable>
                     </View>
+                    <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+                        <Pressable
+                            onPress={() => setMethod('cashapp')}
+                            style={{
+                                flex: 1,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                paddingVertical: 14,
+                                borderRadius: 12,
+                                borderWidth: 2,
+                                borderColor: method === 'cashapp' ? '#00D632' : '#e5e7eb',
+                                backgroundColor: method === 'cashapp' ? '#e6faea' : '#fff',
+                            }}
+                        >
+                            <Ionicons name="logo-usd" size={18} color={method === 'cashapp' ? '#00A825' : '#6b7280'} />
+                            <Text style={{ marginLeft: 6, fontWeight: '700', color: method === 'cashapp' ? '#00732a' : '#6b7280' }}>Cash App</Text>
+                        </Pressable>
+                    </View>
                 </Animated.View>
 
                 {/* MonCash Details */}
@@ -229,6 +250,31 @@ export default function PlayerWithdrawalScreen() {
                                 placeholder="+509 XXXX XXXX"
                                 placeholderTextColor="#d1d5db"
                                 keyboardType="phone-pad"
+                                style={{ backgroundColor: '#f9fafb', borderRadius: 10, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#111827' }}
+                            />
+                        </View>
+                    </Animated.View>
+                )}
+
+                {/* CashApp Details */}
+                {method === 'cashapp' && (
+                    <Animated.View entering={FadeInDown.duration(300)} style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#e5e7eb', padding: 16 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                            <Ionicons name="logo-usd" size={20} color="#00A825" />
+                            <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827', marginLeft: 8 }}>
+                                Cash App Details
+                            </Text>
+                        </View>
+                        <View>
+                            <Text style={{ fontSize: 13, color: '#6b7280', marginBottom: 4 }}>
+                                $Cashtag
+                            </Text>
+                            <TextInput
+                                value={cashappTag}
+                                onChangeText={setCashappTag}
+                                placeholder="$yourtag"
+                                placeholderTextColor="#d1d5db"
+                                autoCapitalize="none"
                                 style={{ backgroundColor: '#f9fafb', borderRadius: 10, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#111827' }}
                             />
                         </View>

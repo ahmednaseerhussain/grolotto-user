@@ -201,11 +201,15 @@ type MoncashWithdrawalMetadata = {
   moncashPhone: string;
   notes?: string | null;
 };
+type CashappWithdrawalMetadata = {
+  cashappTag: string;
+  notes?: string | null;
+};
 
 export async function updateWithdrawalMetadata(
   userId: string,
   idempotencyKey: string,
-  metadata: BankWithdrawalMetadata | MoncashWithdrawalMetadata
+  metadata: BankWithdrawalMetadata | MoncashWithdrawalMetadata | CashappWithdrawalMetadata
 ) {
   await query(
     `UPDATE transactions SET metadata = $1

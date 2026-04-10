@@ -39,7 +39,16 @@ export default function PlayerLogin() {
       }
       setUser(data.user);
     } catch (error) {
-      Alert.alert("Login Failed", getErrorMessage(error));
+      const msg = getErrorMessage(error);
+      if (msg.toLowerCase().includes('suspend')) {
+        Alert.alert(
+          "🚫 Account Suspended", 
+          `${msg}\n\nPlease contact support for assistance.`,
+          [{ text: "OK" }]
+        );
+      } else {
+        Alert.alert("Login Failed", msg);
+      }
     } finally {
       setLoading(false);
     }

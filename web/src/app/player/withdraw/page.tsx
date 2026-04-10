@@ -27,10 +27,11 @@ export default function PlayerWithdrawPage() {
     }, []);
 
     const [amount, setAmount] = useState("");
-    const [withdrawMethod, setWithdrawMethod] = useState<"moncash" | "bank_transfer">(
+    const [withdrawMethod, setWithdrawMethod] = useState<"moncash" | "cashapp" | "bank_transfer">(
         currency === "HTG" ? "moncash" : "bank_transfer"
     );
     const [moncashPhone, setMoncashPhone] = useState("");
+    const [cashappTag, setCashappTag] = useState("");
     const [bankName, setBankName] = useState("");
     const [accountHolderName, setAccountHolderName] = useState("");
     const [accountNumber, setAccountNumber] = useState("");
@@ -45,6 +46,7 @@ export default function PlayerWithdrawPage() {
 
     const methodLimits: Record<string, { min: number; max: number }> = {
         moncash: { min: 500, max: 250000 },
+        cashapp: currency === "HTG" ? { min: 500, max: 250000 } : { min: 5, max: 5000 },
         bank_transfer: currency === "HTG" ? { min: 500, max: 500000 } : { min: 5, max: 5000 },
     };
     const limits = methodLimits[withdrawMethod] || methodLimits.bank_transfer;
@@ -52,6 +54,8 @@ export default function PlayerWithdrawPage() {
     const canSubmit = parseFloat(amount) > 0 && (
         withdrawMethod === "moncash"
             ? moncashPhone.trim().length >= 8
+            : withdrawMethod === "cashapp"
+            ? cashappTag.trim().length >= 2
             : bankName.trim() && accountHolderName.trim() && accountNumber.trim()
     );
 
@@ -78,6 +82,8 @@ export default function PlayerWithdrawPage() {
                 method: withdrawMethod,
                 ...(withdrawMethod === "moncash"
                     ? { moncashPhone }
+                    : withdrawMethod === "cashapp"
+                    ? { cashappTag }
                     : { bankName, accountHolderName, accountNumber, routingNumber }),
                 notes,
             });
@@ -194,6 +200,24 @@ export default function PlayerWithdrawPage() {
                             {withdrawMethod === "bank_transfer" && <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />}
                         </div>
                     </button>
+                    <button
+                        onClick={() => setWithdrawMethod("cashapp")}
+                        className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${withdrawMethod === "cashapp"
+                            ? "border-green-500 bg-green-50"
+                            : "border-gray-200 hover:border-gray-300 bg-white"
+                            }`}
+                    >
+                        <div className="bg-green-500 w-10 h-10 rounded-full flex items-center justify-center">
+                            <span className="text-white font-bold text-lg">$</span>
+                        </div>
+                        <div className="text-left flex-1">
+                            <p className="font-semibold text-gray-900">Cash App</p>
+                            <p className="text-sm text-gray-500">Receive via Cash App $cashtag</p>
+                        </div>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${withdrawMethod === "cashapp" ? "border-green-500" : "border-gray-300"}`}>
+                            {withdrawMethod === "cashapp" && <div className="w-2.5 h-2.5 rounded-full bg-green-500" />}
+                        </div>
+                    </button>
                 </div>
             </div>
 
@@ -211,6 +235,36 @@ export default function PlayerWithdrawPage() {
                                 value={moncashPhone}
                                 onChange={(e) => setMoncashPhone(e.target.value)}
                                 placeholder="+509 XXXX XXXX"
+                                className="mt-1"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm text-gray-600">{t("additionalNotes") || "Additional Notes"} ({t("optional") || "optional"})</label>
+                            <Input
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                placeholder="Any special instructions"
+                                className="mt-1"
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* CashApp Details */}
+            {withdrawMethod === "cashapp" && (
+                <Card>
+                    <CardContent className="p-4 space-y-4">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-green-600 font-bold text-lg">$</span>
+                            <h3 className="font-semibold">Cash App Details</h3>
+                        </div>
+                        <div>
+                            <label className="text-sm text-gray-600">$Cashtag</label>
+                            <Input
+                                value={cashappTag}
+                                onChange={(e) => setCashappTag(e.target.value)}
+                                placeholder="$yourtag"
                                 className="mt-1"
                             />
                         </div>
