@@ -48,8 +48,8 @@ export default function PlayerWithdrawalScreen() {
         method === 'moncash'
             ? moncashPhone.replace(/[\s-]/g, '').length >= 8
             : method === 'cashapp'
-            ? cashappTag.trim().length >= 2
-            : (bankName.trim() && accountHolderName.trim() && accountNumber.trim())
+                ? cashappTag.trim().length >= 2
+                : (bankName.trim() && accountHolderName.trim() && accountNumber.trim())
     );
 
     const handleSubmit = async () => {

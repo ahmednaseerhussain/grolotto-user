@@ -16,7 +16,7 @@ export default function PlayerLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
-  
+
   const navigation = useNavigation();
   const setUser = useAppStore(s => s.setUser);
   const language = useAppStore(s => s.language);
@@ -29,7 +29,7 @@ export default function PlayerLogin() {
     }
 
     setLoading(true);
-    
+
     try {
       const data = await authAPI.login(email, password);
       if (data.user.role !== 'player') {
@@ -42,7 +42,7 @@ export default function PlayerLogin() {
       const msg = getErrorMessage(error);
       if (msg.toLowerCase().includes('suspend')) {
         Alert.alert(
-          "🚫 Account Suspended", 
+          "🚫 Account Suspended",
           `${msg}\n\nPlease contact support for assistance.`,
           [{ text: "OK" }]
         );
@@ -82,7 +82,7 @@ export default function PlayerLogin() {
     }
 
     setLoading(true);
-    
+
     try {
       const data = await authAPI.register({
         email,
@@ -192,19 +192,19 @@ export default function PlayerLogin() {
             autoCapitalize="none"
             autoCorrect={false}
           />
-          <Pressable 
+          <Pressable
             onPress={() => setShowPassword(!showPassword)}
             style={styles.eyeIcon}
           >
-            <Ionicons 
-              name={showPassword ? "eye" : "eye-off"} 
-              size={20} 
-              color="#6b7280" 
+            <Ionicons
+              name={showPassword ? "eye" : "eye-off"}
+              size={20}
+              color="#6b7280"
             />
           </Pressable>
         </View>
 
-        <Pressable 
+        <Pressable
           style={[styles.loginButton, loading && styles.loginButtonDisabled]}
           onPress={isSignUp ? handleSignUp : handleLogin}
           disabled={loading}
@@ -223,7 +223,7 @@ export default function PlayerLogin() {
             <Text style={styles.linkText}>Forgot Password?</Text>
           </Pressable>
         )}
-        
+
         <View style={styles.signupContainer}>
           <Text style={styles.signupText}>
             {isSignUp ? "Already have an account? " : "Don't have an account? "}

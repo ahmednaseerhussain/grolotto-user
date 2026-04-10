@@ -55,8 +55,8 @@ export default function PlayerWithdrawPage() {
         withdrawMethod === "moncash"
             ? moncashPhone.trim().length >= 8
             : withdrawMethod === "cashapp"
-            ? cashappTag.trim().length >= 2
-            : bankName.trim() && accountHolderName.trim() && accountNumber.trim()
+                ? cashappTag.trim().length >= 2
+                : bankName.trim() && accountHolderName.trim() && accountNumber.trim()
     );
 
     const handleSubmit = async () => {
@@ -83,8 +83,8 @@ export default function PlayerWithdrawPage() {
                 ...(withdrawMethod === "moncash"
                     ? { moncashPhone }
                     : withdrawMethod === "cashapp"
-                    ? { cashappTag }
-                    : { bankName, accountHolderName, accountNumber, routingNumber }),
+                        ? { cashappTag }
+                        : { bankName, accountHolderName, accountNumber, routingNumber }),
                 notes,
             });
             setShowSuccess(true);
