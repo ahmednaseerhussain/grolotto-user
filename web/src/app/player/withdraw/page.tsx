@@ -27,11 +27,12 @@ export default function PlayerWithdrawPage() {
     }, []);
 
     const [amount, setAmount] = useState("");
-    const [withdrawMethod, setWithdrawMethod] = useState<"moncash" | "cashapp" | "bank_transfer">(
+    const [withdrawMethod, setWithdrawMethod] = useState<"moncash" | "cashapp" | "paypal" | "bank_transfer">(
         currency === "HTG" ? "moncash" : "bank_transfer"
     );
     const [moncashPhone, setMoncashPhone] = useState("");
     const [cashappTag, setCashappTag] = useState("");
+    const [paypalEmail, setPaypalEmail] = useState("");
     const [bankName, setBankName] = useState("");
     const [accountHolderName, setAccountHolderName] = useState("");
     const [accountNumber, setAccountNumber] = useState("");
@@ -47,6 +48,7 @@ export default function PlayerWithdrawPage() {
     const methodLimits: Record<string, { min: number; max: number }> = {
         moncash: { min: 500, max: 250000 },
         cashapp: currency === "HTG" ? { min: 500, max: 250000 } : { min: 5, max: 5000 },
+        paypal: currency === "HTG" ? { min: 500, max: 250000 } : { min: 5, max: 5000 },
         bank_transfer: currency === "HTG" ? { min: 500, max: 500000 } : { min: 5, max: 5000 },
     };
     const limits = methodLimits[withdrawMethod] || methodLimits.bank_transfer;
@@ -56,7 +58,9 @@ export default function PlayerWithdrawPage() {
             ? moncashPhone.trim().length >= 8
             : withdrawMethod === "cashapp"
                 ? cashappTag.trim().length >= 2
-                : bankName.trim() && accountHolderName.trim() && accountNumber.trim()
+                : withdrawMethod === "paypal"
+                    ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(paypalEmail)
+                    : bankName.trim() && accountHolderName.trim() && accountNumber.trim()
     );
 
     const handleSubmit = async () => {
@@ -84,7 +88,9 @@ export default function PlayerWithdrawPage() {
                     ? { moncashPhone }
                     : withdrawMethod === "cashapp"
                         ? { cashappTag }
-                        : { bankName, accountHolderName, accountNumber, routingNumber }),
+                        : withdrawMethod === "paypal"
+                            ? { paypalEmail }
+                            : { bankName, accountHolderName, accountNumber, routingNumber }),
                 notes,
             });
             setShowSuccess(true);
@@ -218,6 +224,24 @@ export default function PlayerWithdrawPage() {
                             {withdrawMethod === "cashapp" && <div className="w-2.5 h-2.5 rounded-full bg-green-500" />}
                         </div>
                     </button>
+                    <button
+                        onClick={() => setWithdrawMethod("paypal")}
+                        className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${withdrawMethod === "paypal"
+                            ? "border-blue-600 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300 bg-white"
+                            }`}
+                    >
+                        <div className="bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">PP</span>
+                        </div>
+                        <div className="text-left flex-1">
+                            <p className="font-semibold text-gray-900">PayPal</p>
+                            <p className="text-sm text-gray-500">Receive via PayPal email</p>
+                        </div>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${withdrawMethod === "paypal" ? "border-blue-600" : "border-gray-300"}`}>
+                            {withdrawMethod === "paypal" && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
+                        </div>
+                    </button>
                 </div>
             </div>
 
@@ -265,6 +289,37 @@ export default function PlayerWithdrawPage() {
                                 value={cashappTag}
                                 onChange={(e) => setCashappTag(e.target.value)}
                                 placeholder="$yourtag"
+                                className="mt-1"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm text-gray-600">{t("additionalNotes") || "Additional Notes"} ({t("optional") || "optional"})</label>
+                            <Input
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                placeholder="Any special instructions"
+                                className="mt-1"
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* PayPal Details */}
+            {withdrawMethod === "paypal" && (
+                <Card>
+                    <CardContent className="p-4 space-y-4">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Globe className="h-5 w-5 text-blue-600" />
+                            <h3 className="font-semibold">PayPal Details</h3>
+                        </div>
+                        <div>
+                            <label className="text-sm text-gray-600">PayPal Email</label>
+                            <Input
+                                type="email"
+                                value={paypalEmail}
+                                onChange={(e) => setPaypalEmail(e.target.value)}
+                                placeholder="your@email.com"
                                 className="mt-1"
                             />
                         </div>

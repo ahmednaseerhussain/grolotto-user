@@ -91,8 +91,8 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 403) {
       const data = error.response?.data;
       if (data?.code === 'ACCOUNT_SUSPENDED') {
-        forceLogout();
-        // Use the detailed reason from the server if available
+        // Do NOT forceLogout immediately — let the calling page show the
+        // suspension message to the user first (toast / alert).
         const msg = data?.error || 'Your account has been suspended. Please contact support.';
         return Promise.reject(new Error(msg));
       }

@@ -26,7 +26,7 @@ export async function getTransactions(req: Request, res: Response, next: NextFun
 
 export async function requestWithdrawal(req: Request, res: Response, next: NextFunction) {
   try {
-    const { amount, currency, method, bankName, accountHolderName, accountNumber, routingNumber, notes, moncashPhone, cashappTag } = req.body;
+    const { amount, currency, method, bankName, accountHolderName, accountNumber, routingNumber, notes, moncashPhone, cashappTag, paypalEmail } = req.body;
 
     if (!amount || amount <= 0) {
       return res.status(400).json({ message: 'Invalid withdrawal amount' });
@@ -45,6 +45,10 @@ export async function requestWithdrawal(req: Request, res: Response, next: NextF
       if (!cashappTag || cashappTag.trim().length < 2) {
         return res.status(400).json({ message: 'Valid Cash App $cashtag is required' });
       }
+    } else if (paymentMethod === 'paypal') {
+      if (!paypalEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(paypalEmail)) {
+        return res.status(400).json({ message: 'Valid PayPal email address is required' });
+      }
     } else {
       if (!bankName || !accountHolderName || !accountNumber) {
         return res.status(400).json({ message: 'Bank details are required' });
@@ -61,6 +65,8 @@ export async function requestWithdrawal(req: Request, res: Response, next: NextF
       ? `MonCash withdrawal to ${moncashPhone}`
       : paymentMethod === 'cashapp'
       ? `Cash App withdrawal to ${cashappTag}`
+      : paymentMethod === 'paypal'
+      ? `PayPal withdrawal to ${paypalEmail}`
       : `Bank withdrawal to ${bankName} - ${accountHolderName}`;
 
     const result = await walletService.debitWallet(
@@ -77,6 +83,8 @@ export async function requestWithdrawal(req: Request, res: Response, next: NextF
       ? { moncashPhone, notes: notes || null }
       : paymentMethod === 'cashapp'
       ? { cashappTag, notes: notes || null }
+      : paymentMethod === 'paypal'
+      ? { paypalEmail, notes: notes || null }
       : { bankName, accountHolderName, accountNumber, routingNumber: routingNumber || null, notes: notes || null };
 
     await walletService.updateWithdrawalMetadata(req.user!.id, idempotencyKey, metadata);

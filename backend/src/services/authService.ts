@@ -152,7 +152,23 @@ export async function login(input: LoginInput): Promise<{ user: UserProfile; tok
   const user = result.rows[0];
 
   if (!user.is_active) {
-    throw new AppError('Account is suspended', 403, 'ACCOUNT_SUSPENDED');
+    // Fetch the admin-supplied suspension reason so the user sees it
+    let suspensionMsg = 'Your account has been suspended. Please contact support.';
+    try {
+      const reasonResult = await query(
+        `SELECT value FROM app_settings WHERE key = $1`,
+        [`suspension_reason_${user.id}`]
+      );
+      if (reasonResult.rows.length > 0) {
+        const val = typeof reasonResult.rows[0].value === 'string'
+          ? JSON.parse(reasonResult.rows[0].value)
+          : reasonResult.rows[0].value;
+        if (val?.reason) {
+          suspensionMsg = `Account suspended: ${val.reason}`;
+        }
+      }
+    } catch { /* non-critical — fall back to generic message */ }
+    throw new AppError(suspensionMsg, 403, 'ACCOUNT_SUSPENDED');
   }
 
   // Check brute force protection (only if migration has run)

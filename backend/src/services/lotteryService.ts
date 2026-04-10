@@ -865,12 +865,23 @@ export async function getVendorRoundDetails(vendorId: string, roundId: string) {
 
 /**
  * Check if a ticket's numbers match the winning numbers.
- * All game types require exact positional match:
- * - SENP: 1 number (00-99) must match exactly
- * - MARYAJ: 2 numbers (00-99) must match in exact order
+ * - MARYAJ: ticket has 2 numbers (a pair); winning has 6 numbers = 3 pairs
+ *   [fp,sp, fp,tp, sp,tp]. Player wins if their pair matches ANY winning pair
+ *   (order within the pair matters).
  * - LOTO3-5: 3-5 digits (0-9) must match in exact order
  */
 function checkWin(gameType: string, ticketNumbers: number[], winningNumbers: number[]): boolean {
+  if (gameType === 'maryaj') {
+    // Winning numbers: [fp,sp, fp,tp, sp,tp] = 3 sequential pairs
+    // Ticket numbers: [a, b] = 1 pair
+    if (ticketNumbers.length !== 2) return false;
+    const [ta, tb] = ticketNumbers;
+    for (let i = 0; i + 1 < winningNumbers.length; i += 2) {
+      if (winningNumbers[i] === ta && winningNumbers[i + 1] === tb) return true;
+    }
+    return false;
+  }
+
   if (ticketNumbers.length !== winningNumbers.length) return false;
 
   // All numbers must match in order

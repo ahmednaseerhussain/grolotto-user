@@ -205,11 +205,15 @@ type CashappWithdrawalMetadata = {
   cashappTag: string;
   notes?: string | null;
 };
+type PaypalWithdrawalMetadata = {
+  paypalEmail: string;
+  notes?: string | null;
+};
 
 export async function updateWithdrawalMetadata(
   userId: string,
   idempotencyKey: string,
-  metadata: BankWithdrawalMetadata | MoncashWithdrawalMetadata | CashappWithdrawalMetadata
+  metadata: BankWithdrawalMetadata | MoncashWithdrawalMetadata | CashappWithdrawalMetadata | PaypalWithdrawalMetadata
 ) {
   await query(
     `UPDATE transactions SET metadata = $1

@@ -16,9 +16,10 @@ export default function PlayerWithdrawalScreen() {
     const t = (key: string) => getTranslation(key as any, language);
 
     const [amount, setAmount] = useState("");
-    const [method, setMethod] = useState<'moncash' | 'cashapp' | 'bank_transfer'>(currency === 'HTG' ? 'moncash' : 'bank_transfer');
+    const [method, setMethod] = useState<'moncash' | 'cashapp' | 'paypal' | 'bank_transfer'>(currency === 'HTG' ? 'moncash' : 'bank_transfer');
     const [moncashPhone, setMoncashPhone] = useState("");
     const [cashappTag, setCashappTag] = useState("");
+    const [paypalEmail, setPaypalEmail] = useState("");
     const [bankName, setBankName] = useState("");
     const [accountHolderName, setAccountHolderName] = useState("");
     const [accountNumber, setAccountNumber] = useState("");
@@ -49,7 +50,9 @@ export default function PlayerWithdrawalScreen() {
             ? moncashPhone.replace(/[\s-]/g, '').length >= 8
             : method === 'cashapp'
                 ? cashappTag.trim().length >= 2
-                : (bankName.trim() && accountHolderName.trim() && accountNumber.trim())
+                : method === 'paypal'
+                    ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(paypalEmail)
+                    : (bankName.trim() && accountHolderName.trim() && accountNumber.trim())
     );
 
     const handleSubmit = async () => {
@@ -74,6 +77,8 @@ export default function PlayerWithdrawalScreen() {
                 await walletAPI.requestWithdrawal({ ...base, method: 'moncash', moncashPhone });
             } else if (method === 'cashapp') {
                 await walletAPI.requestWithdrawal({ ...base, method: 'cashapp', cashappTag });
+            } else if (method === 'paypal') {
+                await walletAPI.requestWithdrawal({ ...base, method: 'paypal', paypalEmail });
             } else {
                 await walletAPI.requestWithdrawal({ ...base, method: 'bank_transfer', bankName, accountHolderName, accountNumber, routingNumber });
             }
@@ -228,6 +233,23 @@ export default function PlayerWithdrawalScreen() {
                             <Ionicons name="logo-usd" size={18} color={method === 'cashapp' ? '#00A825' : '#6b7280'} />
                             <Text style={{ marginLeft: 6, fontWeight: '700', color: method === 'cashapp' ? '#00732a' : '#6b7280' }}>Cash App</Text>
                         </Pressable>
+                        <Pressable
+                            onPress={() => setMethod('paypal')}
+                            style={{
+                                flex: 1,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                paddingVertical: 14,
+                                borderRadius: 12,
+                                borderWidth: 2,
+                                borderColor: method === 'paypal' ? '#0070ba' : '#e5e7eb',
+                                backgroundColor: method === 'paypal' ? '#e8f4fc' : '#fff',
+                            }}
+                        >
+                            <Ionicons name="logo-paypal" size={18} color={method === 'paypal' ? '#003087' : '#6b7280'} />
+                            <Text style={{ marginLeft: 6, fontWeight: '700', color: method === 'paypal' ? '#003087' : '#6b7280' }}>PayPal</Text>
+                        </Pressable>
                     </View>
                 </Animated.View>
 
@@ -274,6 +296,32 @@ export default function PlayerWithdrawalScreen() {
                                 onChangeText={setCashappTag}
                                 placeholder="$yourtag"
                                 placeholderTextColor="#d1d5db"
+                                autoCapitalize="none"
+                                style={{ backgroundColor: '#f9fafb', borderRadius: 10, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#111827' }}
+                            />
+                        </View>
+                    </Animated.View>
+                )}
+
+                {/* PayPal Details */}
+                {method === 'paypal' && (
+                    <Animated.View entering={FadeInDown.duration(300)} style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#e5e7eb', padding: 16 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                            <Ionicons name="logo-paypal" size={20} color="#003087" />
+                            <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827', marginLeft: 8 }}>
+                                PayPal Details
+                            </Text>
+                        </View>
+                        <View>
+                            <Text style={{ fontSize: 13, color: '#6b7280', marginBottom: 4 }}>
+                                PayPal Email
+                            </Text>
+                            <TextInput
+                                value={paypalEmail}
+                                onChangeText={setPaypalEmail}
+                                placeholder="your@email.com"
+                                placeholderTextColor="#d1d5db"
+                                keyboardType="email-address"
                                 autoCapitalize="none"
                                 style={{ backgroundColor: '#f9fafb', borderRadius: 10, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#111827' }}
                             />

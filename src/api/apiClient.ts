@@ -81,8 +81,9 @@ api.interceptors.response.use(
     if (error.response?.status === 403) {
       const data = error.response?.data as any;
       if (data?.code === 'ACCOUNT_SUSPENDED') {
-        await tokenStorage.clearTokens();
-        // Use the detailed reason from the server if available
+        // Do NOT clear tokens immediately — let the calling code show the
+        // suspension message first (Alert / toast). Tokens are already
+        // invalid server-side so subsequent requests will also fail.
         const msg = data?.error || 'Your account has been suspended. Please contact support.';
         return Promise.reject(new Error(msg));
       }
@@ -371,7 +372,8 @@ export const walletAPI = {
 
   async requestWithdrawal(data: 
     | { amount: number; currency: string; method: 'moncash'; moncashPhone: string; notes?: string }
-    | { amount: number; currency: string; method: 'cashapp '; cashappTag: string; notes?: string }
+    | { amount: number; currency: string; method: 'cashapp'; cashappTag: string; notes?: string }
+    | { amount: number; currency: string; method: 'paypal'; paypalEmail: string; notes?: string }
     | { amount: number; currency: string; method: 'bank_transfer'; bankName: string; accountHolderName: string; accountNumber: string; routingNumber?: string; notes?: string }
   ) {
     const res = await api.post('/wallet/withdraw', data);
