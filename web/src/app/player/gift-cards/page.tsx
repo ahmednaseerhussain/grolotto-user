@@ -9,7 +9,7 @@ import { walletAPI } from "@/lib/api/wallet";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft, Gift, Ticket, CheckCircle, Copy, Share2, Loader2,
-  CreditCard, Wallet, Mail, DollarSign, Clock
+  Wallet, Mail, DollarSign, Clock
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -111,32 +111,6 @@ export default function GiftCardsPage() {
       setBuyStep("pending");
     } catch (err: any) {
       toast.error(err?.response?.data?.error || "Failed to create payment order");
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const handleStripePayment = async () => {
-    if (!selectedAmount) return;
-    setProcessing(true);
-    try {
-      const intent = await paymentOrderAPI.createStripeIntent({
-        amount: selectedAmount,
-        currency,
-        giftCardAmount: selectedAmount,
-      });
-      // For now, redirect to a Stripe-hosted payment page
-      // In production, use Stripe Elements embedded form
-      toast.success("Stripe payment created! Complete payment in the popup.");
-      // After payment, confirm:
-      const confirmed = await paymentOrderAPI.confirmStripePayment(intent.paymentIntentId);
-      if (confirmed.success) {
-        toast.success(`$${confirmed.amount} ${confirmed.currency} added to your wallet!`);
-        try { const w = await walletAPI.getBalance(); if (w) setWallet(w); } catch { }
-        resetBuyFlow();
-      }
-    } catch (err: any) {
-      toast.error(err?.response?.data?.error || "Stripe payment failed");
     } finally {
       setProcessing(false);
     }
@@ -442,22 +416,6 @@ export default function GiftCardsPage() {
                     <p className="text-white font-semibold">CashApp</p>
                     <p className="text-slate-400 text-sm">Send payment &amp; email screenshot</p>
                   </div>
-                </button>
-
-                {/* Debit Card (Stripe) */}
-                <button
-                  onClick={() => { setPaymentMethod("stripe"); handleStripePayment(); }}
-                  disabled={processing}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl bg-slate-800 border border-slate-700 hover:border-blue-500/50 transition-all disabled:opacity-50"
-                >
-                  <div className="bg-blue-500/20 p-3 rounded-lg">
-                    <CreditCard className="h-6 w-6 text-blue-400" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="text-white font-semibold">Debit Card</p>
-                    <p className="text-slate-400 text-sm">Pay instantly with Stripe</p>
-                  </div>
-                  {processing && paymentMethod === "stripe" && <Loader2 className="h-5 w-5 animate-spin text-white" />}
                 </button>
               </div>
             </>

@@ -4,16 +4,16 @@ import * as notificationService from './notificationService';
 import crypto from 'crypto';
 
 /**
- * Generate a unique 12-character gift card code: XXXX-XXXX-XXXX
+ * Generate a unique 16-character gift card code: XXXX-XXXX-XXXX-XXXX
  */
 function generateGiftCardCode(): string {
   const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // no I,L,O,0,1 to avoid confusion
   let code = '';
-  const bytes = crypto.randomBytes(12);
-  for (let i = 0; i < 12; i++) {
+  const bytes = crypto.randomBytes(16);
+  for (let i = 0; i < 16; i++) {
     code += chars[bytes[i] % chars.length];
   }
-  return `${code.slice(0, 4)}-${code.slice(4, 8)}-${code.slice(8, 12)}`;
+  return `${code.slice(0, 4)}-${code.slice(4, 8)}-${code.slice(8, 12)}-${code.slice(12, 16)}`;
 }
 
 /**

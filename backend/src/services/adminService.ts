@@ -991,6 +991,10 @@ export async function getPendingWithdrawals() {
     accountHolderName: r.metadata?.accountHolderName || '',
     accountNumber: r.metadata?.accountNumber || '',
     routingNumber: r.metadata?.routingNumber || '',
+    cashappTag: r.metadata?.cashappTag || '',
+    moncashPhone: r.metadata?.moncashPhone || '',
+    paypalEmail: r.metadata?.paypalEmail || '',
+    zelleEmail: r.metadata?.zelleEmail || '',
     notes: r.metadata?.notes || '',
     requestDate: r.created_at,
   }));
