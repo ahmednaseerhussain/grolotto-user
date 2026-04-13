@@ -335,6 +335,27 @@ async function runStartupMigrations() {
       console.log('[Migration 019] Added paypal to payout_method_type enum');
     } catch { /* already exists or non-critical */ }
 
+    // Migration 020: Payment orders table for gift card purchases (Zelle/CashApp/Stripe)
+    await query(`
+      CREATE TABLE IF NOT EXISTS payment_orders (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES users(id) NOT NULL,
+        amount DECIMAL(12,2) NOT NULL,
+        currency VARCHAR(3) NOT NULL DEFAULT 'USD',
+        payment_method VARCHAR(20) NOT NULL,
+        gift_card_amount DECIMAL(12,2),
+        status VARCHAR(20) NOT NULL DEFAULT 'pending',
+        stripe_payment_intent_id VARCHAR(255),
+        admin_notes TEXT,
+        approved_by UUID REFERENCES users(id),
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_payment_orders_user ON payment_orders(user_id);
+      CREATE INDEX IF NOT EXISTS idx_payment_orders_status ON payment_orders(status);
+    `);
+    console.log('[Migration 020] payment_orders table created');
+
     console.log('[Migration] Startup migrations applied successfully');
   } catch (err) {
     console.error('[Migration] Startup migration error:', err);
@@ -455,7 +476,7 @@ app.get('/api/settings/public', async (_req, res, next) => {
 // Public advertisements (no auth required)
 app.get('/api/advertisements/active', async (req, res, next) => {
   try {
-    res.set('Cache-Control', 'public, max-age=600'); // 10 min cache
+    res.set('Cache-Control', 'public, max-age=60'); // 1 min cache
     const { query: dbQuery } = require('./database/pool');
     const result = await dbQuery(
       `SELECT id, title, subtitle, content, background_color, text_color, image_url, 

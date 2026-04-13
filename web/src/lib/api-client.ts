@@ -87,6 +87,18 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Handle maintenance mode
+    if (error.response?.status === 503) {
+      const data = error.response?.data;
+      if (data?.code === 'MAINTENANCE_MODE') {
+        // Dispatch a custom event so the app can show a maintenance overlay
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('grolotto:maintenance', { detail: { message: data.error } }));
+        }
+        return Promise.reject(new Error(data.error || 'The app is currently under maintenance.'));
+      }
+    }
+
     // Handle suspended accounts
     if (error.response?.status === 403) {
       const data = error.response?.data;

@@ -50,9 +50,11 @@ import TchalaManager from "../screens/TchalaManager";
 
 import { authAPI, tokenStorage } from "../api/apiClient";
 import { registerForPushNotifications, unregisterPushNotifications } from "../utils/pushNotifications";
+import MaintenanceScreen from "../screens/MaintenanceScreen";
 
 export type RootStackParamList = {
   Splash: undefined;
+  Maintenance: undefined;
   Onboarding: undefined;
   LanguageCurrencySelector: undefined;
   LoginEntry: undefined;
@@ -105,6 +107,7 @@ export default function AppNavigator() {
   const isAuthenticated = useAppStore(s => s.isAuthenticated);
   const hasCompletedOnboarding = useAppStore(s => s.hasCompletedOnboarding);
   const user = useAppStore(s => s.user);
+  const maintenanceMode = useAppStore(s => s.maintenanceMode);
 
   // On app launch, validate existing session or restore from stored token
   React.useEffect(() => {
@@ -157,6 +160,8 @@ export default function AppNavigator() {
         <Stack.Screen name="Splash">
           {() => <SplashScreen onComplete={handleSplashComplete} />}
         </Stack.Screen>
+      ) : maintenanceMode ? (
+        <Stack.Screen name="Maintenance" component={MaintenanceScreen} />
       ) : !hasCompletedOnboarding ? (
         <Stack.Screen name="Onboarding" component={OnboardingScreens} />
       ) : !isAuthenticated ? (

@@ -300,6 +300,8 @@ interface AppState {
   // User state
   user: User | null;
   isAuthenticated: boolean;
+  maintenanceMode: boolean;
+  setMaintenanceMode: (on: boolean) => void;
   
   // Vendors
   vendors: Vendor[];
@@ -414,6 +416,7 @@ export const useAppStore = create<AppState>()(
       hasCompletedOnboarding: false,
       user: null,
       isAuthenticated: false,
+      maintenanceMode: false,
       vendors: [],
       pendingVendors: [],
       selectedVendor: null,
@@ -447,6 +450,7 @@ export const useAppStore = create<AppState>()(
       completeOnboarding: () => set({ hasCompletedOnboarding: true }),
       resetOnboarding: () => set({ hasCompletedOnboarding: false }),
       setUser: (user) => set({ user, isAuthenticated: true }),
+      setMaintenanceMode: (on) => set({ maintenanceMode: on }),
       updateUser: (user) => set((state) => ({ 
         user: state.user?.id === user.id ? user : state.user,
         allUsers: state.allUsers.map(u => u.id === user.id ? user : u)

@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import { useAppStore } from '../state/appStore';
 
 // ─── Configuration ───────────────────────────────────────
 // Android emulator uses 10.0.2.2 to reach host machine; iOS simulator uses localhost
@@ -76,6 +77,15 @@ api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+
+    // Handle maintenance mode
+    if (error.response?.status === 503) {
+      const data = error.response?.data as any;
+      if (data?.code === 'MAINTENANCE_MODE') {
+        useAppStore.getState().setMaintenanceMode(true);
+        return Promise.reject(new Error(data.error || 'The app is currently under maintenance.'));
+      }
+    }
 
     // Handle suspended accounts
     if (error.response?.status === 403) {

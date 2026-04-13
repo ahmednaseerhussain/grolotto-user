@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as ctrl from '../controllers/adminController';
+import * as paymentOrderCtrl from '../controllers/paymentOrderController';
 import { authenticate, authorize, authorizeResource } from '../middleware/auth';
 import { validateUUIDParams } from '../middleware/validate';
 
@@ -74,5 +75,10 @@ router.post('/rounds', authorizeResource('results'), ctrl.createLotteryRound);
 // Player Withdrawals
 router.get('/withdrawals/pending', authorizeResource('payouts'), ctrl.getPendingWithdrawals);
 router.post('/withdrawals/:withdrawalId/process', validateUUIDParams('withdrawalId'), authorizeResource('payouts'), ctrl.processPlayerWithdrawal);
+
+// Payment Orders (manual payment approvals)
+router.get('/payment-orders', authorizeResource('payouts'), paymentOrderCtrl.listOrders);
+router.put('/payment-orders/:id/approve', validateUUIDParams('id'), authorizeResource('payouts'), paymentOrderCtrl.approveOrder);
+router.put('/payment-orders/:id/reject', validateUUIDParams('id'), authorizeResource('payouts'), paymentOrderCtrl.rejectOrder);
 
 export default router;

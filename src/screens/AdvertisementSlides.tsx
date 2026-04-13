@@ -3,7 +3,7 @@ import { View, Text, Pressable, ActivityIndicator, Platform, ScrollView } from "
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { adminAPI, getErrorMessage } from "../api/apiClient";
+import { advertisementAPI, getErrorMessage } from "../api/apiClient";
 
 // Conditionally import PagerView for native platforms only
 let PagerView: any = null;
@@ -47,19 +47,19 @@ export default function AdvertisementSlides() {
         const { lotteryAPI } = await import('../api/apiClient');
         const data = await lotteryAPI.getLotteryRounds();
         const rounds = Array.isArray(data) ? data : data?.rounds || [];
-        
+
         const today = new Date().toDateString();
         const yesterday = new Date(Date.now() - 86400000).toDateString();
-        
+
         const todayDraws = rounds.filter((r: any) => new Date(r.date).toDateString() === today);
         const yesterdayDraws = rounds.filter((r: any) => new Date(r.date).toDateString() === yesterday);
-        
+
         const mapDraws = (draws: any[]): DrawResult[] => draws.map((r: any) => ({
           state: r.drawState || r.state || '',
           time: r.drawTime || '',
           ...(r.winningNumbers || {}),
         }));
-        
+
         if (todayDraws.length > 0) setTodayResults({ date: new Date().toLocaleDateString(), draws: mapDraws(todayDraws) });
         if (yesterdayDraws.length > 0) setYesterdayResults({ date: new Date(Date.now() - 86400000).toLocaleDateString(), draws: mapDraws(yesterdayDraws) });
       } catch (e) {
@@ -74,10 +74,8 @@ export default function AdvertisementSlides() {
     const fetchAdvertisements = async () => {
       try {
         setLoading(true);
-        const response = await adminAPI.getAdvertisements();
-        const ads = response.data || response;
+        const ads = await advertisementAPI.getActiveAds();
         const activeAds = (Array.isArray(ads) ? ads : [])
-          .filter((ad: any) => ad.status === "active")
           .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
         setAdvertisements(activeAds);
       } catch (error) {
@@ -93,7 +91,7 @@ export default function AdvertisementSlides() {
   // Auto-slide functionality
   useEffect(() => {
     if (!autoSlide || loading) return;
-    
+
     const totalSlides = 2 + advertisements.length; // 2 results slides + ads
     const interval = setInterval(() => {
       setCurrentPage(prev => (prev + 1) % totalSlides);
@@ -160,30 +158,30 @@ export default function AdvertisementSlides() {
                   <Text className="text-white text-xl font-bold">{draw.state}</Text>
                   <Text className="text-blue-200">{draw.time}</Text>
                 </View>
-                
+
                 <View className="flex-row flex-wrap space-x-2">
                   <View className="bg-white rounded-lg px-3 py-1 mb-2">
                     <Text className="text-xs text-gray-600 font-medium">SENP</Text>
                     <Text className="text-blue-600 font-bold text-lg">{draw.senp}</Text>
                   </View>
-                  
+
                   <View className="bg-white rounded-lg px-3 py-1 mb-2">
                     <Text className="text-xs text-gray-600 font-medium">MARYAJ</Text>
                     <Text className="text-blue-600 font-bold text-lg">{draw.maryaj}</Text>
                   </View>
-                  
+
                   <View className="bg-white rounded-lg px-3 py-1 mb-2">
                     <Text className="text-xs text-gray-600 font-medium">LOTO 3</Text>
                     <Text className="text-blue-600 font-bold text-lg">{draw.loto3}</Text>
                   </View>
-                  
+
                   {draw.loto4 && (
                     <View className="bg-white rounded-lg px-3 py-1 mb-2">
                       <Text className="text-xs text-gray-600 font-medium">LOTO 4</Text>
                       <Text className="text-blue-600 font-bold text-lg">{draw.loto4}</Text>
                     </View>
                   )}
-                  
+
                   {draw.loto5 && (
                     <View className="bg-white rounded-lg px-3 py-1 mb-2">
                       <Text className="text-xs text-gray-600 font-medium">LOTO 5</Text>
@@ -200,7 +198,7 @@ export default function AdvertisementSlides() {
 
     // Slide 2: Yesterday's Results
     {
-      type: "results", 
+      type: "results",
       content: (
         <View className="flex-1 bg-gray-700 px-6 py-8">
           <View className="items-center mb-8">
@@ -218,23 +216,23 @@ export default function AdvertisementSlides() {
                   <Text className="text-white text-xl font-bold">{draw.state}</Text>
                   <Text className="text-gray-300">{draw.time}</Text>
                 </View>
-                
+
                 <View className="flex-row flex-wrap space-x-2">
                   <View className="bg-white rounded-lg px-3 py-1 mb-2">
                     <Text className="text-xs text-gray-600 font-medium">SENP</Text>
                     <Text className="text-gray-700 font-bold text-lg">{draw.senp}</Text>
                   </View>
-                  
+
                   <View className="bg-white rounded-lg px-3 py-1 mb-2">
                     <Text className="text-xs text-gray-600 font-medium">MARYAJ</Text>
                     <Text className="text-gray-700 font-bold text-lg">{draw.maryaj}</Text>
                   </View>
-                  
+
                   <View className="bg-white rounded-lg px-3 py-1 mb-2">
                     <Text className="text-xs text-gray-600 font-medium">LOTO 3</Text>
                     <Text className="text-gray-700 font-bold text-lg">{draw.loto3}</Text>
                   </View>
-                  
+
                   <View className="bg-white rounded-lg px-3 py-1 mb-2">
                     <Text className="text-xs text-gray-600 font-medium">LOTO 4</Text>
                     <Text className="text-gray-700 font-bold text-lg">{draw.loto4}</Text>
@@ -251,31 +249,31 @@ export default function AdvertisementSlides() {
     ...advertisements.map((ad: any) => ({
       type: "ad",
       content: (
-        <View 
-          style={{ backgroundColor: ad.backgroundColor || "#3b82f6" }} 
+        <View
+          style={{ backgroundColor: ad.backgroundColor || "#3b82f6" }}
           className="flex-1 px-6 py-8 justify-center"
         >
           <View className="items-center mb-8">
             <View className="bg-white/20 rounded-full p-6 mb-6">
               <Ionicons name="megaphone" size={64} color="white" />
             </View>
-            
+
             <Text className="text-white text-3xl font-bold text-center mb-3">
               {ad.title}
             </Text>
-            
+
             {ad.subtitle && (
               <Text className="text-white/80 text-xl text-center mb-6">
                 {ad.subtitle}
               </Text>
             )}
-            
+
             <Text className="text-white/90 text-lg text-center leading-7 mb-8">
               {ad.content}
             </Text>
-            
+
             {ad.linkText && (
-              <Pressable 
+              <Pressable
                 className="bg-white rounded-2xl py-4 px-8 shadow-lg"
                 onPress={() => trackClick(ad.id)}
               >
@@ -303,7 +301,7 @@ export default function AdvertisementSlides() {
         >
           <Ionicons name="chevron-back" size={24} color="#374151" />
         </Pressable>
-        
+
         <View className="items-center">
           <Text className="text-lg font-bold text-yellow-600">
             GROLOTTO
@@ -312,15 +310,15 @@ export default function AdvertisementSlides() {
             Results & Offers
           </Text>
         </View>
-        
+
         <Pressable
           onPress={() => setAutoSlide(!autoSlide)}
           className={`p-2 rounded-full ${autoSlide ? 'bg-blue-100' : 'bg-gray-100'}`}
         >
-          <Ionicons 
-            name={autoSlide ? "pause" : "play"} 
-            size={20} 
-            color={autoSlide ? "#2563eb" : "#6b7280"} 
+          <Ionicons
+            name={autoSlide ? "pause" : "play"}
+            size={20}
+            color={autoSlide ? "#2563eb" : "#6b7280"}
           />
         </Pressable>
       </View>
@@ -352,9 +350,8 @@ export default function AdvertisementSlides() {
           {slides.map((_, index) => (
             <View
               key={index}
-              className={`h-2 w-8 mx-1 rounded-full ${
-                index === currentPage ? "bg-blue-500" : "bg-gray-300"
-              }`}
+              className={`h-2 w-8 mx-1 rounded-full ${index === currentPage ? "bg-blue-500" : "bg-gray-300"
+                }`}
             />
           ))}
         </View>
@@ -364,7 +361,7 @@ export default function AdvertisementSlides() {
           <Text className="text-gray-600 text-sm">
             {currentPage + 1} of {slides.length}
           </Text>
-          
+
           <View className="flex-row space-x-4">
             <Pressable
               onPress={() => setCurrentPage((currentPage - 1 + slides.length) % slides.length)}
@@ -372,7 +369,7 @@ export default function AdvertisementSlides() {
             >
               <Ionicons name="chevron-back" size={20} color="#6b7280" />
             </Pressable>
-            
+
             <Pressable
               onPress={() => setCurrentPage((currentPage + 1) % slides.length)}
               className="bg-gray-100 rounded-full p-2"
