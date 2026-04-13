@@ -38,7 +38,7 @@ export default function PaymentScreen() {
 
   // Load payment config for Zelle/CashApp
   useEffect(() => {
-    paymentOrderAPI.getPaymentConfig().then(setPaymentConfig).catch(() => {});
+    paymentOrderAPI.getPaymentConfig().then(setPaymentConfig).catch(() => { });
   }, []);
 
   const balance = currency === "HTG"
@@ -77,7 +77,7 @@ export default function PaymentScreen() {
         toast.success("Complete payment in the Stripe popup.");
         const confirmed = await paymentOrderAPI.confirmStripePayment(intent.paymentIntentId);
         if (confirmed.success) {
-          try { const w = await walletAPI.getBalance(); if (w) setWallet(w); } catch {}
+          try { const w = await walletAPI.getBalance(); if (w) setWallet(w); } catch { }
           setShowSuccess(true);
           setTimeout(() => { setShowSuccess(false); router.push("/player/dashboard"); }, 3000);
         } else {
