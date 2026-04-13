@@ -7,9 +7,9 @@
  */
 import Stripe from 'stripe';
 
-let stripe: Stripe | null = null;
+let stripe: InstanceType<typeof Stripe> | null = null;
 
-function getStripe(): Stripe {
+function getStripe(): InstanceType<typeof Stripe> {
   if (!stripe) {
     const key = process.env.STRIPE_SECRET_KEY;
     if (!key) throw new Error('STRIPE_SECRET_KEY not set in environment');
@@ -43,7 +43,13 @@ export async function createPaymentIntent(
 /**
  * Verify a PaymentIntent succeeded (used after webhook or manual check).
  */
-export async function verifyPaymentIntent(paymentIntentId: string) {
+export async function verifyPaymentIntent(paymentIntentId: string): Promise<{
+  status: string;
+  succeeded: boolean;
+  amount: number;
+  currency: string;
+  metadata: Record<string, string>;
+}> {
   const s = getStripe();
   const intent = await s.paymentIntents.retrieve(paymentIntentId);
   return {
@@ -58,7 +64,7 @@ export async function verifyPaymentIntent(paymentIntentId: string) {
 /**
  * Construct and verify a Stripe webhook event (for automated fulfilment).
  */
-export function constructWebhookEvent(body: Buffer, sig: string) {
+export function constructWebhookEvent(body: Buffer, sig: string): ReturnType<InstanceType<typeof Stripe>['webhooks']['constructEvent']> {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!secret) throw new Error('STRIPE_WEBHOOK_SECRET not set');
   const s = getStripe();
