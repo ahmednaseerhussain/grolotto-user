@@ -188,7 +188,7 @@ export async function getTransactions(
 }
 
 /**
- * Store bank details metadata on a withdrawal transaction.
+ * Store bank details metadata on a withdrawal transaction..
  */
 type BankWithdrawalMetadata = {
   bankName: string;
