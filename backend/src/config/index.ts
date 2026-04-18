@@ -39,6 +39,8 @@ const config = {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
     maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000', 10),
   },
+  rateLimitEnabled: process.env.RATE_LIMIT_ENABLED !== 'false',
+  trustProxy: process.env.TRUST_PROXY === 'true',
   
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:19006',
 

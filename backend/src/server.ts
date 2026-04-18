@@ -385,6 +385,12 @@ import giftCardRoutes from './routes/giftCardRoutes';
 
 const app = express();
 
+// Respect reverse proxy headers if configured (fixes X-Forwarded-For validation)
+if (config.trustProxy) {
+  app.set('trust proxy', true);
+  console.log('[Server] trust proxy enabled');
+}
+
 // ─── Security ────────────────────────────────────────────
 app.use(helmet());
 
@@ -410,14 +416,18 @@ app.use(cors({
 }));
 
 // ─── Rate limiting ───────────────────────────────────────
-const limiter = rateLimit({
-  windowMs: config.rateLimit.windowMs,
-  max: config.rateLimit.maxRequests,
-  message: { error: 'Too many requests, please try again later.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use(limiter);
+if (config.rateLimitEnabled) {
+  const limiter = rateLimit({
+    windowMs: config.rateLimit.windowMs,
+    max: config.rateLimit.maxRequests,
+    message: { error: 'Too many requests, please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+  app.use(limiter);
+} else {
+  console.log('[Server] rate limiting is disabled (RATE_LIMIT_ENABLED=false)');
+}
 
 // Auth routes get stricter rate limiting
 const authLimiter = rateLimit({
