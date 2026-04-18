@@ -3,6 +3,7 @@ import * as ctrl from '../controllers/adminController';
 import * as paymentOrderCtrl from '../controllers/paymentOrderController';
 import { authenticate, authorize, authorizeResource } from '../middleware/auth';
 import { validateUUIDParams } from '../middleware/validate';
+import * as walletCtrl from '../controllers/walletController';
 
 const router = Router();
 
@@ -80,5 +81,8 @@ router.post('/withdrawals/:withdrawalId/process', validateUUIDParams('withdrawal
 router.get('/payment-orders', authorizeResource('payouts'), paymentOrderCtrl.listOrders);
 router.put('/payment-orders/:id/approve', validateUUIDParams('id'), authorizeResource('payouts'), paymentOrderCtrl.approveOrder);
 router.put('/payment-orders/:id/reject', validateUUIDParams('id'), authorizeResource('payouts'), paymentOrderCtrl.rejectOrder);
+
+// Player wallet lookup (admin)
+router.get('/players/:playerId/wallet', validateUUIDParams('playerId'), authorizeResource('players'), walletCtrl.getPlayerWalletById);
 
 export default router;

@@ -102,3 +102,14 @@ export async function requestWithdrawal(req: Request, res: Response, next: NextF
     next(error);
   }
 }
+
+// Admin endpoint to get any player's wallet
+export async function getPlayerWalletById(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { playerId } = req.params;
+    const wallet = await walletService.getWallet(playerId);
+    res.json(wallet);
+  } catch (error) {
+    next(error);
+  }
+}
