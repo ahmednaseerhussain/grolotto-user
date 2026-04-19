@@ -163,7 +163,7 @@ export async function redeemGiftCard(userId: string, code: string) {
 
     // Mark gift card as redeemed
     await client.query(
-      `UPDATE gift_cards SET status = 'redeemed', redeemed_by = $1, redeemed_at = NOW() WHERE id = $2`,
+      `UPDATE gift_cards SET status = 'redeemed', is_redeemed = TRUE, redeemed_by = $1, redeemed_at = NOW() WHERE id = $2`,
       [userId, gc.id]
     );
 
