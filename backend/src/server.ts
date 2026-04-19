@@ -240,7 +240,7 @@ async function runStartupMigrations() {
       CREATE TABLE IF NOT EXISTS number_limits (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         vendor_id UUID NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
-        draw_state draw_state NOT NULL,
+        draw_state VARCHAR(10) NOT NULL,
         number VARCHAR(10) NOT NULL,
         bet_limit DECIMAL(10,2) NOT NULL,
         current_total DECIMAL(10,2) DEFAULT 0.00,
@@ -250,6 +250,21 @@ async function runStartupMigrations() {
       );
       CREATE INDEX IF NOT EXISTS idx_number_limits_vendor_draw ON number_limits(vendor_id, draw_state);
     `);
+
+    // Migration 022: Alter existing number_limits table to use VARCHAR instead of ENUM
+    await query(`
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'number_limits'
+          AND column_name = 'draw_state'
+          AND data_type = 'USER-DEFINED'
+        ) THEN
+          ALTER TABLE number_limits ALTER COLUMN draw_state TYPE VARCHAR(10);
+        END IF;
+      END $$;
+    `).catch(() => {});
 
     // Migration 012: create dream_dictionary table if missing
     await query(`
