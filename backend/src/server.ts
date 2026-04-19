@@ -386,6 +386,41 @@ async function runStartupMigrations() {
       CREATE INDEX IF NOT EXISTS idx_payment_orders_user ON payment_orders(user_id);
       CREATE INDEX IF NOT EXISTS idx_payment_orders_status ON payment_orders(status);
     `);
+
+    // Migration 021b: ensure draw_state enum includes 'KY' (safe to run repeatedly)
+    try {
+      await query(`ALTER TYPE draw_state ADD VALUE IF NOT EXISTS 'KY'`);
+      console.log('[Migration 021b] Added KY to draw_state enum');
+    } catch { /* non-critical */ }
+
+    // Migration 021c: if any tables still use the old enum type for draw_state, convert to VARCHAR(10)
+    await query(`
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'lottery_rounds'
+          AND column_name = 'draw_state'
+          AND data_type = 'USER-DEFINED'
+        ) THEN
+          ALTER TABLE lottery_rounds ALTER COLUMN draw_state TYPE VARCHAR(10);
+        END IF;
+      END $$;
+    `).catch(() => {});
+
+    await query(`
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'lottery_tickets'
+          AND column_name = 'draw_state'
+          AND data_type = 'USER-DEFINED'
+        ) THEN
+          ALTER TABLE lottery_tickets ALTER COLUMN draw_state TYPE VARCHAR(10);
+        END IF;
+      END $$;
+    `).catch(() => {});
     console.log('[Migration 020] payment_orders table created ');
 
     console.log('[Migration] Startup migrations applied successfully');
