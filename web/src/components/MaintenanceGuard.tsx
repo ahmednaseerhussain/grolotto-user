@@ -16,7 +16,7 @@ export function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   const handleRetry = async () => {
     setChecking(true);
     try {
-      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://grolotto-user.onrender.com/api";
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://grolotto-user-wk3b.onrender.com/api";
       const res = await fetch(`${API_BASE}/settings/public`);
       if (res.ok) {
         setMaintenance(false);
