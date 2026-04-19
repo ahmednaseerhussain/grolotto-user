@@ -53,7 +53,7 @@ export const updateProfileSchema = z.object({
 
 export const placeBetSchema = z.object({
   vendorId: z.string().uuid('Invalid vendor ID'),
-  drawState: z.enum(['NY', 'FL', 'GA', 'TX', 'PA', 'CT', 'TN', 'NJ']),
+  drawState: z.string().min(2).max(10), // Allow any state code
   gameType: z.enum(['senp', 'maryaj', 'loto3', 'loto4', 'loto5']),
   numbers: z.array(z.number().int().min(0)).min(1).max(5),
   betAmount: z.number().positive('Bet amount must be positive'),
@@ -67,7 +67,7 @@ export const createPaymentSchema = z.object({
 });
 
 export const publishResultsSchema = z.object({
-  drawState: z.enum(['NY', 'FL', 'GA', 'TX', 'PA', 'CT', 'TN', 'NJ']),
+  drawState: z.string().min(2).max(10), // Allow any state code, not just hardcoded enum
   winningNumbers: z.record(
     z.enum(['senp', 'maryaj', 'loto3', 'loto4', 'loto5']),
     z.array(z.number().int().min(0))
