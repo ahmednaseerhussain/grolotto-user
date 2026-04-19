@@ -371,7 +371,7 @@ async function runStartupMigrations() {
       CREATE INDEX IF NOT EXISTS idx_payment_orders_user ON payment_orders(user_id);
       CREATE INDEX IF NOT EXISTS idx_payment_orders_status ON payment_orders(status);
     `);
-    console.log('[Migration 020] payment_orders table created');
+    console.log('[Migration 020] payment_orders table created ');
 
     console.log('[Migration] Startup migrations applied successfully');
   } catch (err) {
