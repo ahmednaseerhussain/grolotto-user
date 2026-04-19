@@ -10,7 +10,8 @@
     "migrate": "ts-node src/database/migrate.ts",
     "seed": "ts-node src/database/seed.ts"
     ,
-    "check-draw-state": "node scripts/check_draw_state.js"
+    "check-draw-state": "node scripts/check_draw_state.js",
+    "check-gift-cards": "node scripts/check-gift-cards.js"
   },
   "dependencies": {
     "axios": "^1.7.7",

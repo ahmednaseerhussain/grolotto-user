@@ -164,6 +164,14 @@ async function runStartupMigrations() {
       END $$;
     `);
 
+    // Backfill: mark existing gift_cards as redeemed when status indicates so or redeemed_at is present
+    // This is idempotent and ensures older rows created before `is_redeemed` existed are counted correctly
+    await query(`
+      UPDATE gift_cards
+      SET is_redeemed = TRUE
+      WHERE (status = 'redeemed' OR redeemed_at IS NOT NULL) AND is_redeemed IS DISTINCT FROM TRUE
+    `).catch(() => {});
+
     // Fix: ensure code column is nullable (batch cards use pin_code instead)
     await query(`ALTER TABLE gift_cards ALTER COLUMN code DROP NOT NULL`).catch(() => { });
 
