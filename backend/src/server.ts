@@ -6,10 +6,12 @@ async function runStartupMigrations() {
     // Migration 005: draw_configs table + gift_card_batches + admin_commission enum
     await query(`ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'admin_commission'`).catch(() => { });
 
+    // Migration 021: Change draw_configs.state from ENUM to VARCHAR to support dynamic states
+    // First create table with VARCHAR if not exists, then migrate existing data if needed
     await query(`
       CREATE TABLE IF NOT EXISTS draw_configs (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-        state draw_state NOT NULL,
+        state VARCHAR(10) NOT NULL,
         name VARCHAR(100) NOT NULL,
         draw_time VARCHAR(20) NOT NULL,
         cutoff_time VARCHAR(20),
@@ -19,6 +21,21 @@ async function runStartupMigrations() {
         UNIQUE(state, name)
       );
     `);
+
+    // If existing table still uses draw_state enum, alter the column
+    await query(`
+      DO $$ 
+      BEGIN 
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'draw_configs' 
+          AND column_name = 'state' 
+          AND data_type = 'USER-DEFINED'
+        ) THEN
+          ALTER TABLE draw_configs ALTER COLUMN state TYPE VARCHAR(10);
+        END IF;
+      END $$;
+    `).catch(() => { });
 
     await query(`
       CREATE TABLE IF NOT EXISTS gift_card_batches (

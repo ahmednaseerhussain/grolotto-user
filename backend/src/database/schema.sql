@@ -162,7 +162,7 @@ CREATE INDEX idx_vendor_documents_vendor_id ON vendor_documents(vendor_id);
 CREATE TABLE vendor_draw_configs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     vendor_id UUID NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
-    draw_state draw_state NOT NULL,
+    draw_state VARCHAR(10) NOT NULL,
     enabled BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
@@ -194,7 +194,7 @@ CREATE INDEX idx_vendor_game_configs_draw ON vendor_game_configs(draw_config_id)
 CREATE TABLE number_limits (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     vendor_id UUID NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
-    draw_state draw_state NOT NULL,
+    draw_state VARCHAR(10) NOT NULL,
     number VARCHAR(10) NOT NULL,
     bet_limit DECIMAL(10,2) NOT NULL,
     current_total DECIMAL(10,2) DEFAULT 0.00,
@@ -211,7 +211,7 @@ CREATE INDEX idx_number_limits_vendor_draw ON number_limits(vendor_id, draw_stat
 
 CREATE TABLE lottery_rounds (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    draw_state draw_state NOT NULL,
+    draw_state VARCHAR(10) NOT NULL,
     draw_date DATE NOT NULL,
     draw_time VARCHAR(20) NOT NULL, -- 'midday' or 'evening'
     status lottery_round_status DEFAULT 'open',
@@ -245,7 +245,7 @@ CREATE TABLE lottery_tickets (
     player_id UUID NOT NULL REFERENCES users(id),
     vendor_id UUID NOT NULL REFERENCES vendors(id),
     round_id UUID NOT NULL REFERENCES lottery_rounds(id),
-    draw_state draw_state NOT NULL,
+    draw_state VARCHAR(10) NOT NULL,
     game_type game_type NOT NULL,
     numbers INTEGER[] NOT NULL,
     bet_amount DECIMAL(10,2) NOT NULL CHECK (bet_amount > 0),
