@@ -67,7 +67,7 @@ export default function PlayScreen() {
   const [selectedGame, setSelectedGame] = useState("");
   const [numbers, setNumbers] = useState<string[]>([]);
   const [betAmount, setBetAmount] = useState("");
-  const [drawTime, setDrawTime] = useState<"midday" | "evening">("midday");
+  const [drawTime, setDrawTime] = useState<"morning" | "midday" | "evening">("morning");
   const [gameSelections, setGameSelections] = useState<GameSelection[]>([]);
   const [processing, setProcessing] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -296,8 +296,12 @@ export default function PlayScreen() {
   }
 
   if (!vendor) {
-    // Show vendor selection screen
-    const availableVendors = (vendors || []).filter((v: any) => v.draws && Object.values(v.draws).some((d: any) => d?.enabled));
+    // Show vendor selection screen - filter by selected currency
+    const availableVendors = (vendors || []).filter((v: any) => {
+      const matchesCurrency = !v.operatingCurrency || v.operatingCurrency === currency;
+      if (!matchesCurrency) return false;
+      return v.draws && Object.values(v.draws).some((d: any) => d?.enabled);
+    });
     return (
       <div className="space-y-6 max-w-4xl mx-auto">
         <div className="flex items-center gap-3">
@@ -305,18 +309,18 @@ export default function PlayScreen() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-xl font-bold">{t("selectVendor") || "Select a Vendor"}</h1>
-            <p className="text-sm text-gray-500">{t("chooseVendorToPlay") || "Choose a vendor to place your bets"}</p>
+            <h1 className="text-xl font-bold">{t("Select Vendor") || "Select a Vendor"}</h1>
+            <p className="text-sm text-gray-500">{t("Choose Vendor To Play") || "Choose a vendor to place your bets"}</p>
           </div>
         </div>
         {availableVendors.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
               <AlertTriangle className="h-12 w-12 text-amber-400 mx-auto mb-3" />
-              <p className="font-medium text-gray-700">{t("noVendorsAvailable") || "No vendors available"}</p>
+              <p className="font-medium text-gray-700">{t("No Vendors Available") || "No vendors available"}</p>
               <p className="text-sm text-gray-500 mt-1">Check back later or contact support</p>
               <Button className="mt-4" onClick={() => router.push("/player/dashboard")}>
-                {t("goBack") || "Go Back"}
+                {t("Go Back") || "Go Back"}
               </Button>
             </CardContent>
           </Card>
@@ -407,8 +411,17 @@ export default function PlayScreen() {
 
       {/* Draw Time Selection */}
       <div>
-        <h3 className="text-sm font-medium text-gray-700 mb-2">{t("drawTime") || "Draw Time"}</h3>
+        <h3 className="text-sm font-medium text-gray-700 mb-2">{t("Draw Time") || "Draw Time"}</h3>
         <div className="flex gap-2">
+          <button
+            onClick={() => setDrawTime("morning")}
+            className={`flex-1 px-4 py-3 rounded-lg border text-sm font-medium transition-all flex items-center justify-center gap-2 ${drawTime === "morning"
+              ? "bg-green-600 text-white border-green-600"
+              : "bg-white text-gray-700 border-gray-200 hover:border-green-300"
+              }`}
+          >
+            🌅 {t("morning") || "Morning"}
+          </button>
           <button
             onClick={() => setDrawTime("midday")}
             className={`flex-1 px-4 py-3 rounded-lg border text-sm font-medium transition-all flex items-center justify-center gap-2 ${drawTime === "midday"
@@ -416,7 +429,7 @@ export default function PlayScreen() {
               : "bg-white text-gray-700 border-gray-200 hover:border-amber-300"
               }`}
           >
-            ☀️ {t("midday") || "Day (Midday)"}
+            ☀️ {t("midday") || "Midday"}
           </button>
           <button
             onClick={() => setDrawTime("evening")}
@@ -425,7 +438,7 @@ export default function PlayScreen() {
               : "bg-white text-gray-700 border-gray-200 hover:border-indigo-300"
               }`}
           >
-            🌙 {t("evening") || "Night (Evening)"}
+            🌙 {t("evening") || "Evening"}
           </button>
         </div>
       </div>
@@ -608,7 +621,7 @@ export default function PlayScreen() {
               className="w-full mt-4 bg-green-600 hover:bg-green-700"
               size="lg"
             >
-              {processing ? "Processing..." : `${t("pay") || "Pay"} ${formatCurrency(totalAmount, currency)}`}
+              {processing ? "Processing..." : `${t("Pay") || "Pay"} ${formatCurrency(totalAmount, currency)}`}
             </Button>
           </CardContent>
         </Card>

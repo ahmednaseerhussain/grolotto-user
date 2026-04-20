@@ -82,7 +82,7 @@ export default function ForgotPasswordPage() {
                             {t("forgotPassword")}
                         </CardTitle>
                         <CardDescription>
-                            {t("enterEmailForReset") || "Enter your email address and we'll send you a reset code."}
+                            {t("Enter Email For Reset") || "Enter your email address and we'll send you a reset code."}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -98,7 +98,7 @@ export default function ForgotPasswordPage() {
                                 />
                             </div>
                             <Button type="submit" loading={isLoading} className="w-full" size="lg">
-                                {t("sendResetCode") || "Send Reset Code"}
+                                {t("Send Reset Code") || "Send Reset Code"}
                             </Button>
                         </form>
                     </CardContent>

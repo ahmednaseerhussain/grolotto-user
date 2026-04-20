@@ -163,7 +163,7 @@ export default function VendorHistoryScreen() {
           <Button variant="ghost" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-xl font-bold">{t("playHistory") || "Play History"}</h1>
+          <h1 className="text-xl font-bold">{t("Play History") || "Play History"}</h1>
         </div>
         <div className="flex gap-1">
           <Button variant="outline" size="sm" onClick={handleExportCSV}>
@@ -178,7 +178,7 @@ export default function VendorHistoryScreen() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard title={t("totalTickets") || "Tickets"} value={stats.total} icon={<Ticket className="h-5 w-5" />} />
-        <StatCard title={t("totalBet") || "Total Bet"} value={formatCurrency(stats.totalBet, currency)} icon={<DollarSign className="h-5 w-5" />} />
+        <StatCard title={t("Total Bet") || "Total Bet"} value={formatCurrency(stats.totalBet, currency)} icon={<DollarSign className="h-5 w-5" />} />
         <StatCard title={t("winners") || "Winners"} value={stats.winners} icon={<Trophy className="h-5 w-5" />} />
         <StatCard title={t("commission") || "Commission"} value={formatCurrency(stats.commission, currency)} icon={<Percent className="h-5 w-5" />} />
       </div>
@@ -190,7 +190,7 @@ export default function VendorHistoryScreen() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               className="pl-9"
-              placeholder={t("searchPlayers") || "Search players, numbers..."}
+              placeholder={t("Search Players") || "Search players, numbers..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />

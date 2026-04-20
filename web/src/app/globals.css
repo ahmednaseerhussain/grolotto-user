@@ -51,6 +51,15 @@ body {
   animation: slideUp 0.3s ease-out;
 }
 
+/* Hide scrollbar for swipeable containers */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Print styles */
 @media print {
   nav, header, .no-print { display: none !important; }

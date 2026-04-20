@@ -141,7 +141,7 @@ export default function PlayerWithdrawPage() {
             {/* Amount Input */}
             <div>
                 <label className="text-sm font-semibold text-gray-700 block mb-2">
-                    {t("withdrawalAmount") || "Withdrawal Amount"}
+                    {t("Withdrawal Amount") || "Withdrawal Amount"}
                 </label>
                 <div className="flex items-center gap-2 bg-gray-50 rounded-xl border-2 border-gray-200 px-4 py-3">
                     <span className="text-xl text-gray-400">{currency === "HTG" ? "G" : "$"}</span>
@@ -237,7 +237,7 @@ export default function PlayerWithdrawPage() {
                             />
                         </div>
                         <div>
-                            <label className="text-sm text-gray-600">{t("additionalNotes") || "Additional Notes"} ({t("optional") || "optional"})</label>
+                            <label className="text-sm text-gray-600">{t("Additional Notes") || "Additional Notes"} ({t("optional") || "optional"})</label>
                             <Input
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
@@ -351,7 +351,7 @@ export default function PlayerWithdrawPage() {
                 {processing ? (
                     <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processing...</>
                 ) : (
-                    t("submitWithdrawalRequest") || "Submit Withdrawal Request"
+                    t("Submit Withdrawal Request") || "Submit Withdrawal Request"
                 )}
             </Button>
 
@@ -361,12 +361,12 @@ export default function PlayerWithdrawPage() {
                     <div className="flex items-start gap-2">
                         <HelpCircle className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
                         <div>
-                            <h4 className="text-sm font-semibold text-blue-800">{t("howItWorks") || "How It Works"}</h4>
+                            <h4 className="text-sm font-semibold text-blue-800">{t("How It Works") || "How It Works"}</h4>
                             <ul className="text-xs text-blue-700 mt-1 space-y-1">
-                                <li>• {t("withdrawStep1") || "Submit your withdrawal request with bank details"}</li>
-                                <li>• {t("withdrawStep2") || "Admin reviews and approves the request"}</li>
-                                <li>• {t("withdrawStep3") || "Funds are transferred directly to your bank account"}</li>
-                                <li>• {t("withdrawStep4") || "Processing typically takes 1-3 business days"}</li>
+                                <li>• {t("Withdraw Step 1") || "Submit your withdrawal request with bank details"}</li>
+                                <li>• {t("Withdraw Step 2") || "Admin reviews and approves the request"}</li>
+                                <li>• {t("Withdraw Step 3") || "Funds are transferred directly to your bank account"}</li>
+                                <li>• {t("Withdraw Step 4") || "Processing typically takes 1-3 business days"}</li>
                             </ul>
                         </div>
                     </div>

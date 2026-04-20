@@ -185,13 +185,13 @@ export default function HistoryScreen() {
       <div className="grid grid-cols-3 gap-3">
         <Card className="bg-blue-50 border-blue-100">
           <CardContent className="p-3 text-center">
-            <p className="text-xs text-blue-600">{t("totalBet") || "Total Bet"}</p>
+            <p className="text-xs text-blue-600">{t("Total Bet") || "Total Bet"}</p>
             <p className="text-lg font-bold text-blue-700">{formatCurrency(totalBet, currency)}</p>
           </CardContent>
         </Card>
         <Card className="bg-emerald-50 border-emerald-100">
           <CardContent className="p-3 text-center">
-            <p className="text-xs text-emerald-600">{t("totalWon") || "Total Won"}</p>
+            <p className="text-xs text-emerald-600">{t("Total Won") || "Total Won"}</p>
             <p className="text-lg font-bold text-emerald-700">{formatCurrency(totalWon, currency)}</p>
           </CardContent>
         </Card>
@@ -243,7 +243,7 @@ export default function HistoryScreen() {
               : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
           >
-            {f === "all" ? (t("allGames") || "All Games") : t(f) || f.charAt(0).toUpperCase() + f.slice(1)}
+            {f === "all" ? (t("allGames") || "All Games") : (() => { const label = t(f) || f; return label.charAt(0).toUpperCase() + label.slice(1); })()}
           </button>
         ))}
       </div>
@@ -316,7 +316,7 @@ export default function HistoryScreen() {
                     <p className="text-sm font-semibold">{formatCurrency(ticket.betAmount, currency)}</p>
                     <Badge variant={STATUS_COLORS[ticket.status] as any || "secondary"} className="text-xs mt-1">
                       {ticket.status === "won" && <Trophy className="h-3 w-3 mr-1" />}
-                      {ticket.status}
+                      {ticket.status?.charAt(0).toUpperCase() + ticket.status?.slice(1)}
                     </Badge>
                     {ticket.status === "won" && ticket.winAmount > 0 && (
                       <p className="text-sm font-bold text-emerald-600 mt-1">

@@ -158,12 +158,12 @@ export default function ResultsScreen() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-xl font-bold">{t("lotteryResults") || "Lottery Results"}</h1>
-            <p className="text-xs text-gray-500">{t("officialDrawResults") || "Official draw results"}</p>
+            <h1 className="text-xl font-bold">{t("Lottery Results") || "Lottery Results"}</h1>
+            <p className="text-xs text-gray-500">{t("Official Draw Results") || "Official draw results"}</p>
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={() => setShowPayoutInfo(true)}>
-          <Info className="h-4 w-4 mr-1" /> {t("payoutRates") || "Payout Rates"}
+          <Info className="h-4 w-4 mr-1" /> {t("Payout Rates") || "Payout Rates"}
         </Button>
       </div>
 

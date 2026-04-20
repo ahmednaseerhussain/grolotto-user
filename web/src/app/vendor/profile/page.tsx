@@ -131,7 +131,7 @@ export default function VendorProfileScreen() {
         <Button variant="ghost" size="sm" onClick={() => router.back()}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-xl font-bold">{t("vendorProfile") || "Vendor Profile"}</h1>
+        <h1 className="text-xl font-bold">{t("Vendor Profile") || "Vendor Profile"}</h1>
       </div>
 
       {/* Profile Banner */}
@@ -181,7 +181,7 @@ export default function VendorProfileScreen() {
           <Card>
             <CardContent className="p-4 space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold">{t("businessInfo") || "Business Information"}</h3>
+                <h3 className="font-semibold">{t("Business Info") || "Business Information"}</h3>
                 {!editing ? (
                   <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
                     <Edit2 className="h-3.5 w-3.5 mr-1" /> {t("edit") || "Edit"}
@@ -198,12 +198,12 @@ export default function VendorProfileScreen() {
 
               {[
                 { key: "businessName", label: t("businessName") || "Business Name", icon: Store, readOnly: true },
-                { key: "ownerName", label: t("ownerName") || "Owner Name", icon: User, readOnly: true },
-                { key: "email", label: t("email") || "Email", icon: Mail },
-                { key: "phone", label: t("phone") || "Phone", icon: Phone },
-                { key: "address", label: t("address") || "Address", icon: MapPin },
-                { key: "city", label: t("city") || "City", icon: Globe },
-                { key: "state", label: t("state") || "State", icon: Globe },
+                { key: "ownerName", label: t("OwnerPName") || "Owner Name", icon: User, readOnly: true },
+                { key: "email", label: t("Email") || "Email", icon: Mail },
+                { key: "phone", label: t("Phone") || "Phone", icon: Phone },
+                { key: "address", label: t("Address") || "Address", icon: MapPin },
+                { key: "city", label: t("City") || "City", icon: Globe },
+                { key: "state", label: t("State") || "State", icon: Globe },
               ].map(({ key, label, icon: Icon, readOnly }) => (
                 <div key={key}>
                   <label className="text-sm text-gray-500 flex items-center gap-1.5">
@@ -222,7 +222,7 @@ export default function VendorProfileScreen() {
               ))}
 
               <div>
-                <label className="text-sm text-gray-500">{t("description") || "Description"}</label>
+                <label className="text-sm text-gray-500">{t("Description") || "Description"}</label>
                 {editing ? (
                   <textarea
                     value={form.description}
@@ -241,7 +241,7 @@ export default function VendorProfileScreen() {
           {/* Rating Distribution */}
           <Card>
             <CardContent className="p-4">
-              <h3 className="font-semibold mb-3">{t("ratingDistribution") || "Rating Distribution"}</h3>
+              <h3 className="font-semibold mb-3">{t("Rating Distribution") || "Rating Distribution"}</h3>
               <div className="space-y-2">
                 {[5, 4, 3, 2, 1].map((stars) => {
                   const count = ratingDist[stars - 1];
@@ -266,7 +266,7 @@ export default function VendorProfileScreen() {
             <Card className="bg-gray-50">
               <CardContent className="p-6 text-center text-gray-400">
                 <MessageCircle className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                <p className="text-sm">{t("noReviews") || "No reviews yet"}</p>
+                <p className="text-sm">{t("No Reviews") || "No reviews yet"}</p>
               </CardContent>
             </Card>
           ) : (

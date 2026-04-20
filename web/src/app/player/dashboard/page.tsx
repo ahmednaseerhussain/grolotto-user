@@ -15,7 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/common/empty-state";
 import {
   Wallet, Search, Trophy, Clock, Star, ChevronRight, Eye, EyeOff,
-  Plus, Sparkles, User, SlidersHorizontal, ArrowDownCircle, CreditCard
+  Plus, Sparkles, User, SlidersHorizontal, ArrowDownCircle, CreditCard,
+  Gift
 } from "lucide-react";
 import { formatCurrency, GAME_LABELS, DRAW_STATES } from "@/lib/utils";
 
@@ -61,6 +62,7 @@ export default function PlayerDashboard() {
   const [loading, setLoading] = useState(true);
   const [todayResults, setTodayResults] = useState<any[]>([]);
   const slideInterval = useRef<NodeJS.Timeout | null>(null);
+  const adScrollRef = useRef<HTMLDivElement | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -94,9 +96,42 @@ export default function PlayerDashboard() {
   useEffect(() => {
     if (displayAds.length > 1) {
       slideInterval.current = setInterval(() => {
-        setCurrentSlide((prev) => (prev + 1) % displayAds.length);
+        setCurrentSlide((prev) => {
+          const next = (prev + 1) % displayAds.length;
+          const container = adScrollRef.current;
+          if (container) {
+            const child = container.children[next] as HTMLElement;
+            child?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
+          }
+          return next;
+        });
       }, 5000);
       return () => { if (slideInterval.current) clearInterval(slideInterval.current); };
+    }
+  }, [displayAds.length]);
+
+  // Sync currentSlide on manual scroll
+  const handleAdScroll = useCallback(() => {
+    const container = adScrollRef.current;
+    if (!container) return;
+    const scrollLeft = container.scrollLeft;
+    const width = container.offsetWidth;
+    const index = Math.round(scrollLeft / width);
+    setCurrentSlide(index);
+    // Reset auto-slide timer on manual swipe
+    if (slideInterval.current) clearInterval(slideInterval.current);
+    if (displayAds.length > 1) {
+      slideInterval.current = setInterval(() => {
+        setCurrentSlide((prev) => {
+          const next = (prev + 1) % displayAds.length;
+          const cont = adScrollRef.current;
+          if (cont) {
+            const child = cont.children[next] as HTMLElement;
+            child?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
+          }
+          return next;
+        });
+      }, 5000);
     }
   }, [displayAds.length]);
 
@@ -153,7 +188,7 @@ export default function PlayerDashboard() {
             {t("welcomePlayer") || "Welcome, Player!"}
           </h1>
           <p className="text-sm text-gray-500">
-            {t("playAndWin") || "Play & Win Big Today!"}
+            {t("Play & Win") || "Play & Win Big Today!"}
           </p>
         </div>
         <Button variant="ghost" size="sm" onClick={() => router.push("/player/profile")}>
@@ -163,77 +198,90 @@ export default function PlayerDashboard() {
 
       {/* ── Section 2: Ad Banner Slider ── */}
       {displayAds.length > 0 && (
-        <div className="relative overflow-hidden rounded-2xl h-44 shadow-md">
-          {displayAds.map((ad: any, i: number) => (
-            <div
-              key={ad.id || i}
-              className={`absolute inset-0 transition-all duration-700 flex items-center p-6 ${i === currentSlide ? "opacity-100 translate-x-0" : "opacity-0 translate-x-full pointer-events-none"
-                }`}
-              style={{
-                background: ad.backgroundColor
-                  ? `linear-gradient(135deg, ${ad.backgroundColor}, ${ad.backgroundColor}dd)`
-                  : "linear-gradient(135deg, #166534, #15803d)",
-                cursor: ad.linkUrl ? "pointer" : "default",
-              }}
-              onClick={() => {
-                if (ad.linkUrl) {
-                  if (ad.linkUrl.startsWith("/")) {
-                    router.push(ad.linkUrl);
-                  } else {
-                    try {
-                      const url = new URL(ad.linkUrl);
-                      if (url.protocol === 'http:' || url.protocol === 'https:') {
-                        window.open(ad.linkUrl, "_blank", "noopener,noreferrer");
-                      }
-                    } catch { /* invalid URL */ }
+        <div className="relative rounded-2xl shadow-md">
+          <div
+            ref={adScrollRef}
+            onScroll={handleAdScroll}
+            className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide rounded-2xl"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
+          >
+            {displayAds.map((ad: any, i: number) => (
+              <div
+                key={ad.id || i}
+                className="snap-start shrink-0 w-full h-44 flex items-center p-6 relative"
+                style={{
+                  background: ad.backgroundColor
+                    ? `linear-gradient(135deg, ${ad.backgroundColor}, ${ad.backgroundColor}dd)`
+                    : "linear-gradient(135deg, #166534, #15803d)",
+                  cursor: ad.linkUrl ? "pointer" : "default",
+                }}
+                onClick={() => {
+                  if (ad.linkUrl) {
+                    if (ad.linkUrl.startsWith("/")) {
+                      router.push(ad.linkUrl);
+                    } else {
+                      try {
+                        const url = new URL(ad.linkUrl);
+                        if (url.protocol === 'http:' || url.protocol === 'https:') {
+                          window.open(ad.linkUrl, "_blank", "noopener,noreferrer");
+                        }
+                      } catch { /* invalid URL */ }
+                    }
                   }
-                }
-              }}
-            >
-              <div className="flex-1 z-10">
-                <h3
-                  className="text-2xl font-extrabold mb-1 drop-shadow-sm"
-                  style={{ color: ad.textColor || "#ffffff" }}
-                >
-                  {ad.title}
-                </h3>
-                {ad.subtitle && (
-                  <p
-                    className="text-base font-medium mb-1 opacity-90"
+                }}
+              >
+                <div className="flex-1 z-10">
+                  <h3
+                    className="text-2xl font-extrabold mb-1 drop-shadow-sm"
                     style={{ color: ad.textColor || "#ffffff" }}
                   >
-                    {ad.subtitle}
-                  </p>
-                )}
-                {ad.content && (
-                  <p
-                    className="text-sm opacity-80 line-clamp-2"
-                    style={{ color: ad.textColor || "#ffffff" }}
-                  >
-                    {ad.content}
-                  </p>
-                )}
-                {ad.linkText && (
-                  <span
-                    className="inline-block mt-2 px-4 py-1.5 bg-amber-400 text-gray-900 rounded-full text-sm font-bold shadow"
-                  >
-                    {ad.linkText}
-                  </span>
-                )}
+                    {ad.title}
+                  </h3>
+                  {ad.subtitle && (
+                    <p
+                      className="text-base font-medium mb-1 opacity-90"
+                      style={{ color: ad.textColor || "#ffffff" }}
+                    >
+                      {ad.subtitle}
+                    </p>
+                  )}
+                  {ad.content && (
+                    <p
+                      className="text-sm opacity-80 line-clamp-2"
+                      style={{ color: ad.textColor || "#ffffff" }}
+                    >
+                      {ad.content}
+                    </p>
+                  )}
+                  {ad.linkText && (
+                    <span
+                      className="inline-block mt-2 px-4 py-1.5 bg-amber-400 text-gray-900 rounded-full text-sm font-bold shadow"
+                    >
+                      {ad.linkText}
+                    </span>
+                  )}
+                </div>
+                {/* Decorative circles */}
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-20">
+                  <div className="w-24 h-24 rounded-full border-4 border-white/60" />
+                  <div className="w-16 h-16 rounded-full border-4 border-white/40 -mt-4 ml-8" />
+                </div>
               </div>
-              {/* Decorative circles */}
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-20">
-                <div className="w-24 h-24 rounded-full border-4 border-white/60" />
-                <div className="w-16 h-16 rounded-full border-4 border-white/40 -mt-4 ml-8" />
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
           {displayAds.length > 1 && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
               {displayAds.map((_: any, i: number) => (
                 <button
                   key={i}
-                  onClick={() => setCurrentSlide(i)}
+                  onClick={() => {
+                    setCurrentSlide(i);
+                    const container = adScrollRef.current;
+                    if (container) {
+                      const child = container.children[i] as HTMLElement;
+                      child?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
+                    }
+                  }}
                   className={`h-2 rounded-full transition-all ${i === currentSlide ? "bg-white w-6" : "bg-white/40 w-2"
                     }`}
                 />
@@ -284,9 +332,9 @@ export default function PlayerDashboard() {
       {/* ── Section 4: Quick Actions 2x2 Grid ── */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { icon: ArrowDownCircle, label: t("withdraw") || "Withdraw", subtitle: t("cashOut") || "Cash Out", gradient: "from-red-500 to-red-600", href: "/player/withdraw" },
+          { icon: ArrowDownCircle, label: t("Withdraw") || "Withdraw", subtitle: t("CashOut") || "Cash Out", gradient: "from-red-500 to-red-600", href: "/player/withdraw" },
           { icon: Sparkles, label: t("tchala") || "Tchala", subtitle: t("dreamNumbers") || "Dream Numbers", gradient: "from-amber-500 to-orange-500", href: "/player/tchala" },
-          { icon: Trophy, label: t("results") || "Results", subtitle: "& " + (t("offers") || "Offers"), gradient: "from-emerald-500 to-green-600", href: "/player/results" },
+          { icon: Trophy, label: t("results") || "Results", subtitle: "" + (t("offers") || "Offers"), gradient: "from-emerald-500 to-green-600", href: "/player/results" },
           { icon: Clock, label: t("history") || "History", subtitle: t("pastPlays") || "Past Plays", gradient: "from-violet-500 to-purple-600", href: "/player/history" },
         ].map((action) => (
           <button
@@ -304,7 +352,7 @@ export default function PlayerDashboard() {
       </div>
 
       {/* ── Buy Gift Card from Debit Card ── */}
-      <button
+      {/* <button
         onClick={() => window.open("https://grolotto.com/buy-gift-card", "_blank", "noopener,noreferrer")}
         className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-500 text-white hover:opacity-90 transition-all shadow-md"
       >
@@ -316,7 +364,34 @@ export default function PlayerDashboard() {
           <span className="text-xs opacity-80">{t("payWithDebitCard") || "Pay with your debit card"}</span>
         </div>
         <ChevronRight className="h-5 w-5 opacity-70" />
-      </button>
+      </button> */}
+      <div className="w-full p-4 rounded-xl border-2 border-gray-200 bg-white">
+        <div className="flex items-center gap-4">
+          <div className="bg-amber-500 w-12 h-12 rounded-full flex items-center justify-center">
+            <Gift className="h-6 w-6 text-white" />
+          </div>
+          <div className="text-left flex-1">
+            <p className="font-semibold text-gray-900">{t("giftCard") || "Gift Card"}</p>
+            <p className="text-sm text-gray-500">                Buy Gift Card From Your Debit Card
+            </p>
+            {/* <p className="text-sm text-gray-500">{t("buyOrRedeemGiftCards") || "Buy or redeem gift cards"}</p> */}
+          </div>
+        </div>
+        <div className="flex gap-2 mt-3">
+          <button
+            onClick={() => router.push("/player/gift-cards")}
+            className="flex-1 py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold transition-colors"
+          >
+            🎁 {t("buyGiftCard") || "Buy Gift Card"}
+          </button>
+          <button
+            onClick={() => router.push("/player/gift-cards?tab=redeem")}
+            className="flex-1 py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold transition-colors"
+          >
+            🎟️ {t("redeemCode") || "Redeem Code"}
+          </button>
+        </div>
+      </div>
 
       {/* ── Section 5: Latest Results ── */}
       <div>
@@ -369,7 +444,7 @@ export default function PlayerDashboard() {
           <Card className="bg-gray-50 border-dashed">
             <CardContent className="p-4 text-center">
               <Trophy className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">{t("noResultsYetToday") || "No results published yet today"}</p>
+              <p className="text-sm text-gray-500">{t("No results published yet") || "No results published yet today"}</p>
               <Button variant="ghost" size="sm" className="mt-2" onClick={() => router.push("/player/results")}>
                 {t("viewAllResults") || "View All Results"}
               </Button>

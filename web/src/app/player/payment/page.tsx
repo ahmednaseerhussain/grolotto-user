@@ -11,7 +11,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  ArrowLeft, Wallet, CheckCircle, Smartphone, DollarSign, Loader2, CreditCard, Gift, Ticket, Mail, Clock
+  ArrowLeft, Wallet, CheckCircle, Smartphone, DollarSign, Loader2, CreditCard, Gift, Ticket, Mail, Clock,
+  ChevronRight
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -212,25 +213,109 @@ export default function PaymentScreen() {
       {/* Payment Method */}
       <div>
         <label className="text-sm font-semibold text-gray-700 block mb-3">Select Payment Method</label>
-        <div>
-          <select
-            value={selectedMethod ?? ""}
-            onChange={(e) => setSelectedMethod(e.target.value || null)}
-            className="w-full p-4 rounded-xl border-2 border-gray-200 bg-white"
-          >
-            {currency === "HTG" && <option value="moncash">MonCash (Digicel mobile money)</option>}
-            <option value="zelle">Zelle (Send payment & email screenshot)</option>
-            <option value="cashapp">CashApp (Send payment & email screenshot)</option>
-            <option value="stripe">Credit / Debit Card (Stripe)</option>
-            <option value="wallet">Wallet</option>
-            <option value="system">System</option>
-            <option value="gift_card">Gift Card</option>
-            <option value="reward">Reward</option>
-          </select>
+        <div className="space-y-3">
+          {/* MonCash — HTG only */}
+          {currency === "HTG" && (
+            <button
+              onClick={() => setSelectedMethod("moncash")}
+              className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${selectedMethod === "moncash"
+                ? "border-red-500 bg-red-50"
+                : "border-gray-200 hover:border-gray-300 bg-white"
+                }`}
+            >
+              <div className="bg-red-500 w-12 h-12 rounded-full flex items-center justify-center">
+                <Smartphone className="h-6 w-6 text-white" />
+              </div>
+              <div className="text-left flex-1">
+                <p className="font-semibold text-gray-900">MonCash</p>
+                <p className="text-sm text-gray-500">Digicel mobile money</p>
+              </div>
+              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "moncash" ? "border-red-500" : "border-gray-300"
+                }`}>
+                {selectedMethod === "moncash" && <div className="w-3 h-3 rounded-full bg-red-500" />}
+              </div>
+            </button>
+          )}
 
-          {/* Contextual actions for special methods */}
-          {selectedMethod === "gift_card" && (
-            <div className="mt-4 flex gap-2">
+          {/* PayPal — USD only */}
+          {currency === "USD" && (
+            <>
+              {/* Zelle */}
+              <button
+                onClick={() => setSelectedMethod("zelle")}
+                className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${selectedMethod === "zelle"
+                  ? "border-purple-500 bg-purple-50"
+                  : "border-gray-200 hover:border-gray-300 bg-white"
+                  }`}
+              >
+                <div className="bg-purple-500 w-12 h-12 rounded-full flex items-center justify-center">
+                  <Mail className="h-6 w-6 text-white" />
+                </div>
+                <div className="text-left flex-1">
+                  <p className="font-semibold text-gray-900">Zelle</p>
+                  <p className="text-sm text-gray-500">Send payment &amp; email screenshot</p>
+                </div>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "zelle" ? "border-purple-500" : "border-gray-300"}`}>
+                  {selectedMethod === "zelle" && <div className="w-3 h-3 rounded-full bg-purple-500" />}
+                </div>
+              </button>
+
+              {/* CashApp */}
+              <button
+                onClick={() => setSelectedMethod("cashapp")}
+                className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${selectedMethod === "cashapp"
+                  ? "border-green-500 bg-green-50"
+                  : "border-gray-200 hover:border-gray-300 bg-white"
+                  }`}
+              >
+                <div className="bg-green-500 w-12 h-12 rounded-full flex items-center justify-center">
+                  <DollarSign className="h-6 w-6 text-white" />
+                </div>
+                <div className="text-left flex-1">
+                  <p className="font-semibold text-gray-900">CashApp</p>
+                  <p className="text-sm text-gray-500">Send payment &amp; email screenshot</p>
+                </div>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "cashapp" ? "border-green-500" : "border-gray-300"}`}>
+                  {selectedMethod === "cashapp" && <div className="w-3 h-3 rounded-full bg-green-500" />}
+                </div>
+              </button>
+
+              {/* Credit/Debit Card (Stripe) */}
+              <button
+                onClick={() => setSelectedMethod("stripe")}
+                className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${selectedMethod === "stripe"
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-200 hover:border-gray-300 bg-white"
+                  }`}
+              >
+                <div className="bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center">
+                  <CreditCard className="h-6 w-6 text-white" />
+                </div>
+                <div className="text-left flex-1">
+                  <p className="font-semibold text-gray-900">Credit / Debit Card</p>
+                  <p className="text-sm text-gray-500">Pay instantly with Stripe</p>
+                </div>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "stripe" ? "border-blue-500" : "border-gray-300"}`}>
+                  {selectedMethod === "stripe" && <div className="w-3 h-3 rounded-full bg-blue-500" />}
+                </div>
+              </button>
+            </>
+          )}
+
+          {/* Coming Soon placeholder removed — Credit/Debit Card is now active via Stripe */}
+
+          {/* Gift Card */}
+          {/* <div className="w-full p-4 rounded-xl border-2 border-gray-200 bg-white">
+            <div className="flex items-center gap-4">
+              <div className="bg-amber-500 w-12 h-12 rounded-full flex items-center justify-center">
+                <Gift className="h-6 w-6 text-white" />
+              </div>
+              <div className="text-left flex-1">
+                <p className="font-semibold text-gray-900">{t("giftCard") || "Gift Card"}</p>
+                <p className="text-sm text-gray-500">{t("buyOrRedeemGiftCards") || "Buy or redeem gift cards"}</p>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-3">
               <button
                 onClick={() => router.push("/player/gift-cards")}
                 className="flex-1 py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold transition-colors"
@@ -244,43 +329,46 @@ export default function PaymentScreen() {
                 🎟️ {t("redeemCode") || "Redeem Code"}
               </button>
             </div>
-          )}
-
-          {selectedMethod === "wallet" && (
-            <div className="mt-4 bg-gray-50 rounded-xl p-4 border border-gray-200">
-              <p className="text-sm text-gray-600">Wallet balance</p>
-              <p className="text-lg font-semibold text-gray-900">{formatCurrency(balance, currency)}</p>
-              <div className="mt-3">
-                <button
-                  onClick={async () => {
-                    if (!amount || parseFloat(amount) <= 0) { toast.error("Enter an amount"); return; }
-                    setProcessing(true);
-                    try {
-                      const bal = currency === "HTG" ? (wallet?.balanceHtg ?? wallet?.balance ?? 0) : (wallet?.balanceUsd ?? wallet?.balance ?? 0);
-                      if (parseFloat(amount) > bal) { toast.error("Insufficient wallet balance"); setProcessing(false); return; }
-                      // Optimistically refresh wallet and show success
-                      try { const w = await walletAPI.getBalance(); if (w) setWallet(w); } catch { }
-                      setShowSuccess(true);
-                      setTimeout(() => { setShowSuccess(false); router.push("/player/dashboard"); }, 2000);
-                    } catch (err) {
-                      toast.error("Wallet payment failed");
-                    } finally { setProcessing(false); }
-                  }}
-                  className="mt-2 px-4 py-2 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700"
-                >
-                  Pay with Wallet
-                </button>
+          </div> */}
+          {/* <div className="w-full p-4 rounded-xl border-2 border-gray-200 bg-white">
+            <div className="flex items-center gap-4">
+              <div className="bg-amber-500 w-12 h-12 rounded-full flex items-center justify-center">
+                <Gift className="h-6 w-6 text-white" />
+              </div>
+              <div className="text-left flex-1">
+                <p className="font-semibold text-gray-900">{t("giftCard") || "Gift Card"}</p>
+                <p className="text-sm text-gray-500">Buy Gift Card From Your Debit Card</p>
               </div>
             </div>
-          )}
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => router.push("/player/gift-cards")}
+                className="flex-1 py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold transition-colors"
+              >
+                🎁 {t("buyGiftCard") || "Buy Gift Card"}
+              </button>
+              <button
+                onClick={() => router.push("/player/gift-cards?tab=redeem")}
+                className="flex-1 py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold transition-colors"
+              >
+                🎟️ {t("redeemCode") || "Redeem Code"}
+              </button>
+            </div>
+          </div> */}
+           <button
+        onClick={() => window.open("https://grolotto.com/buy-gift-card", "_blank", "noopener,noreferrer")}
+        className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-500 text-white hover:opacity-90 transition-all shadow-md"
+      >
+        <div className="bg-white/20 p-3 rounded-xl">
+          <CreditCard className="h-6 w-6" />
+        </div>
+        <div className="text-left flex-1">
+          <span className="text-base font-bold block">{t("buyGiftCardFromDebitCard") || "Buy Gift Card from Debit Card"}</span>
+          <span className="text-xs opacity-80">{t("payWithDebitCard") || "Pay with your debit card"}</span>
+        </div>
+        <ChevronRight className="h-5 w-5 opacity-70" />
+      </button>
 
-          {selectedMethod === "system" && (
-            <div className="mt-4 text-sm text-gray-600">System payments are for internal use only.</div>
-          )}
-
-          {selectedMethod === "reward" && (
-            <div className="mt-4 text-sm text-gray-600">Reward payments use promotional credits. Contact support to apply.</div>
-          )}
         </div>
       </div>
 

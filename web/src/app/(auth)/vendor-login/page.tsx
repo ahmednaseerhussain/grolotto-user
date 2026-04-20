@@ -35,7 +35,7 @@ export default function VendorLoginPage() {
       }
 
       setUser(user);
-      toast.success(t("loginSuccess"));
+      toast.success(t("Login Success"));
       router.push("/vendor/dashboard");
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -60,7 +60,7 @@ export default function VendorLoginPage() {
       <Card>
         <CardHeader>
           <CardTitle>{t("vendorLogin")}</CardTitle>
-          <CardDescription>{t("enterCredentials")}</CardDescription>
+          <CardDescription>{t("Enter Credentials")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -70,7 +70,7 @@ export default function VendorLoginPage() {
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder={t("yourEmail")}
+                placeholder={t("Your Email")}
                 required
               />
             </div>
@@ -81,7 +81,7 @@ export default function VendorLoginPage() {
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder={t("enterPassword")}
+                placeholder={t("Enter Password") || "Enter Password"}
                 required
                 minLength={6}
               />

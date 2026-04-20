@@ -55,7 +55,7 @@ export default function PlayerLoginPage() {
       }
 
       setUser(user);
-      toast.success(isLogin ? t("loginSuccess") : t("registrationSuccess"));
+      toast.success(isLogin ? t("Login Success") : t("Registration Success"));
       router.push("/player/dashboard");
     } catch (error: any) {
       const msg = getErrorMessage(error);
@@ -84,9 +84,9 @@ export default function PlayerLoginPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{isLogin ? t("playerLogin") : t("createAccount")}</CardTitle>
+          <CardTitle>{isLogin ? t("Player Login") : t("createAccount")}</CardTitle>
           <CardDescription>
-            {isLogin ? t("enterCredentials") : t("fillInformation")}
+            {isLogin ? t("Enter Credentials") : t("fillInformation")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -121,7 +121,7 @@ export default function PlayerLoginPage() {
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder={t("yourEmail")}
+                placeholder={t("Your Email") || "Your Email"}
                 required
               />
             </div>
@@ -156,7 +156,7 @@ export default function PlayerLoginPage() {
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder={t("enterPassword")}
+                placeholder={t("Enter Password") || "Enter Password"}
                 required
                 minLength={6}
               />

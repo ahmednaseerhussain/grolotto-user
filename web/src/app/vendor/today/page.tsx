@@ -153,7 +153,7 @@ export default function TodayPlayersWinnersScreen() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-xl font-bold">{t("todaysPlayersWinners") || "Today's Players & Winners"}</h1>
+            <h1 className="text-xl font-bold">{t("Today's Players & Winners") || "Today's Players & Winners"}</h1>
             <p className="text-sm text-gray-500">
               <Calendar className="inline h-3.5 w-3.5 mr-1" />
               {new Date().toLocaleDateString()}
@@ -167,10 +167,10 @@ export default function TodayPlayersWinnersScreen() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard title={t("totalPlayers") || "Players"} value={stats.players} icon={<Users className="h-5 w-5" />} />
-        <StatCard title={t("totalBets") || "Bets"} value={formatCurrency(stats.totalBet, currency)} icon={<DollarSign className="h-5 w-5" />} />
-        <StatCard title={t("winners") || "Winners"} value={stats.winners} icon={<Trophy className="h-5 w-5" />} />
-        <StatCard title={t("totalPaid") || "Total Paid"} value={formatCurrency(stats.totalWon, currency)} icon={<DollarSign className="h-5 w-5" />} />
+        <StatCard title={t("Total Players") || "Players"} value={stats.players} icon={<Users className="h-5 w-5" />} />
+        <StatCard title={t("Total Bets") || "Bets"} value={formatCurrency(stats.totalBet, currency)} icon={<DollarSign className="h-5 w-5" />} />
+        <StatCard title={t("Winners") || "Winners"} value={stats.winners} icon={<Trophy className="h-5 w-5" />} />
+        <StatCard title={t("Total Paid") || "Total Paid"} value={formatCurrency(stats.totalWon, currency)} icon={<DollarSign className="h-5 w-5" />} />
       </div>
 
       {/* Tabs */}
@@ -184,7 +184,7 @@ export default function TodayPlayersWinnersScreen() {
                 : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
           >
-            {tab === "players" ? (t("players") || "Players") : (t("winners") || "Winners")}
+            {tab === "players" ? (t("Players") || "Players") : (t("winners") || "Winners")}
             <span className="ml-1 text-xs bg-gray-100 px-1.5 py-0.5 rounded-full">
               {tab === "players" ? players.length : winners.length}
             </span>
@@ -221,8 +221,8 @@ export default function TodayPlayersWinnersScreen() {
       ) : displayed.length === 0 ? (
         <EmptyState
           icon={activeTab === "winners" ? <Trophy className="h-10 w-10" /> : <Users className="h-10 w-10" />}
-          title={activeTab === "winners" ? (t("noWinnersToday") || "No winners today") : (t("noPlayersToday") || "No players today")}
-          description={t("checkBackLater") || "Check back later for updated results."}
+          title={activeTab === "winners" ? (t("noWinnersToday") || "No winners today") : (t("No Players Today") || "No players today")}
+          description={t("Check Back Later") || "Check back later for updated results."}
         />
       ) : (
         <div className="space-y-4">
