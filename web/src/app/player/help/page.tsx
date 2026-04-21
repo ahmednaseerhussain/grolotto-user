@@ -60,126 +60,54 @@ export default function HelpPage() {
 
   const sections: FAQSection[] = [
     {
-      title: "🎮 How to Play",
+      title: t("faqHowToPlay") || "🎮 How to Play",
       icon: Gamepad2,
       color: "text-blue-400",
       items: [
-        {
-          question: "How do I play GroLotto?",
-          answer: "Go to the Play tab and choose a game type: Borlèt (pick 2 digits 00-99), Maryaj (pick 2 pairs of numbers), or Lotto 3/Lotto 4/Lotto 5 (pick 3, 4, or 5 numbers). Select your numbers, choose a draw time (Morning, Afternoon, or Evening), enter your bet amount, and tap Play!",
-        },
-        {
-          question: "What are the different game types?",
-          answer: "Borlèt: Pick a 2-digit number (00-99). Maryaj: Pick 2 pairs of numbers. Lotto 3: Pick 3 numbers. Lotto 4: Pick 4 numbers. Lotto 5: Pick 5 numbers. Tchala: Dream-number interpretations — search a dream symbol and play its associated number.",
-        },
-        {
-          question: "What are the draw times?",
-          answer: "There are three daily draws: Morning (Maten) at 10:00 AM, Afternoon (Aprèmidi) at 2:00 PM, and Evening (Aswè) at 8:00 PM. All times are Eastern Time (Haiti).",
-        },
-        {
-          question: "How do I know if I won?",
-          answer: "After each draw, check the Results tab to see winning numbers. You'll also receive a notification if you win. Winnings are automatically credited to your wallet.",
-        },
-        {
-          question: "What is the minimum and maximum bet?",
-          answer: "The minimum bet is 10 HTG (or $1 USD). Maximum bet varies by game type and is displayed on the play screen.",
-        },
+        { question: t("faqPlayQ1") || "How do I play GroLotto?", answer: t("faqPlayA1") || "" },
+        { question: t("faqPlayQ2") || "What are the different game types?", answer: t("faqPlayA2") || "" },
+        { question: t("faqPlayQ3") || "What are the draw times?", answer: t("faqPlayA3") || "" },
+        { question: t("faqPlayQ4") || "How do I know if I won?", answer: t("faqPlayA4") || "" },
       ],
     },
     {
-      title: "💳 Payments & Wallet",
+      title: t("faqPaymentsWallet") || "💳 Payments & Wallet",
       icon: CreditCard,
       color: "text-green-400",
       items: [
-        {
-          question: "How do I add money to my wallet?",
-          answer: "Go to Payment, select a deposit amount (or enter a custom amount), choose your payment method (MonCash or PayPal), and complete the payment. Funds will appear in your wallet within minutes.",
-        },
-        {
-          question: "What payment methods are available?",
-          answer: "We currently support MonCash (Digicel mobile money) and PayPal. You can also fund your wallet with a Gift Card code.",
-        },
-        {
-          question: "How do I withdraw my winnings?",
-          answer: "Go to Payment, switch to the Withdraw tab, enter the amount you'd like to withdraw, and choose your withdrawal method. Processing typically takes 24-48 hours.",
-        },
-        {
-          question: "Can I switch between HTG and USD?",
-          answer: "Yes! Go to Settings and change your preferred currency. Your wallet shows balances in both HTG and USD. Bets and deposits are processed in your selected currency.",
-        },
-        {
-          question: "Is there a fee for deposits or withdrawals?",
-          answer: "GroLotto does not charge deposit fees. MonCash may apply their standard transaction fees. Withdrawal fees, if any, are shown before you confirm.",
-        },
+        { question: t("faqPayQ1") || "How do I add money to my wallet?", answer: t("faqPayA1") || "" },
+        { question: t("faqPayQ2") || "What payment methods are available?", answer: t("faqPayA2") || "" },
+        { question: t("faqPayQ3") || "How do I withdraw my winnings?", answer: t("faqPayA3") || "" },
+        { question: t("faqPayQ4") || "Are there withdrawal limits?", answer: t("faqPayA4") || "" },
       ],
     },
     {
-      title: "🎁 Gift Cards",
+      title: t("faqGiftCards") || "🎁 Gift Cards",
       icon: Gift,
       color: "text-amber-400",
       items: [
-        {
-          question: "How do gift cards work?",
-          answer: "You can buy a gift card from your wallet balance and get a unique 12-character code (format: XXXX-XXXX-XXXX). Share this code with a friend, and they can redeem it to add funds to their wallet.",
-        },
-        {
-          question: "What gift card amounts are available?",
-          answer: "In HTG: 500, 1,000, 2,000, 5,000, and 10,000. In USD: $5, $10, $25, $50, and $100.",
-        },
-        {
-          question: "Can I redeem my own gift card?",
-          answer: "No, gift cards are meant to be shared. You cannot redeem a gift card that you purchased yourself.",
-        },
-        {
-          question: "Do gift cards expire?",
-          answer: "Yes, gift cards are valid for 1 year from the date of purchase.",
-        },
-        {
-          question: "How do I redeem a gift card?",
-          answer: "Go to Payment → Gift Cards → Redeem tab. Enter the 12-character code and tap Redeem. The amount will be instantly added to your wallet.",
-        },
+        { question: t("faqGiftQ1") || "How do gift cards work?", answer: t("faqGiftA1") || "" },
+        { question: t("faqGiftQ2") || "How do I buy a gift card?", answer: t("faqGiftA2") || "" },
+        { question: t("faqGiftQ3") || "How do I redeem a PIN?", answer: t("faqGiftA3") || "" },
       ],
     },
     {
-      title: "🛡️ Account & Security",
+      title: t("faqAccountSecurity") || "🛡️ Account & Security",
       icon: Shield,
       color: "text-violet-400",
       items: [
-        {
-          question: "How do I change my password?",
-          answer: "Go to Settings → Security. You can update your password there. For your safety, you'll need to enter your current password first.",
-        },
-        {
-          question: "How do I update my profile?",
-          answer: "Go to Profile from the bottom navigation or sidebar. You can update your name and profile picture. Note: Phone number and email cannot be changed for security reasons.",
-        },
-        {
-          question: "Is my data secure?",
-          answer: "Yes. We use industry-standard encryption for all data in transit and at rest. Your password is hashed and never stored in plain text. We never share your personal information with third parties.",
-        },
-        {
-          question: "What do I do if I forget my password?",
-          answer: "On the login screen, tap 'Forgot Password' and enter your registered phone number or email. You'll receive a reset link to create a new password.",
-        },
+        { question: t("faqAccountQ1") || "How do I change my password?", answer: t("faqAccountA1") || "" },
+        { question: t("faqAccountQ2") || "Is my data secure?", answer: t("faqAccountA2") || "" },
+        { question: t("faqAccountQ3") || "What if I forget my password?", answer: t("faqAccountA3") || "" },
       ],
     },
     {
-      title: "🏆 Rewards & Bonuses",
+      title: t("faqRewardsBonuses") || "🏆 Rewards & Bonuses",
       icon: Trophy,
       color: "text-yellow-400",
       items: [
-        {
-          question: "How do rewards work?",
-          answer: "You earn reward points every time you play. These points accumulate and can unlock special bonuses. Check the Rewards tab to see your current points and available rewards.",
-        },
-        {
-          question: "What is the referral bonus?",
-          answer: "Invite friends to GroLotto using your referral code. When they sign up and make their first deposit, both you and your friend receive a bonus credited to your wallets.",
-        },
-        {
-          question: "Do reward points expire?",
-          answer: "Reward points remain in your account as long as you play at least once every 90 days. Inactive accounts may have their points reset.",
-        },
+        { question: t("faqRewardsQ1") || "How do rewards work?", answer: t("faqRewardsA1") || "" },
+        { question: t("faqRewardsQ2") || "What is the referral bonus?", answer: t("faqRewardsA2") || "" },
       ],
     },
   ];
@@ -201,7 +129,7 @@ export default function HelpPage() {
         <div className="text-center py-6 bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border border-emerald-200">
           <HelpCircle className="h-12 w-12 text-emerald-600 mx-auto mb-3" />
           <h2 className="text-lg font-bold text-gray-800 mb-1">{t("howCanWeHelp") || "How can we help you?"}</h2>
-          <p className="text-gray-500 text-sm">Find answers to common questions below</p>
+          <p className="text-gray-500 text-sm">{t("helpSubtitle") || "Find answers to common questions below"}</p>
         </div>
       </div>
 
@@ -230,7 +158,7 @@ export default function HelpPage() {
       {/* Contact Section */}
       <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
         <h3 className="text-lg font-bold text-gray-800 mb-4">📞 {t("contactSupport") || "Contact Support"}</h3>
-        <p className="text-gray-500 text-sm mb-4">Still need help? Reach out to our support team:</p>
+        <p className="text-gray-500 text-sm mb-4">{t("stillNeedHelp") || "Still need help? Reach out to our support team:"}</p>
         <div className="space-y-3">
           <a
             href="mailto:support@grolotto.com"

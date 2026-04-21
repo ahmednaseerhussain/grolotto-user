@@ -3413,6 +3413,414 @@ export const translations = {
     en: "Support",
     fr: "Support",
     es: "Soporte"
+  },
+
+  // Payment & Withdrawal Methods
+  bankTransfer: {
+    ht: "Transfè Bankè",
+    en: "Bank Transfer",
+    fr: "Virement Bancaire",
+    es: "Transferencia Bancaria"
+  },
+  zelle: {
+    ht: "Zelle",
+    en: "Zelle",
+    fr: "Zelle",
+    es: "Zelle"
+  },
+  cashapp: {
+    ht: "CashApp",
+    en: "CashApp",
+    fr: "CashApp",
+    es: "CashApp"
+  },
+  moncash: {
+    ht: "MonCash",
+    en: "MonCash",
+    fr: "MonCash",
+    es: "MonCash"
+  },
+  debitCard: {
+    ht: "Kat Debi",
+    en: "Debit Card",
+    fr: "Carte de Débit",
+    es: "Tarjeta de Débito"
+  },
+  htgGiftCard: {
+    ht: "Kat Kado HTG",
+    en: "HTG Gift Card",
+    fr: "Carte Cadeau HTG",
+    es: "Tarjeta Regalo HTG"
+  },
+  usdGiftCard: {
+    ht: "Kat Kado USD",
+    en: "USD Gift Card",
+    fr: "Carte Cadeau USD",
+    es: "Tarjeta Regalo USD"
+  },
+
+  // Withdraw / Payment form labels
+  withdrawalMethod: {
+    ht: "Metòd Retrè",
+    en: "Withdrawal Method",
+    fr: "Méthode de Retrait",
+    es: "Método de Retiro"
+  },
+  withdrawalAmount: {
+    ht: "Montan Retrè",
+    en: "Withdrawal Amount",
+    fr: "Montant du Retrait",
+    es: "Monto del Retiro"
+  },
+  submitWithdrawalRequest: {
+    ht: "Voye Demann Retrè a",
+    en: "Submit Withdrawal Request",
+    fr: "Envoyer la Demande de Retrait",
+    es: "Enviar Solicitud de Retiro"
+  },
+  bankDetails: {
+    ht: "Detay Bank la",
+    en: "Bank Details",
+    fr: "Détails Bancaires",
+    es: "Datos Bancarios"
+  },
+  bankName: {
+    ht: "Non Bank la",
+    en: "Bank Name",
+    fr: "Nom de la Banque",
+    es: "Nombre del Banco"
+  },
+  accountHolderName: {
+    ht: "Non Pwopriyetè Kont la",
+    en: "Account Holder Name",
+    fr: "Nom du Titulaire",
+    es: "Nombre del Titular"
+  },
+  accountNumber: {
+    ht: "Nimewo Kont",
+    en: "Account Number",
+    fr: "Numéro de Compte",
+    es: "Número de Cuenta"
+  },
+  routingNumber: {
+    ht: "Nimewo Routing",
+    en: "Routing Number",
+    fr: "Numéro de Routage",
+    es: "Número de Ruta"
+  },
+  additionalNotes: {
+    ht: "Nòt Adisyonèl",
+    en: "Additional Notes",
+    fr: "Notes Supplémentaires",
+    es: "Notas Adicionales"
+  },
+  cashappTag: {
+    ht: "$Cashtag",
+    en: "$Cashtag",
+    fr: "$Cashtag",
+    es: "$Cashtag"
+  },
+  zelleEmail: {
+    ht: "Imel Zelle",
+    en: "Zelle Email",
+    fr: "Email Zelle",
+    es: "Correo Zelle"
+  },
+  paypalEmail: {
+    ht: "Imel PayPal",
+    en: "PayPal Email",
+    fr: "Email PayPal",
+    es: "Correo PayPal"
+  },
+  adminWillProcess: {
+    ht: "Admin ap revize epi trete retrè ou a.",
+    en: "The admin will review and process your withdrawal.",
+    fr: "L'admin examinera et traitera votre retrait.",
+    es: "El admin revisará y procesará tu retiro."
+  },
+  backToDashboard: {
+    ht: "Retounen nan Dashboard",
+    en: "Back to Dashboard",
+    fr: "Retour au Tableau de Bord",
+    es: "Volver al Panel"
+  },
+  howItWorks: {
+    ht: "Kijan Li Mache",
+    en: "How It Works",
+    fr: "Comment Ça Marche",
+    es: "Cómo Funciona"
+  },
+
+  // Gift card external redirect
+  buyGiftCardOnline: {
+    ht: "Achte Kat Kado sou Entènèt",
+    en: "Buy Gift Card Online",
+    fr: "Acheter une Carte Cadeau en Ligne",
+    es: "Comprar Tarjeta Regalo en Línea"
+  },
+  buyRedirectNotice: {
+    ht: "Kat kado yo vann sou sitwèb nou. Ou ap redirije pou konplete acha a.",
+    en: "Gift cards are sold on our website. You will be redirected to complete your purchase.",
+    fr: "Les cartes cadeaux sont vendues sur notre site web. Vous serez redirigé pour finaliser l'achat.",
+    es: "Las tarjetas de regalo se venden en nuestro sitio web. Se te redirigirá para completar la compra."
+  },
+  openWebsite: {
+    ht: "Ouvri Sitwèb",
+    en: "Open Website",
+    fr: "Ouvrir le Site Web",
+    es: "Abrir Sitio Web"
+  },
+  pinDeliveryInfo: {
+    ht: "Apre acha, PIN an ap voye ba ou pa imel oswa WhatsApp.",
+    en: "After purchase, your PIN will be sent by email or WhatsApp.",
+    fr: "Après l'achat, votre PIN sera envoyé par email ou WhatsApp.",
+    es: "Después de la compra, tu PIN se enviará por correo o WhatsApp."
+  },
+
+  // Help FAQ section titles
+  faqHowToPlay: {
+    ht: "🎮 Kijan pou Jwe",
+    en: "🎮 How to Play",
+    fr: "🎮 Comment Jouer",
+    es: "🎮 Cómo Jugar"
+  },
+  faqPaymentsWallet: {
+    ht: "💳 Peman & Bous",
+    en: "💳 Payments & Wallet",
+    fr: "💳 Paiements & Portefeuille",
+    es: "💳 Pagos y Billetera"
+  },
+  faqGiftCards: {
+    ht: "🎁 Kat Kado",
+    en: "🎁 Gift Cards",
+    fr: "🎁 Cartes Cadeaux",
+    es: "🎁 Tarjetas de Regalo"
+  },
+  faqAccountSecurity: {
+    ht: "🛡️ Kont & Sekirite",
+    en: "🛡️ Account & Security",
+    fr: "🛡️ Compte & Sécurité",
+    es: "🛡️ Cuenta y Seguridad"
+  },
+  faqRewardsBonuses: {
+    ht: "🏆 Rekonpans & Bonis",
+    en: "🏆 Rewards & Bonuses",
+    fr: "🏆 Récompenses & Bonus",
+    es: "🏆 Recompensas y Bonos"
+  },
+
+  // Help — How to Play
+  faqPlayQ1: {
+    ht: "Kijan mwen jwe GroLotto?",
+    en: "How do I play GroLotto?",
+    fr: "Comment jouer à GroLotto ?",
+    es: "¿Cómo juego a GroLotto?"
+  },
+  faqPlayA1: {
+    ht: "Ale sou tab Jwe epi chwazi yon tip jwèt: Borlèt, Maryaj, Lotto 3/4/5. Chwazi nimewo ou yo, chwazi yon lè tiraj (Maten, Midi, Aswè), antre montan pari a, epi tape Jwe!",
+    en: "Go to the Play tab and choose a game type: Borlèt, Maryaj, or Lotto 3/4/5. Select your numbers, choose a draw time (Morning, Midday, Evening), enter your bet amount, and tap Play!",
+    fr: "Allez sur l'onglet Jouer et choisissez un type de jeu : Borlèt, Maryaj, ou Lotto 3/4/5. Sélectionnez vos numéros, choisissez une heure de tirage (Matin, Midi, Soir), entrez votre mise, et touchez Jouer !",
+    es: "Ve a la pestaña Jugar y elige un tipo de juego: Borlèt, Maryaj, o Lotto 3/4/5. Selecciona tus números, elige una hora de sorteo (Mañana, Mediodía, Noche), ingresa tu apuesta y toca Jugar."
+  },
+  faqPlayQ2: {
+    ht: "Ki tip jwèt ki genyen?",
+    en: "What are the different game types?",
+    fr: "Quels sont les types de jeux ?",
+    es: "¿Cuáles son los tipos de juego?"
+  },
+  faqPlayA2: {
+    ht: "Borlèt: 2 chif (00-99). Maryaj: 2 pè nimewo. Lotto 3/4/5: 3, 4 oswa 5 nimewo. Tchala: entèprete rèv yo.",
+    en: "Borlèt: 2 digits (00-99). Maryaj: 2 pairs of numbers. Lotto 3/4/5: pick 3, 4, or 5 numbers. Tchala: dream-number interpretations.",
+    fr: "Borlèt : 2 chiffres (00-99). Maryaj : 2 paires. Lotto 3/4/5 : 3, 4 ou 5 numéros. Tchala : interprétation des rêves.",
+    es: "Borlèt: 2 dígitos (00-99). Maryaj: 2 pares. Lotto 3/4/5: 3, 4 o 5 números. Tchala: interpretación de sueños."
+  },
+  faqPlayQ3: {
+    ht: "Ki lè tiraj yo?",
+    en: "What are the draw times?",
+    fr: "Quelles sont les heures de tirage ?",
+    es: "¿Cuáles son las horas de sorteo?"
+  },
+  faqPlayA3: {
+    ht: "Twa tiraj chak jou: Maten 10:00 AM, Midi 2:00 PM, Aswè 8:00 PM (lè Ayiti).",
+    en: "Three daily draws: Morning 10:00 AM, Midday 2:00 PM, Evening 8:00 PM (Haiti time).",
+    fr: "Trois tirages quotidiens : Matin 10h, Midi 14h, Soir 20h (heure d'Haïti).",
+    es: "Tres sorteos diarios: Mañana 10:00 AM, Mediodía 2:00 PM, Noche 8:00 PM (hora de Haití)."
+  },
+  faqPlayQ4: {
+    ht: "Kijan mwen konnen si mwen genyen?",
+    en: "How do I know if I won?",
+    fr: "Comment savoir si j'ai gagné ?",
+    es: "¿Cómo sé si gané?"
+  },
+  faqPlayA4: {
+    ht: "Gade tab Rezilta a apre chak tiraj. Ou ap jwenn yon notifikasyon epi lajan an ap otomatikman ajoute nan bous ou.",
+    en: "Check the Results tab after each draw. You'll receive a notification and winnings are credited automatically to your wallet.",
+    fr: "Consultez l'onglet Résultats après chaque tirage. Vous recevrez une notification et les gains seront crédités automatiquement.",
+    es: "Revisa la pestaña Resultados después de cada sorteo. Recibirás una notificación y las ganancias se acreditarán automáticamente."
+  },
+
+  // Help — Payments
+  faqPayQ1: {
+    ht: "Kijan mwen ajoute lajan nan bous mwen?",
+    en: "How do I add money to my wallet?",
+    fr: "Comment ajouter de l'argent à mon portefeuille ?",
+    es: "¿Cómo agrego dinero a mi billetera?"
+  },
+  faqPayA1: {
+    ht: "Ale nan Peman, chwazi yon montan, chwazi metòd peman an (MonCash pou HTG; Zelle, CashApp, PayPal, Bank Transfer, Debit Card pou USD), epi fini peman an.",
+    en: "Go to Payment, choose an amount, select a method (MonCash for HTG; Zelle, CashApp, PayPal, Bank Transfer, Debit Card for USD), and complete the payment.",
+    fr: "Allez dans Paiement, choisissez un montant, sélectionnez une méthode (MonCash pour HTG ; Zelle, CashApp, PayPal, Virement, Carte pour USD), et complétez le paiement.",
+    es: "Ve a Pago, elige un monto, selecciona un método (MonCash para HTG; Zelle, CashApp, PayPal, Transferencia, Tarjeta para USD), y completa el pago."
+  },
+  faqPayQ2: {
+    ht: "Ki metòd peman ki disponib?",
+    en: "What payment methods are available?",
+    fr: "Quelles méthodes de paiement sont disponibles ?",
+    es: "¿Qué métodos de pago están disponibles?"
+  },
+  faqPayA2: {
+    ht: "Pou HTG: MonCash ak Kat Kado HTG. Pou USD: Bank Transfer, Zelle, CashApp, PayPal, Kat Debi, ak Kat Kado USD.",
+    en: "HTG: MonCash and HTG Gift Cards. USD: Bank Transfer, Zelle, CashApp, PayPal, Debit Card, and USD Gift Cards.",
+    fr: "HTG : MonCash et Cartes Cadeaux HTG. USD : Virement, Zelle, CashApp, PayPal, Carte de Débit, Cartes Cadeaux USD.",
+    es: "HTG: MonCash y Tarjetas Regalo HTG. USD: Transferencia, Zelle, CashApp, PayPal, Tarjeta de Débito y Tarjetas Regalo USD."
+  },
+  faqPayQ3: {
+    ht: "Kijan mwen retire lajan mwen genyen an?",
+    en: "How do I withdraw my winnings?",
+    fr: "Comment retirer mes gains ?",
+    es: "¿Cómo retiro mis ganancias?"
+  },
+  faqPayA3: {
+    ht: "Ale nan Retrè, antre montan an, chwazi metòd la. HTG: MonCash oswa Bank Transfer. USD: Zelle, CashApp, PayPal, oswa Bank Transfer. Pwosesis la pran 1-3 jou.",
+    en: "Go to Withdraw, enter the amount, and pick a method. HTG: MonCash or Bank Transfer. USD: Zelle, CashApp, PayPal, or Bank Transfer. Processing takes 1-3 business days.",
+    fr: "Allez dans Retrait, entrez le montant, choisissez une méthode. HTG : MonCash ou Virement. USD : Zelle, CashApp, PayPal ou Virement. 1 à 3 jours ouvrés.",
+    es: "Ve a Retiro, ingresa el monto, elige un método. HTG: MonCash o Transferencia. USD: Zelle, CashApp, PayPal o Transferencia. Tarda 1-3 días hábiles."
+  },
+  faqPayQ4: {
+    ht: "Èske genyen limit sou retrè?",
+    en: "Are there withdrawal limits?",
+    fr: "Y a-t-il des limites de retrait ?",
+    es: "¿Hay límites de retiro?"
+  },
+  faqPayA4: {
+    ht: "Wi. Chak metòd gen pwòp minimòm/maksimòm li. Limit la parèt anvan ou konfime retrè a.",
+    en: "Yes. Each method has its own min/max. The limit is shown before you confirm the withdrawal.",
+    fr: "Oui. Chaque méthode a ses propres min/max. La limite est affichée avant confirmation.",
+    es: "Sí. Cada método tiene su propio mín/máx. El límite se muestra antes de confirmar."
+  },
+
+  // Help — Gift cards
+  faqGiftQ1: {
+    ht: "Kijan kat kado yo mache?",
+    en: "How do gift cards work?",
+    fr: "Comment fonctionnent les cartes cadeaux ?",
+    es: "¿Cómo funcionan las tarjetas de regalo?"
+  },
+  faqGiftA1: {
+    ht: "Ou achte kat kado sou sitwèb la. Ou ap resevwa yon PIN pa imel oswa WhatsApp. Ou ka redeem PIN nan aplikasyon an pou ajoute lajan nan bous ou.",
+    en: "You buy gift cards on our website. You receive a PIN by email or WhatsApp. Redeem the PIN in the app to add funds to your wallet.",
+    fr: "Vous achetez les cartes cadeaux sur notre site. Vous recevez un PIN par email ou WhatsApp. Utilisez le PIN dans l'app pour créditer votre portefeuille.",
+    es: "Compras las tarjetas regalo en nuestro sitio. Recibes un PIN por correo o WhatsApp. Redímelo en la app para acreditar tu billetera."
+  },
+  faqGiftQ2: {
+    ht: "Kijan mwen achte yon kat kado?",
+    en: "How do I buy a gift card?",
+    fr: "Comment acheter une carte cadeau ?",
+    es: "¿Cómo compro una tarjeta de regalo?"
+  },
+  faqGiftA2: {
+    ht: "Ale nan Kat Kado nan aplikasyon an epi klike Achte. N ap redirije w sou sitwèb GroLotto pou acha a (HTG oswa USD selon deviz ou).",
+    en: "Open Gift Cards in the app and tap Buy. You'll be redirected to the GroLotto website to complete the purchase (HTG or USD depending on your currency).",
+    fr: "Ouvrez Cartes Cadeaux dans l'app et touchez Acheter. Vous serez redirigé vers le site GroLotto (HTG ou USD selon votre devise).",
+    es: "Abre Tarjetas Regalo en la app y toca Comprar. Serás redirigido al sitio de GroLotto (HTG o USD según tu moneda)."
+  },
+  faqGiftQ3: {
+    ht: "Kijan mwen redeem yon PIN?",
+    en: "How do I redeem a PIN?",
+    fr: "Comment utiliser un PIN ?",
+    es: "¿Cómo redimo un PIN?"
+  },
+  faqGiftA3: {
+    ht: "Ale nan Kat Kado → Redeem. Antre PIN an. Si li bon, lajan an ap ajoute nan bous ou imedyatman. PIN yo sèvi yon sèl fwa.",
+    en: "Go to Gift Cards → Redeem. Enter the PIN. If valid, funds are added to your wallet instantly. PINs can only be used once.",
+    fr: "Allez dans Cartes Cadeaux → Utiliser. Entrez le PIN. S'il est valide, les fonds sont crédités instantanément. Les PIN ne peuvent être utilisés qu'une seule fois.",
+    es: "Ve a Tarjetas Regalo → Redimir. Ingresa el PIN. Si es válido, los fondos se acreditan al instante. Los PIN solo se usan una vez."
+  },
+
+  // Help — Account
+  faqAccountQ1: {
+    ht: "Kijan mwen chanje modpas mwen?",
+    en: "How do I change my password?",
+    fr: "Comment changer mon mot de passe ?",
+    es: "¿Cómo cambio mi contraseña?"
+  },
+  faqAccountA1: {
+    ht: "Ale nan Paramèt → Sekirite. Ou ap bezwen modpas aktyèl ou.",
+    en: "Go to Settings → Security. You'll need your current password.",
+    fr: "Allez dans Paramètres → Sécurité. Votre mot de passe actuel est requis.",
+    es: "Ve a Ajustes → Seguridad. Necesitarás tu contraseña actual."
+  },
+  faqAccountQ2: {
+    ht: "Èske done mwen yo an sekirite?",
+    en: "Is my data secure?",
+    fr: "Mes données sont-elles sécurisées ?",
+    es: "¿Mis datos están seguros?"
+  },
+  faqAccountA2: {
+    ht: "Wi. Nou sèvi ak chiffrman estanda endistri. Modpas ou hash epi pa janm estoke an plen tèks.",
+    en: "Yes. We use industry-standard encryption. Passwords are hashed and never stored in plain text.",
+    fr: "Oui. Nous utilisons un chiffrement standard. Les mots de passe sont hachés et jamais stockés en clair.",
+    es: "Sí. Usamos cifrado estándar. Las contraseñas se codifican y nunca se guardan en texto plano."
+  },
+  faqAccountQ3: {
+    ht: "Ki sa pou m fè si m bliye modpas mwen?",
+    en: "What if I forget my password?",
+    fr: "Que faire si j'oublie mon mot de passe ?",
+    es: "¿Qué hago si olvido mi contraseña?"
+  },
+  faqAccountA3: {
+    ht: "Sou ekran koneksyon an, klike 'Bliye Modpas' epi antre telefòn oswa imel ou. Nou ap voye yon lyen reset.",
+    en: "On the login screen, tap 'Forgot Password' and enter your phone or email. We'll send a reset link.",
+    fr: "Sur l'écran de connexion, touchez « Mot de passe oublié » et entrez votre téléphone ou email. Un lien de réinitialisation sera envoyé.",
+    es: "En la pantalla de inicio, toca 'Olvidé mi contraseña' e ingresa tu teléfono o correo. Enviaremos un enlace de restablecimiento."
+  },
+
+  // Help — Rewards
+  faqRewardsQ1: {
+    ht: "Kijan rekonpans yo mache?",
+    en: "How do rewards work?",
+    fr: "Comment fonctionnent les récompenses ?",
+    es: "¿Cómo funcionan las recompensas?"
+  },
+  faqRewardsA1: {
+    ht: "Ou touche pwen chak fwa ou jwe. Pwen yo bay aksè nan bonis espesyal.",
+    en: "You earn points every time you play. Points unlock special bonuses.",
+    fr: "Vous gagnez des points à chaque jeu. Les points débloquent des bonus.",
+    es: "Ganas puntos cada vez que juegas. Los puntos desbloquean bonos especiales."
+  },
+  faqRewardsQ2: {
+    ht: "Ki sa bonis refè a ye?",
+    en: "What is the referral bonus?",
+    fr: "Qu'est-ce que le bonus de parrainage ?",
+    es: "¿Qué es el bono de referido?"
+  },
+  faqRewardsA2: {
+    ht: "Envite zanmi ou ak kòd refè w la. Lè yo fè premye depo a, tou de resevwa yon bonis.",
+    en: "Invite friends with your referral code. When they make their first deposit, you both get a bonus.",
+    fr: "Invitez des amis avec votre code de parrainage. Lors de leur premier dépôt, vous recevez tous deux un bonus.",
+    es: "Invita amigos con tu código. Cuando hagan su primer depósito, ambos reciben un bono."
+  },
+  helpSubtitle: {
+    ht: "Jwenn repons pou kesyon ou genyen pi souvan",
+    en: "Find answers to common questions below",
+    fr: "Trouvez les réponses aux questions fréquentes",
+    es: "Encuentra respuestas a preguntas comunes"
+  },
+  stillNeedHelp: {
+    ht: "Èske w toujou bezwen èd? Kontakte sipò:",
+    en: "Still need help? Reach out to our support team:",
+    fr: "Besoin d'aide supplémentaire ? Contactez notre équipe :",
+    es: "¿Aún necesitas ayuda? Contacta a nuestro equipo:"
   }
 };
 

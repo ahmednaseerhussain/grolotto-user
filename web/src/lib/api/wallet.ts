@@ -23,6 +23,7 @@ export const walletAPI = {
     method: string;
     moncashPhone?: string;
     cashappTag?: string;
+    zelleEmail?: string;
     paypalEmail?: string;
     bankName?: string;
     accountHolderName?: string;

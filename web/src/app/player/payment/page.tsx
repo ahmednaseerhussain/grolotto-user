@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   ArrowLeft, Wallet, CheckCircle, Smartphone, DollarSign, Loader2, CreditCard, Gift, Ticket, Mail, Clock,
-  ChevronRight
+  ChevronRight, Banknote, ExternalLink
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -50,14 +50,27 @@ export default function PaymentScreen() {
     (selectedMethod === "moncash" && phoneNumber.length >= 8) ||
     (selectedMethod === "zelle") ||
     (selectedMethod === "cashapp") ||
-    (selectedMethod === "stripe")
+    (selectedMethod === "stripe") ||
+    (selectedMethod === "bank_transfer") ||
+    (selectedMethod === "paypal") ||
+    (selectedMethod === "gift_card")
   );
 
   const handlePayment = async () => {
     if (!canProceed) return;
+
+    // Gift card — external redirect
+    if (selectedMethod === "gift_card") {
+      const url = currency === "HTG"
+        ? "https://grolotto.com/buy-gift-card-htg"
+        : "https://grolotto.com/buy-gift-card-usd";
+      window.open(url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
     setProcessing(true);
     try {
-      if (selectedMethod === "zelle" || selectedMethod === "cashapp") {
+      if (selectedMethod === "zelle" || selectedMethod === "cashapp" || selectedMethod === "bank_transfer" || selectedMethod === "paypal") {
         // Manual payment: create order then show instructions
         await paymentOrderAPI.createOrder({
           amount: parseFloat(amount),
@@ -292,83 +305,79 @@ export default function PaymentScreen() {
                   <CreditCard className="h-6 w-6 text-white" />
                 </div>
                 <div className="text-left flex-1">
-                  <p className="font-semibold text-gray-900">Credit / Debit Card</p>
+                  <p className="font-semibold text-gray-900">{t("creditDebitCard") || "Credit / Debit Card"}</p>
                   <p className="text-sm text-gray-500">Pay instantly with Stripe</p>
                 </div>
                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "stripe" ? "border-blue-500" : "border-gray-300"}`}>
                   {selectedMethod === "stripe" && <div className="w-3 h-3 rounded-full bg-blue-500" />}
                 </div>
               </button>
+
+              {/* PayPal */}
+              <button
+                onClick={() => setSelectedMethod("paypal")}
+                className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${selectedMethod === "paypal"
+                  ? "border-indigo-500 bg-indigo-50"
+                  : "border-gray-200 hover:border-gray-300 bg-white"
+                  }`}
+              >
+                <div className="bg-indigo-600 w-12 h-12 rounded-full flex items-center justify-center">
+                  <DollarSign className="h-6 w-6 text-white" />
+                </div>
+                <div className="text-left flex-1">
+                  <p className="font-semibold text-gray-900">{t("paypal") || "PayPal"}</p>
+                  <p className="text-sm text-gray-500">Send payment &amp; email screenshot</p>
+                </div>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "paypal" ? "border-indigo-500" : "border-gray-300"}`}>
+                  {selectedMethod === "paypal" && <div className="w-3 h-3 rounded-full bg-indigo-500" />}
+                </div>
+              </button>
+
+              {/* Bank Transfer */}
+              <button
+                onClick={() => setSelectedMethod("bank_transfer")}
+                className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${selectedMethod === "bank_transfer"
+                  ? "border-amber-500 bg-amber-50"
+                  : "border-gray-200 hover:border-gray-300 bg-white"
+                  }`}
+              >
+                <div className="bg-amber-500 w-12 h-12 rounded-full flex items-center justify-center">
+                  <Banknote className="h-6 w-6 text-white" />
+                </div>
+                <div className="text-left flex-1">
+                  <p className="font-semibold text-gray-900">{t("bankTransfer") || "Bank Transfer"}</p>
+                  <p className="text-sm text-gray-500">Transfer &amp; email proof</p>
+                </div>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "bank_transfer" ? "border-amber-500" : "border-gray-300"}`}>
+                  {selectedMethod === "bank_transfer" && <div className="w-3 h-3 rounded-full bg-amber-500" />}
+                </div>
+              </button>
             </>
           )}
 
-          {/* Coming Soon placeholder removed — Credit/Debit Card is now active via Stripe */}
-
-          {/* Gift Card */}
-          {/* <div className="w-full p-4 rounded-xl border-2 border-gray-200 bg-white">
-            <div className="flex items-center gap-4">
-              <div className="bg-amber-500 w-12 h-12 rounded-full flex items-center justify-center">
-                <Gift className="h-6 w-6 text-white" />
-              </div>
-              <div className="text-left flex-1">
-                <p className="font-semibold text-gray-900">{t("giftCard") || "Gift Card"}</p>
-                <p className="text-sm text-gray-500">{t("buyOrRedeemGiftCards") || "Buy or redeem gift cards"}</p>
-              </div>
+          {/* Gift Card — currency-specific, redirects to website */}
+          <button
+            onClick={() => setSelectedMethod("gift_card")}
+            className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${selectedMethod === "gift_card"
+              ? "border-orange-500 bg-orange-50"
+              : "border-gray-200 hover:border-gray-300 bg-white"
+              }`}
+          >
+            <div className="bg-orange-500 w-12 h-12 rounded-full flex items-center justify-center">
+              <Gift className="h-6 w-6 text-white" />
             </div>
-            <div className="flex gap-2 mt-3">
-              <button
-                onClick={() => router.push("/player/gift-cards")}
-                className="flex-1 py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold transition-colors"
-              >
-                🎁 {t("buyGiftCard") || "Buy Gift Card"}
-              </button>
-              <button
-                onClick={() => router.push("/player/gift-cards?tab=redeem")}
-                className="flex-1 py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold transition-colors"
-              >
-                🎟️ {t("redeemCode") || "Redeem Code"}
-              </button>
+            <div className="text-left flex-1">
+              <p className="font-semibold text-gray-900">
+                {currency === "HTG"
+                  ? (t("htgGiftCard") || "HTG Gift Card")
+                  : (t("usdGiftCard") || "USD Gift Card")}
+              </p>
+              <p className="text-sm text-gray-500">
+                {t("buyRedirectNotice") || "Buy on our website — redirects to grolotto.com"}
+              </p>
             </div>
-          </div> */}
-          {/* <div className="w-full p-4 rounded-xl border-2 border-gray-200 bg-white">
-            <div className="flex items-center gap-4">
-              <div className="bg-amber-500 w-12 h-12 rounded-full flex items-center justify-center">
-                <Gift className="h-6 w-6 text-white" />
-              </div>
-              <div className="text-left flex-1">
-                <p className="font-semibold text-gray-900">{t("giftCard") || "Gift Card"}</p>
-                <p className="text-sm text-gray-500">Buy Gift Card From Your Debit Card</p>
-              </div>
-            </div>
-            <div className="flex gap-2 mt-3">
-              <button
-                onClick={() => router.push("/player/gift-cards")}
-                className="flex-1 py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold transition-colors"
-              >
-                🎁 {t("buyGiftCard") || "Buy Gift Card"}
-              </button>
-              <button
-                onClick={() => router.push("/player/gift-cards?tab=redeem")}
-                className="flex-1 py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold transition-colors"
-              >
-                🎟️ {t("redeemCode") || "Redeem Code"}
-              </button>
-            </div>
-          </div> */}
-           <button
-        onClick={() => window.open("https://grolotto.com/buy-gift-card", "_blank", "noopener,noreferrer")}
-        className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-500 text-white hover:opacity-90 transition-all shadow-md"
-      >
-        <div className="bg-white/20 p-3 rounded-xl">
-          <CreditCard className="h-6 w-6" />
-        </div>
-        <div className="text-left flex-1">
-          <span className="text-base font-bold block">{t("buyGiftCardFromDebitCard") || "Buy Gift Card from Debit Card"}</span>
-          <span className="text-xs opacity-80">{t("payWithDebitCard") || "Pay with your debit card"}</span>
-        </div>
-        <ChevronRight className="h-5 w-5 opacity-70" />
-      </button>
-
+            <ExternalLink className="h-5 w-5 text-gray-400" />
+          </button>
         </div>
       </div>
 
@@ -468,7 +477,11 @@ export default function PaymentScreen() {
           className={`w-full rounded-xl py-4 flex items-center justify-center gap-2 font-bold text-lg text-white transition-colors ${canProceed && !processing ? "bg-green-600 hover:bg-green-700" : "bg-gray-300 cursor-not-allowed"
             }`}
         >
-          {processing ? "Processing..." : `🔒 Pay ${amount ? formatCurrency(parseFloat(amount), currency) : ""}`}
+          {processing
+            ? "Processing..."
+            : selectedMethod === "gift_card"
+              ? `${t("openWebsite") || "Open Website"} →`
+              : `🔒 Pay ${amount ? formatCurrency(parseFloat(amount), currency) : ""}`}
         </button>
       )}
     </div>

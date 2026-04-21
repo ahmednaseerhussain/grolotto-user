@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-    ArrowLeft, Wallet, Banknote, CheckCircle, HelpCircle, Loader2, Mail
+    ArrowLeft, Wallet, Banknote, CheckCircle, HelpCircle, Loader2, Mail, Smartphone, DollarSign
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -27,11 +27,13 @@ export default function PlayerWithdrawPage() {
     }, []);
 
     const [amount, setAmount] = useState("");
-    const [withdrawMethod, setWithdrawMethod] = useState<"cashapp" | "zelle" | "bank_transfer">(
-        "cashapp"
+    const [withdrawMethod, setWithdrawMethod] = useState<"cashapp" | "zelle" | "bank_transfer" | "moncash" | "paypal">(
+        currency === "HTG" ? "moncash" : "cashapp"
     );
     const [cashappTag, setCashappTag] = useState("");
     const [zelleEmail, setZelleEmail] = useState("");
+    const [paypalEmail, setPaypalEmail] = useState("");
+    const [moncashPhone, setMoncashPhone] = useState("");
     const [bankName, setBankName] = useState("");
     const [accountHolderName, setAccountHolderName] = useState("");
     const [accountNumber, setAccountNumber] = useState("");
@@ -40,13 +42,24 @@ export default function PlayerWithdrawPage() {
     const [processing, setProcessing] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
 
+    // Reset method when currency changes so player only sees valid options
+    useEffect(() => {
+        if (currency === "HTG" && (withdrawMethod === "cashapp" || withdrawMethod === "zelle" || withdrawMethod === "paypal")) {
+            setWithdrawMethod("moncash");
+        } else if (currency === "USD" && withdrawMethod === "moncash") {
+            setWithdrawMethod("cashapp");
+        }
+    }, [currency]);
+
     const balance = currency === "HTG"
         ? (wallet?.balanceHtg ?? wallet?.balance ?? 0)
         : (wallet?.balanceUsd ?? wallet?.balance ?? 0);
 
     const methodLimits: Record<string, { min: number; max: number }> = {
-        cashapp: currency === "HTG" ? { min: 500, max: 250000 } : { min: 5, max: 5000 },
-        zelle: currency === "HTG" ? { min: 500, max: 250000 } : { min: 5, max: 5000 },
+        moncash: { min: 500, max: 250000 },
+        cashapp: { min: 5, max: 5000 },
+        zelle: { min: 5, max: 5000 },
+        paypal: { min: 5, max: 200 },
         bank_transfer: currency === "HTG" ? { min: 500, max: 500000 } : { min: 5, max: 5000 },
     };
     const limits = methodLimits[withdrawMethod] || methodLimits.bank_transfer;
@@ -56,7 +69,11 @@ export default function PlayerWithdrawPage() {
             ? cashappTag.trim().length >= 2
             : withdrawMethod === "zelle"
                 ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(zelleEmail)
-                : bankName.trim() && accountHolderName.trim() && accountNumber.trim()
+                : withdrawMethod === "paypal"
+                    ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(paypalEmail)
+                    : withdrawMethod === "moncash"
+                        ? moncashPhone.trim().length >= 8
+                        : bankName.trim() && accountHolderName.trim() && accountNumber.trim()
     );
 
     const handleSubmit = async () => {
@@ -84,7 +101,11 @@ export default function PlayerWithdrawPage() {
                     ? { cashappTag }
                     : withdrawMethod === "zelle"
                         ? { zelleEmail }
-                        : { bankName, accountHolderName, accountNumber, routingNumber }),
+                        : withdrawMethod === "paypal"
+                            ? { paypalEmail }
+                            : withdrawMethod === "moncash"
+                                ? { moncashPhone }
+                                : { bankName, accountHolderName, accountNumber, routingNumber }),
                 notes,
             });
             setShowSuccess(true);
@@ -160,44 +181,97 @@ export default function PlayerWithdrawPage() {
 
             {/* Withdrawal Method Selector */}
             <div>
-                <label className="text-sm font-semibold text-gray-700 block mb-3">Withdrawal Method</label>
+                <label className="text-sm font-semibold text-gray-700 block mb-3">{t("withdrawalMethod") || "Withdrawal Method"}</label>
                 <div className="space-y-3">
-                    <button
-                        onClick={() => setWithdrawMethod("cashapp")}
-                        className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${withdrawMethod === "cashapp"
-                            ? "border-green-500 bg-green-50"
-                            : "border-gray-200 hover:border-gray-300 bg-white"
-                            }`}
-                    >
-                        <div className="bg-green-500 w-10 h-10 rounded-full flex items-center justify-center">
-                            <span className="text-white font-bold text-lg">$</span>
-                        </div>
-                        <div className="text-left flex-1">
-                            <p className="font-semibold text-gray-900">Cash App</p>
-                            <p className="text-sm text-gray-500">Receive via Cash App $cashtag</p>
-                        </div>
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${withdrawMethod === "cashapp" ? "border-green-500" : "border-gray-300"}`}>
-                            {withdrawMethod === "cashapp" && <div className="w-2.5 h-2.5 rounded-full bg-green-500" />}
-                        </div>
-                    </button>
-                    <button
-                        onClick={() => setWithdrawMethod("zelle")}
-                        className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${withdrawMethod === "zelle"
-                            ? "border-purple-500 bg-purple-50"
-                            : "border-gray-200 hover:border-gray-300 bg-white"
-                            }`}
-                    >
-                        <div className="bg-purple-500 w-10 h-10 rounded-full flex items-center justify-center">
-                            <Mail className="h-5 w-5 text-white" />
-                        </div>
-                        <div className="text-left flex-1">
-                            <p className="font-semibold text-gray-900">Zelle</p>
-                            <p className="text-sm text-gray-500">Receive via Zelle email</p>
-                        </div>
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${withdrawMethod === "zelle" ? "border-purple-500" : "border-gray-300"}`}>
-                            {withdrawMethod === "zelle" && <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />}
-                        </div>
-                    </button>
+                    {/* MonCash — HTG only */}
+                    {currency === "HTG" && (
+                        <button
+                            onClick={() => setWithdrawMethod("moncash")}
+                            className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${withdrawMethod === "moncash"
+                                ? "border-red-500 bg-red-50"
+                                : "border-gray-200 hover:border-gray-300 bg-white"
+                                }`}
+                        >
+                            <div className="bg-red-500 w-10 h-10 rounded-full flex items-center justify-center">
+                                <Smartphone className="h-5 w-5 text-white" />
+                            </div>
+                            <div className="text-left flex-1">
+                                <p className="font-semibold text-gray-900">{t("moncash") || "MonCash"}</p>
+                                <p className="text-sm text-gray-500">Receive via Digicel mobile money</p>
+                            </div>
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${withdrawMethod === "moncash" ? "border-red-500" : "border-gray-300"}`}>
+                                {withdrawMethod === "moncash" && <div className="w-2.5 h-2.5 rounded-full bg-red-500" />}
+                            </div>
+                        </button>
+                    )}
+
+                    {/* Cash App — USD only */}
+                    {currency === "USD" && (
+                        <button
+                            onClick={() => setWithdrawMethod("cashapp")}
+                            className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${withdrawMethod === "cashapp"
+                                ? "border-green-500 bg-green-50"
+                                : "border-gray-200 hover:border-gray-300 bg-white"
+                                }`}
+                        >
+                            <div className="bg-green-500 w-10 h-10 rounded-full flex items-center justify-center">
+                                <span className="text-white font-bold text-lg">$</span>
+                            </div>
+                            <div className="text-left flex-1">
+                                <p className="font-semibold text-gray-900">Cash App</p>
+                                <p className="text-sm text-gray-500">Receive via Cash App $cashtag</p>
+                            </div>
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${withdrawMethod === "cashapp" ? "border-green-500" : "border-gray-300"}`}>
+                                {withdrawMethod === "cashapp" && <div className="w-2.5 h-2.5 rounded-full bg-green-500" />}
+                            </div>
+                        </button>
+                    )}
+
+                    {/* Zelle — USD only */}
+                    {currency === "USD" && (
+                        <button
+                            onClick={() => setWithdrawMethod("zelle")}
+                            className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${withdrawMethod === "zelle"
+                                ? "border-purple-500 bg-purple-50"
+                                : "border-gray-200 hover:border-gray-300 bg-white"
+                                }`}
+                        >
+                            <div className="bg-purple-500 w-10 h-10 rounded-full flex items-center justify-center">
+                                <Mail className="h-5 w-5 text-white" />
+                            </div>
+                            <div className="text-left flex-1">
+                                <p className="font-semibold text-gray-900">{t("zelle") || "Zelle"}</p>
+                                <p className="text-sm text-gray-500">Receive via Zelle email</p>
+                            </div>
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${withdrawMethod === "zelle" ? "border-purple-500" : "border-gray-300"}`}>
+                                {withdrawMethod === "zelle" && <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />}
+                            </div>
+                        </button>
+                    )}
+
+                    {/* PayPal — USD only */}
+                    {currency === "USD" && (
+                        <button
+                            onClick={() => setWithdrawMethod("paypal")}
+                            className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${withdrawMethod === "paypal"
+                                ? "border-indigo-500 bg-indigo-50"
+                                : "border-gray-200 hover:border-gray-300 bg-white"
+                                }`}
+                        >
+                            <div className="bg-indigo-600 w-10 h-10 rounded-full flex items-center justify-center">
+                                <DollarSign className="h-5 w-5 text-white" />
+                            </div>
+                            <div className="text-left flex-1">
+                                <p className="font-semibold text-gray-900">{t("paypal") || "PayPal"}</p>
+                                <p className="text-sm text-gray-500">Receive via PayPal email</p>
+                            </div>
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${withdrawMethod === "paypal" ? "border-indigo-500" : "border-gray-300"}`}>
+                                {withdrawMethod === "paypal" && <div className="w-2.5 h-2.5 rounded-full bg-indigo-500" />}
+                            </div>
+                        </button>
+                    )}
+
+                    {/* Bank Transfer — both currencies */}
                     <button
                         onClick={() => setWithdrawMethod("bank_transfer")}
                         className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${withdrawMethod === "bank_transfer"
@@ -209,7 +283,7 @@ export default function PlayerWithdrawPage() {
                             <Banknote className="h-5 w-5 text-white" />
                         </div>
                         <div className="text-left flex-1">
-                            <p className="font-semibold text-gray-900">Bank Transfer</p>
+                            <p className="font-semibold text-gray-900">{t("bankTransfer") || "Bank Transfer"}</p>
                             <p className="text-sm text-gray-500">Direct transfer to your bank account</p>
                         </div>
                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${withdrawMethod === "bank_transfer" ? "border-amber-500" : "border-gray-300"}`}>
@@ -258,12 +332,74 @@ export default function PlayerWithdrawPage() {
                             <h3 className="font-semibold">Zelle Details</h3>
                         </div>
                         <div>
-                            <label className="text-sm text-gray-600">Zelle Email</label>
+                            <label className="text-sm text-gray-600">{t("zelleEmail") || "Zelle Email"}</label>
                             <Input
                                 type="email"
                                 value={zelleEmail}
                                 onChange={(e) => setZelleEmail(e.target.value)}
                                 placeholder="your@email.com"
+                                className="mt-1"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm text-gray-600">{t("additionalNotes") || "Additional Notes"} ({t("optional") || "optional"})</label>
+                            <Input
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                placeholder="Any special instructions"
+                                className="mt-1"
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* MonCash Details — HTG */}
+            {withdrawMethod === "moncash" && (
+                <Card>
+                    <CardContent className="p-4 space-y-4">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Smartphone className="h-5 w-5 text-red-600" />
+                            <h3 className="font-semibold">MonCash Details</h3>
+                        </div>
+                        <div>
+                            <label className="text-sm text-gray-600">{t("moncashPhone") || "MonCash Phone Number"}</label>
+                            <Input
+                                type="tel"
+                                value={moncashPhone}
+                                onChange={(e) => setMoncashPhone(e.target.value)}
+                                placeholder="+509 1234 5678"
+                                className="mt-1"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm text-gray-600">{t("additionalNotes") || "Additional Notes"} ({t("optional") || "optional"})</label>
+                            <Input
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                placeholder="Any special instructions"
+                                className="mt-1"
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* PayPal Details — USD */}
+            {withdrawMethod === "paypal" && (
+                <Card>
+                    <CardContent className="p-4 space-y-4">
+                        <div className="flex items-center gap-2 mb-1">
+                            <DollarSign className="h-5 w-5 text-indigo-600" />
+                            <h3 className="font-semibold">PayPal Details</h3>
+                        </div>
+                        <div>
+                            <label className="text-sm text-gray-600">{t("paypalEmail") || "PayPal Email"}</label>
+                            <Input
+                                type="email"
+                                value={paypalEmail}
+                                onChange={(e) => setPaypalEmail(e.target.value)}
+                                placeholder="your@paypal.com"
                                 className="mt-1"
                             />
                         </div>

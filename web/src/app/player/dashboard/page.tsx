@@ -323,7 +323,7 @@ export default function PlayerDashboard() {
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); router.push("/player/transactions"); }}
-          className="flex items-center gap-1 text-green-200 hover:text-white text-xs font-medium mt-2 transition-colors"
+          className={`flex items-center gap-1 ${currency === "HTG" ? "text-red-200" : "text-green-200"} hover:text-white text-xs font-medium mt-2 transition-colors`}
         >
           <Clock className="h-3 w-3" /> {t("viewTransactionHistory") || "View Transaction History"} <ChevronRight className="h-3 w-3" />
         </button>

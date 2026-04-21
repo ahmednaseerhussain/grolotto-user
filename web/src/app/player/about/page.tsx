@@ -51,6 +51,22 @@ export default function AboutPage() {
           <p className="text-gray-700 leading-relaxed">
             With GroLotto, users can select their preferred lottery bank, choose the state draw they want to play, select the draw time (Morning, Midday, or Evening), and place their bets in seconds. The platform supports popular lottery game types such as Senp, Maryaj, Lotto 3, Lotto 4, and Lotto 5, allowing players to enjoy the same authentic experience they would have at a physical bank.
           </p>
+
+          <p className="text-gray-700 leading-relaxed">
+            GroLotto is built with convenience, privacy, and accessibility in mind. Instead of leaving home, calling someone to place numbers on their behalf, or missing a draw because of circumstances beyond their control, players can now participate instantly from the palm of their hand. This also allows users to play privately without needing to share their numbers or personal lottery strategies with others.
+          </p>
+
+          <p className="text-gray-700 leading-relaxed">
+            One of GroLotto&apos;s unique features is Tchala, a digital dream interpretation tool deeply rooted in Haitian lottery culture. With Tchala, players can search dream meanings and instantly discover the lucky numbers traditionally associated with those dreams. This feature allows players to explore dream-number connections privately without needing to explain their dreams to anyone else.
+          </p>
+
+          <p className="text-gray-700 leading-relaxed">
+            The platform is designed to serve a global community. GroLotto is available in multiple languages including Haitian Creole, English, French, and Spanish, ensuring accessibility for players both in Haiti and across the diaspora. The system also supports two primary currencies: Haitian Gourdes (HTG) and U.S. Dollars (USD), making it easy for players anywhere in the world to participate.
+          </p>
+
+          <p className="text-gray-700 leading-relaxed">
+            GroLotto offers flexible and secure payment options, allowing users to fund their wallet, place bets, and receive winnings seamlessly. Importantly, GroLotto does not charge players any service fee on their winnings. Players receive their full prize amounts, with only minimal transaction-related charges applied when necessary depending on the payment method used.
+          </p>
         </CardContent>
       </Card>
 
@@ -128,7 +144,7 @@ export default function AboutPage() {
             <Target className="h-6 w-6 text-amber-600" />
             How GroLotto Works
           </h2>
-          
+
           <div className="space-y-4">
             {[
               { step: "1", title: "Choose a Lottery Bank", desc: "Browse and select a trusted lottery bank registered on the platform." },
@@ -158,7 +174,7 @@ export default function AboutPage() {
             <Zap className="h-6 w-6 text-amber-600" />
             Platform Features
           </h2>
-          
+
           <div className="grid md:grid-cols-2 gap-4">
             {[
               { icon: Trophy, title: "Digital Lottery Access", desc: "Play traditional Haitian lottery games online from anywhere in the world." },
@@ -191,11 +207,11 @@ export default function AboutPage() {
             <Users className="h-6 w-6 text-green-600" />
             For Lottery Banks
           </h2>
-          
+
           <p className="text-gray-700 mb-4">
             GroLotto provides traditional lottery operators with a powerful digital platform to expand their business. Lottery banks can register on the platform and make their services available to players online. This allows vendors to reach customers beyond their physical location and grow their audience both locally and internationally.
           </p>
-          
+
           <p className="font-semibold text-gray-900 mb-2">Through the GroLotto vendor dashboard, lottery operators can:</p>
           <ul className="space-y-2 text-gray-700">
             {[
@@ -221,16 +237,16 @@ export default function AboutPage() {
             <Shield className="h-6 w-6 text-blue-600" />
             Security & Transparency
           </h2>
-          
+
           <div className="space-y-4 text-gray-700">
             <p>
               GroLotto is built with security and transparency as top priorities. All transactions and player activity are recorded within the platform to ensure accountability and fairness. The system protects both players and vendors by maintaining a secure digital record of all bets placed on the platform.
             </p>
-            
+
             <p>
               Players receive their full winnings without service fees charged by GroLotto. Only minimal transaction-related charges may apply depending on the payment method used.
             </p>
-            
+
             <p className="font-semibold text-gray-900">
               Our mission is to provide a safe and reliable environment where players and lottery operators can interact with confidence.
             </p>
@@ -242,11 +258,11 @@ export default function AboutPage() {
       <Card className="bg-gradient-to-br from-amber-500 to-orange-600 text-white">
         <CardContent className="p-8 text-center">
           <h2 className="text-3xl font-bold mb-4">Why Choose GroLotto?</h2>
-          
+
           <p className="text-white/90 text-lg mb-6 max-w-2xl mx-auto">
-            GroLotto removes the barriers that often prevent players from participating in the lottery. Bad weather, transportation issues, security concerns, or busy schedules should never stop someone from playing their favorite numbers.
+            GroLotto removes the barriers that often prevent players from participating in the lottery. Bad weather, transportation issues, security concerns, or busy schedules should never stop someone from playing their favorite numbers. With GroLotto, the traditional lottery experience becomes fully accessible anytime and anywhere.
           </p>
-          
+
           <div className="grid md:grid-cols-3 gap-4 mt-8">
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
               <p className="font-bold text-xl">Play when you want</p>
@@ -255,13 +271,13 @@ export default function AboutPage() {
               <p className="font-bold text-xl">Play privately</p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <p className="font-bold text-xl">Play from anywhere</p>
+              <p className="font-bold text-xl">Play from anywhere in the world</p>
             </div>
           </div>
 
           <div className="mt-8">
             <p className="text-sm text-white/80">
-              Innovation without losing tradition
+              At its core, GroLotto represents innovation without losing tradition. By combining trusted lottery systems with modern technology, GroLotto makes playing the lottery easier, more accessible, and more secure for everyone — whether they are in Haiti or anywhere else in the world.
             </p>
           </div>
         </CardContent>
