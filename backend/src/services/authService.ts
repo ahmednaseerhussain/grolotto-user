@@ -16,6 +16,11 @@ export interface RegisterInput {
   phone?: string;
   dateOfBirth?: string;
   country?: string;
+  // Optional vendor fields — if role === 'vendor', vendor row is created in same transaction
+  firstName?: string;
+  lastName?: string;
+  businessName?: string;
+  operatingCurrency?: 'HTG' | 'USD';
 }
 
 export interface LoginInput {
@@ -60,7 +65,8 @@ function generateTokens(user: { id: string; email: string; role: string }): Toke
 }
 
 export async function register(input: RegisterInput): Promise<{ user: UserProfile; tokens: TokenPair }> {
-  const { email, password, name, role = 'player', phone, dateOfBirth, country } = input;
+  const { email, password, name, role = 'player', phone, dateOfBirth, country,
+    firstName, lastName, businessName, operatingCurrency } = input;
 
   // Check if email already exists
   const existing = await query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
@@ -71,6 +77,16 @@ export async function register(input: RegisterInput): Promise<{ user: UserProfil
   // Cannot self-register as admin
   if (role === 'admin') {
     throw new AppError('Cannot register as admin', 403);
+  }
+
+  // If registering as vendor, require vendor fields so we don't end up with orphan users
+  if (role === 'vendor') {
+    if (!firstName || firstName.trim().length < 2) {
+      throw new AppError('First name is required (min 2 characters) for vendor registration', 400);
+    }
+    if (!lastName || lastName.trim().length < 2) {
+      throw new AppError('Last name is required (min 2 characters) for vendor registration', 400);
+    }
   }
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
@@ -90,6 +106,24 @@ export async function register(input: RegisterInput): Promise<{ user: UserProfil
       'INSERT INTO wallets (user_id) VALUES ($1)',
       [user.id]
     );
+
+    // If vendor, create vendor row atomically in the same transaction
+    if (role === 'vendor') {
+      const currency = operatingCurrency === 'USD' ? 'USD' : 'HTG';
+      const vendorInsert = await client.query(
+        `INSERT INTO vendors (user_id, first_name, last_name, business_name, display_name, status, application_date)
+         VALUES ($1, $2, $3, $4, $5, 'pending', NOW())
+         RETURNING id`,
+        [user.id, firstName!, lastName!, businessName || null, `${firstName} ${lastName}`]
+      );
+      // Try to set operating_currency — silently skip if column hasn't been migrated
+      try {
+        await client.query(
+          `UPDATE vendors SET operating_currency = $1 WHERE id = $2`,
+          [currency, vendorInsert.rows[0].id]
+        );
+      } catch { /* column doesn't exist — will default */ }
+    }
 
     // Create welcome bonus reward (non-blocking)
     rewardService.createWelcomeBonus(user.id);

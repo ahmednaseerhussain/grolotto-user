@@ -32,6 +32,11 @@ export const registerSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date of birth must be in YYYY-MM-DD format')
     .refine(isValidAdultDOB, 'You must be at least 18 years old to register'),
   country: z.string().optional(),
+  // Optional vendor fields — required by service if role === 'vendor'
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  businessName: z.string().optional(),
+  operatingCurrency: z.enum(['HTG', 'USD']).optional(),
 });
 
 export const loginSchema = z.object({
