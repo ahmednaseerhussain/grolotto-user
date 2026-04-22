@@ -118,8 +118,9 @@ export default function VendorPendingPage() {
             : {
                 icon: Clock,
                 color: "amber",
-                title: t("Vendor Pending Title") || "Application Under Review",
-                message: t("Vendor Pending Message") ||
+                title: t("Application Under Review") || "Application Under Review",
+                message: t("Your account is pending Admin approval. You will receive a notification once a decision has been made.",
+                ) ||
                     "Your account is pending Admin approval. You will receive a notification once a decision has been made.",
             };
 
@@ -144,12 +145,19 @@ export default function VendorPendingPage() {
                             {t("Application Details") || "Application Details"}
                         </h2>
                         <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                                <p className="text-gray-500">{t("businessName") || "Business Name"}</p>
-                                <p className="font-medium text-gray-900">
-                                    {profile.businessName || `${profile.firstName} ${profile.lastName}`}
-                                </p>
-                            </div>
+                           <div>
+    <p className="text-gray-500">
+        {profile.businessName 
+            ? (t("BusinessName") || "Business Name") 
+            : (t("Name") || "Name")}
+    </p>
+
+    <p className="font-medium text-gray-900">
+        {profile.businessName 
+            ? profile.businessName 
+            : `${profile.firstName} ${profile.lastName}`}
+    </p>
+</div>
                             <div>
                                 <p className="text-gray-500">{t("email") || "Email"}</p>
                                 <p className="font-medium text-gray-900">{profile.email}</p>
