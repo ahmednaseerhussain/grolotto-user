@@ -36,6 +36,7 @@ export const validate = (schema: ZodSchema, source: 'body' | 'query' | 'params' 
           field: e.path.join('.'),
           message: e.message,
         }));
+        console.error(`[VALIDATION] ${req.method} ${req.originalUrl}`, formattedErrors);
         res.status(400).json({
           error: 'Validation failed',
           details: formattedErrors,

@@ -530,6 +530,10 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// ─── Static file serving (vendor documents uploads) ──────
+import path from 'path';
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
 // ─── API Routes ──────────────────────────────────────────
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/vendors', vendorRoutes);

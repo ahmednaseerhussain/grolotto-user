@@ -83,6 +83,8 @@ export const vendorRegistrationSchema = z.object({
   phone: z.string().min(8),
   dateOfBirth: z.string(),
   businessName: z.string().optional(),
+  operatingCurrency: z.enum(['HTG', 'USD']).optional(),
+  password: z.string().optional(),
 });
 
 export const drawSettingsSchema = z.object({

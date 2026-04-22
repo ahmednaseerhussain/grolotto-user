@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as ctrl from '../controllers/vendorController';
+import { uploadVendorDoc, uploadVendorDocument, getMyVendorDocuments } from '../controllers/vendorDocumentsController';
 import { authenticate, authorize } from '../middleware/auth';
 import { validate, validateUUIDParams } from '../middleware/validate';
 import { vendorRegistrationSchema, drawSettingsSchema } from '../validators/schemas';
@@ -33,6 +34,10 @@ router.delete('/me/number-limits/:limitId', authenticate, authorize('vendor'), v
 
 // Payout requests
 router.post('/me/payouts', authenticate, authorize('vendor'), ctrl.requestPayout);
+
+// Vendor documents (ID card / business license)
+router.get('/me/documents', authenticate, authorize('vendor'), getMyVendorDocuments);
+router.post('/me/documents', authenticate, authorize('vendor'), uploadVendorDoc, uploadVendorDocument);
 
 // Payout multiplier management
 router.get('/me/payout-multipliers', authenticate, authorize('vendor'), ctrl.getPayoutMultipliers);

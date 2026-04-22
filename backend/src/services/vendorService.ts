@@ -22,6 +22,9 @@ export interface VendorPublic {
   totalPlayers: number;
   availableBalance: number;
   operatingCurrency: string;
+  rejectionReason?: string | null;
+  applicationDate?: string | null;
+  approvedDate?: string | null;
 }
 
 interface DrawConfig {
@@ -114,6 +117,9 @@ export async function getVendorById(vendorId: string): Promise<VendorPublic> {
     totalPlayers: row.total_players || 0,
     availableBalance: parseFloat(row.available_balance || '0'),
     operatingCurrency: row.operating_currency || 'HTG',
+    rejectionReason: row.rejection_reason || null,
+    applicationDate: row.application_date || null,
+    approvedDate: row.approved_date || null,
   };
 }
 
@@ -552,6 +558,10 @@ export async function requestPayout(
     bankAccountNumber?: string;
     bankRoutingNumber?: string;
     moncashPhone?: string;
+    zelleEmail?: string;
+    zellePhone?: string;
+    cashappTag?: string;
+    paypalEmail?: string;
   }
 ) {
   // Check vendor balance
@@ -573,8 +583,9 @@ export async function requestPayout(
 
   const result = await query(
     `INSERT INTO vendor_payouts (vendor_id, amount, currency, method, status, request_date,
-       bank_name, bank_account_name, bank_account_number, bank_routing_number, moncash_phone)
-     VALUES ($1, $2, $3, $4, 'pending', NOW(), $5, $6, $7, $8, $9)
+       bank_name, bank_account_name, bank_account_number, bank_routing_number, moncash_phone,
+       zelle_email, zelle_phone, cashapp_tag, paypal_email)
+     VALUES ($1, $2, $3, $4, 'pending', NOW(), $5, $6, $7, $8, $9, $10, $11, $12, $13)
      RETURNING *`,
     [
       vendorId, amount, currency, method,
@@ -582,7 +593,11 @@ export async function requestPayout(
       bankDetails?.bankAccountName || null,
       bankDetails?.bankAccountNumber || null,
       bankDetails?.bankRoutingNumber || null,
-      bankDetails?.moncashPhone || null
+      bankDetails?.moncashPhone || null,
+      bankDetails?.zelleEmail || null,
+      bankDetails?.zellePhone || null,
+      bankDetails?.cashappTag || null,
+      bankDetails?.paypalEmail || null,
     ]
   );
 
