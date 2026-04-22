@@ -38,10 +38,19 @@ export default function VendorRegisterPage() {
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.firstName.trim()) newErrors.firstName = t("firstNameRequired");
+    else if (formData.firstName.trim().length < 2) newErrors.firstName = "First name must be at least 2 characters";
     if (!formData.lastName.trim()) newErrors.lastName = t("lastNameRequired");
+    else if (formData.lastName.trim().length < 2) newErrors.lastName = "Last name must be at least 2 characters";
     if (!formData.email.trim()) newErrors.email = t("emailRequired");
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) newErrors.email = "Invalid email address";
     if (!formData.phone.trim()) newErrors.phone = t("phoneRequired");
+    else if (formData.phone.trim().length < 8) newErrors.phone = "Phone must be at least 8 digits";
     if (!formData.dateOfBirth.trim()) newErrors.dateOfBirth = t("dobRequired");
+    else {
+      const dob = new Date(formData.dateOfBirth);
+      const age = (Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+      if (age < 18) newErrors.dateOfBirth = "You must be at least 18 years old";
+    }
     if (!formData.password) newErrors.password = t("passwordRequired");
     else if (formData.password.length < 6) newErrors.password = t("minimum6Chars");
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = t("passwordsDontMatch");
@@ -55,7 +64,8 @@ export default function VendorRegisterPage() {
 
     setIsLoading(true);
     try {
-      // Register user account first, then vendor profile
+      // Atomic signup: creates user + vendor row in a single backend transaction.
+      // If any part fails, nothing is persisted — no orphan users.
       const user = await authAPI.register({
         name: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
@@ -63,17 +73,10 @@ export default function VendorRegisterPage() {
         role: "vendor",
         dateOfBirth: formData.dateOfBirth,
         phone: formData.phone,
-      });
-
-      await vendorAPI.register({
         firstName: formData.firstName,
         lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        dateOfBirth: formData.dateOfBirth,
         businessName: formData.businessName || undefined,
         operatingCurrency: formData.operatingCurrency,
-        password: formData.password,
       });
 
       setUser(user);

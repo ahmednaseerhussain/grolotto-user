@@ -105,11 +105,11 @@ export default function PlayerLoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("name")}</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("Name")}</label>
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder={t("enterYourName")}
+                  placeholder={t("Enter Your Name")}
                   required={!isLogin}
                 />
               </div>
@@ -145,7 +145,7 @@ export default function PlayerLoginPage() {
                     onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                     required={!isLogin}
                   />
-                  <p className="text-xs text-gray-500 mt-1">{t("mustBe18") || "You must be at least 18 years old"}</p>
+                  <p className="text-xs text-gray-500 mt-1">{t("Must Be 18") || "You must be at least 18 years old"}</p>
                 </div>
               </>
             )}

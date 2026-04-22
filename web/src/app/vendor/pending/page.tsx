@@ -141,7 +141,7 @@ export default function VendorPendingPage() {
                 <Card>
                     <CardContent className="p-6 space-y-4">
                         <h2 className="font-semibold text-gray-900">
-                            {t("applicationDetails") || "Application Details"}
+                            {t("Application Details") || "Application Details"}
                         </h2>
                         <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
@@ -159,14 +159,14 @@ export default function VendorPendingPage() {
                                 <p className="font-medium text-gray-900">{profile.operatingCurrency || "HTG"}</p>
                             </div>
                             <div>
-                                <p className="text-gray-500">{t("status") || "Status"}</p>
+                                <p className="text-gray-500">{t("Status") || "Status"}</p>
                                 <p className={`font-medium capitalize text-${config.color}-600`}>
                                     {status}
                                 </p>
                             </div>
                             {profile.applicationDate && (
                                 <div className="col-span-2">
-                                    <p className="text-gray-500">{t("submittedOn") || "Submitted On"}</p>
+                                    <p className="text-gray-500">{t("Submitted On") || "Submitted On"}</p>
                                     <p className="font-medium text-gray-900">
                                         {new Date(profile.applicationDate).toLocaleString()}
                                     </p>
@@ -206,7 +206,7 @@ export default function VendorPendingPage() {
                 <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
                     <CheckCircle2 className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <p className="text-sm text-blue-800">
-                        {t("Vendor Pending Help") ||
+                        {t("Review typically takes 1-2 business days. You'll receive an email once your account is approved.") ||
                             "Review typically takes 1-2 business days. You'll receive an email once your account is approved."}
                     </p>
                 </div>

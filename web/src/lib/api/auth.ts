@@ -2,7 +2,18 @@ import { apiClient, setTokens, clearTokens } from "../api-client";
 import type { User, AuthTokens } from "@/types";
 
 export const authAPI = {
-  async register(data: { email: string; password: string; name: string; role?: string; dateOfBirth?: string; phone?: string }) {
+  async register(data: {
+    email: string;
+    password: string;
+    name: string;
+    role?: string;
+    dateOfBirth?: string;
+    phone?: string;
+    firstName?: string;
+    lastName?: string;
+    businessName?: string;
+    operatingCurrency?: "HTG" | "USD";
+  }) {
     const response = await apiClient.post("/auth/register", data);
     const payload = response.data.data || response.data;
     const accessToken = payload.accessToken || payload.tokens?.accessToken;
