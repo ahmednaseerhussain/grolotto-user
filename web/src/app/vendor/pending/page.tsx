@@ -191,7 +191,7 @@ export default function VendorPendingPage() {
                     <CardContent className="p-6">
                         <h3 className="font-semibold text-red-900 mb-2 flex items-center gap-2">
                             <AlertTriangle className="h-5 w-5" />
-                            {t("denialReason") || "Reason for Denial"}
+                            {t("Reason for Denial") || "Reason for Denial"}
                         </h3>
                         <p className="text-red-800 text-sm leading-relaxed">
                             {profile.rejectionReason}
