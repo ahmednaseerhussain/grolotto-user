@@ -103,16 +103,17 @@ export default function VendorPendingPage() {
         ? {
             icon: XCircle,
             color: "red",
-            title: t("vendorRejectedTitle") || "Application Denied",
-            message: t("vendorRejectedMessage") ||
+            title: t("Application Denied") || "Application Denied",
+            message: t("Your vendor application has been denied. Please review the reason below and resubmit if applicable.",
+            ) ||
                 "Your vendor application has been denied. Please review the reason below and resubmit if applicable.",
         }
         : isSuspended
             ? {
                 icon: AlertTriangle,
                 color: "orange",
-                title: t("vendorSuspendedTitle") || "Account Suspended",
-                message: t("vendorSuspendedMessage") ||
+                title: t("Account Suspended") || "Account Suspended",
+                message: t("Your vendor account is currently suspended. Please contact support for more information.") ||
                     "Your vendor account is currently suspended. Please contact support for more information.",
             }
             : {
@@ -145,19 +146,19 @@ export default function VendorPendingPage() {
                             {t("Application Details") || "Application Details"}
                         </h2>
                         <div className="grid grid-cols-2 gap-4 text-sm">
-                           <div>
-    <p className="text-gray-500">
-        {profile.businessName 
-            ? (t("BusinessName") || "Business Name") 
-            : (t("Name") || "Name")}
-    </p>
+                            <div>
+                                <p className="text-gray-500">
+                                    {profile.businessName
+                                        ? (t("BusinessName") || "Business Name")
+                                        : (t("Name") || "Name")}
+                                </p>
 
-    <p className="font-medium text-gray-900">
-        {profile.businessName 
-            ? profile.businessName 
-            : `${profile.firstName} ${profile.lastName}`}
-    </p>
-</div>
+                                <p className="font-medium text-gray-900">
+                                    {profile.businessName
+                                        ? profile.businessName
+                                        : `${profile.firstName} ${profile.lastName}`}
+                                </p>
+                            </div>
                             <div>
                                 <p className="text-gray-500">{t("email") || "Email"}</p>
                                 <p className="font-medium text-gray-900">{profile.email}</p>
