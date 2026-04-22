@@ -103,7 +103,7 @@ export default function VendorSchedulePage() {
             <Card className="bg-blue-50 border-blue-100">
                 <CardContent className="p-4">
                     <p className="text-sm text-blue-800">
-                        {t("Draw Schedule Help") ||
+                        {t("Set opening and closing times for each state/draw. Players can only place bets when the draw is open. Times are in Haiti time (UTC-5).") ||
                             "Set opening and closing times for each state/draw. Players can only place bets when the draw is open. Times are in Haiti time (UTC-5)."}
                     </p>
                 </CardContent>
