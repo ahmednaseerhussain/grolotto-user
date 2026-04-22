@@ -76,6 +76,9 @@ export interface Vendor {
   profile?: VendorProfile;
   createdAt?: string;
   operatingCurrency?: string;
+  rejectionReason?: string | null;
+  applicationDate?: string | null;
+  approvedDate?: string | null;
 }
 
 export interface VendorProfile {

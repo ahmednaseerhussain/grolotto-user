@@ -31,6 +31,8 @@ export default function VendorRegisterPage() {
     password: "",
     confirmPassword: "",
   });
+  const [idCardFile, setIdCardFile] = useState<File | null>(null);
+  const [businessLicenseFile, setBusinessLicenseFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validate = () => {
@@ -75,8 +77,21 @@ export default function VendorRegisterPage() {
       });
 
       setUser(user);
+
+      // Upload documents if provided (non-blocking on failure)
+      try {
+        if (idCardFile) {
+          await vendorAPI.uploadDocument(idCardFile, "id_card");
+        }
+        if (businessLicenseFile) {
+          await vendorAPI.uploadDocument(businessLicenseFile, "business_license");
+        }
+      } catch (uploadErr) {
+        toast.error("Registration succeeded but document upload failed. You can upload later from your profile.");
+      }
+
       toast.success(t("applicationSubmitted"));
-      router.push("/vendor/dashboard");
+      router.push("/vendor/pending");
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
@@ -110,25 +125,25 @@ export default function VendorRegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("firstName")} *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("First Name")} *</label>
                 <Input value={formData.firstName} onChange={(e) => updateField("firstName", e.target.value)} placeholder={t("enterYourFirstName")} />
                 {errors.firstName && <p className="text-xs text-red-500 mt-1">{errors.firstName}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("lastName")} *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("Last Name")} *</label>
                 <Input value={formData.lastName} onChange={(e) => updateField("lastName", e.target.value)} placeholder={t("enterYourLastName")} />
                 {errors.lastName && <p className="text-xs text-red-500 mt-1">{errors.lastName}</p>}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t("email")} *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("Email")} *</label>
               <Input type="email" value={formData.email} onChange={(e) => updateField("email", e.target.value)} placeholder={t("yourEmail")} />
               {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t("phoneNumber")} *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("Phone Number")} *</label>
               <Input value={formData.phone} onChange={(e) => updateField("phone", e.target.value)} placeholder="+509 1234 5678" />
               {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
             </div>
@@ -152,11 +167,10 @@ export default function VendorRegisterPage() {
                 <button
                   type="button"
                   onClick={() => updateField("operatingCurrency", "HTG")}
-                  className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
-                    formData.operatingCurrency === "HTG"
+                  className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${formData.operatingCurrency === "HTG"
                       ? "border-emerald-500 bg-emerald-50"
                       : "border-gray-200 hover:border-gray-300"
-                  }`}
+                    }`}
                 >
                   <span className="text-2xl">🇭🇹</span>
                   <span className="font-semibold">HTG</span>
@@ -165,16 +179,59 @@ export default function VendorRegisterPage() {
                 <button
                   type="button"
                   onClick={() => updateField("operatingCurrency", "USD")}
-                  className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
-                    formData.operatingCurrency === "USD"
+                  className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${formData.operatingCurrency === "USD"
                       ? "border-blue-500 bg-blue-50"
                       : "border-gray-200 hover:border-gray-300"
-                  }`}
+                    }`}
                 >
                   <span className="text-2xl">🇺🇸</span>
                   <span className="font-semibold">USD</span>
                   <span className="text-xs text-gray-500">US Dollar</span>
                 </button>
+              </div>
+            </div>
+
+            <hr className="my-2" />
+
+            {/* Identity Documents */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t("Identity Documents") || "Identity Documents"}
+              </label>
+              <p className="text-xs text-gray-500 mb-3">
+                {t("Identity Documents Help") || "Upload your ID card and business license (JPG/PNG/PDF, max 5MB each). Optional but speeds up approval."}
+              </p>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    {t("idCard") || "ID Card"} ({t("optional")})
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => setIdCardFile(e.target.files?.[0] || null)}
+                    className="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                  />
+                  {idCardFile && (
+                    <p className="text-xs text-emerald-600 mt-1">✓ {idCardFile.name}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    {t("businessLicense") || "Business License"} ({t("optional")})
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => setBusinessLicenseFile(e.target.files?.[0] || null)}
+                    className="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                  />
+                  {businessLicenseFile && (
+                    <p className="text-xs text-emerald-600 mt-1">✓ {businessLicenseFile.name}</p>
+                  )}
+                </div>
               </div>
             </div>
 

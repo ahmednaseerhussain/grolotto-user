@@ -224,13 +224,13 @@ export default function VendorResultsScreen() {
         <Button variant="ghost" size="sm" onClick={() => router.back()}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-xl font-bold">{t("winnerResults") || "Winner Results"}</h1>
+        <h1 className="text-xl font-bold">{t("Winner Results") || "Winner Results"}</h1>
       </div>
 
       {/* Summary */}
       <div className="grid grid-cols-2 gap-3">
         <StatCard title={t("activeDraws") || "Active Draws"} value={openRounds.length} icon={<Clock className="h-5 w-5" />} />
-        <StatCard title={t("publishedResults") || "Published Results"} value={completedRounds.length} icon={<Trophy className="h-5 w-5" />} />
+        <StatCard title={t("Published Results") || "Published Results"} value={completedRounds.length} icon={<Trophy className="h-5 w-5" />} />
       </div>
 
       {/* Tabs */}
@@ -244,7 +244,7 @@ export default function VendorResultsScreen() {
               : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
           >
-            {tab === "open" ? (t("activeDraws") || "Active Draws") : (t("winnerResults") || "Winner Results")}
+            {tab === "open" ? (t("activeDraws") || "Active Draws") : (t("Winner Results") || "Winner Results")}
             <span className="ml-1 text-xs bg-gray-100 px-1.5 py-0.5 rounded-full">
               {tab === "open" ? openRounds.length : completedRounds.length}
             </span>

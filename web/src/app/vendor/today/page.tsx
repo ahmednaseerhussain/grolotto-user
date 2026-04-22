@@ -221,7 +221,7 @@ export default function TodayPlayersWinnersScreen() {
       ) : displayed.length === 0 ? (
         <EmptyState
           icon={activeTab === "winners" ? <Trophy className="h-10 w-10" /> : <Users className="h-10 w-10" />}
-          title={activeTab === "winners" ? (t("noWinnersToday") || "No winners today") : (t("No Players Today") || "No players today")}
+          title={activeTab === "winners" ? (t("No Winners Today") || "No winners today") : (t("No Players Today") || "No players today")}
           description={t("Check Back Later") || "Check back later for updated results."}
         />
       ) : (

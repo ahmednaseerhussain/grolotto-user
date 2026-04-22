@@ -75,7 +75,7 @@ export default function VendorSettingsScreen() {
     if (typeof window !== "undefined") {
       localStorage.removeItem("grolotto-app-storage");
     }
-    toast.success(t("cacheCleared") || "Cache cleared");
+    toast.success(t("Cache cleared") || "Cache cleared");
   };
 
   return (
@@ -116,14 +116,14 @@ export default function VendorSettingsScreen() {
       {/* Preferences */}
       <Card>
         <CardContent className="p-4">
-          <h3 className="font-semibold mb-3">{t("preferences") || "Preferences"}</h3>
+          <h3 className="font-semibold mb-3">{t("Preferences") || "Preferences"}</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Bell className="h-4 w-4 text-gray-500" />
                 <div>
-                  <p className="text-sm font-medium">{t("pushNotifications") || "Push Notifications"}</p>
-                  <p className="text-xs text-gray-400">{t("pushDesc") || "Receive alerts for new bets and results"}</p>
+                  <p className="text-sm font-medium">{t("Push Notifications") || "Push Notifications"}</p>
+                  <p className="text-xs text-gray-400">{t("Receive alerts for new bets and results") || "Receive alerts for new bets and results"}</p>
                 </div>
               </div>
               <button
@@ -137,8 +137,8 @@ export default function VendorSettingsScreen() {
               <div className="flex items-center gap-2">
                 <Zap className="h-4 w-4 text-gray-500" />
                 <div>
-                  <p className="text-sm font-medium">{t("autoAcceptBets") || "Auto-Accept Bets"}</p>
-                  <p className="text-xs text-gray-400">{t("autoAcceptDesc") || "Automatically accept incoming bets"}</p>
+                  <p className="text-sm font-medium">{t("Auto-Accept Bets") || "Auto-Accept Bets"}</p>
+                  <p className="text-xs text-gray-400">{t("Automatically accept incoming bets") || "Automatically accept incoming bets"}</p>
                 </div>
               </div>
               <button
@@ -158,7 +158,7 @@ export default function VendorSettingsScreen() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-amber-600" />
-              <h3 className="font-semibold">{t("payoutRates") || "Payout Rates"}</h3>
+              <h3 className="font-semibold">{t("Payout Rates") || "Payout Rates"}</h3>
             </div>
             <Button
               size="sm"
@@ -171,7 +171,7 @@ export default function VendorSettingsScreen() {
             </Button>
           </div>
           <p className="text-xs text-gray-500 mb-3">
-            {t("payoutRatesDesc") || "Set how much a player wins per $1 bet for each game type."}
+            {t("Payout Rates ") || "Set how much a player wins per $1 bet for each game type."}
           </p>
 
           {loadingRates ? (
@@ -233,11 +233,11 @@ export default function VendorSettingsScreen() {
       </Card>
 
       {/* Links */}
-      <Card>
+      {/* <Card>
         <CardContent className="p-4 space-y-1">
           {[
-            { label: t("vendorProfile") || "Vendor Profile", href: "/profile" },
-            { label: t("payoutSettings") || "Payout Settings", href: "/payouts" },
+            { label: t("Vendor Profile") || "Vendor Profile", href: "/profile" },
+            { label: t("Payout Settings") || "Payout Settings", href: "/payouts" },
           ].map((link) => (
             <button
               key={link.href}
@@ -249,7 +249,7 @@ export default function VendorSettingsScreen() {
             </button>
           ))}
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Danger zone */}
       <Card className="border-red-100">
@@ -260,7 +260,7 @@ export default function VendorSettingsScreen() {
             onClick={handleClearCache}
           >
             <Trash2 className="h-4 w-4 mr-2" />
-            {t("clearCache") || "Clear Cache"}
+            {t("Clear Cache") || "Clear Cache"}
           </Button>
           <Button
             variant="outline"
@@ -268,7 +268,7 @@ export default function VendorSettingsScreen() {
             onClick={handleLogout}
           >
             <LogOut className="h-4 w-4 mr-2" />
-            {t("logout") || "Log Out"}
+            {t("Log Out") || "Log Out"}
           </Button>
         </CardContent>
       </Card>

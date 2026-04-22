@@ -14,7 +14,7 @@ import {
   ChevronRight, ChevronDown, Calendar, Loader2, Trophy, Gamepad2,
   DollarSign, TrendingUp, TrendingDown, Award
 } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, getVendorBalanceClasses } from "@/lib/utils";
 import type { VendorStats } from "@/types";
 import toast from "react-hot-toast";
 
@@ -117,7 +117,7 @@ export default function VendorDashboard() {
       </div>
 
       {/* Balance Card */}
-      <Card className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white border-0">
+      <Card className={`${getVendorBalanceClasses(vendorCurrency).gradient} text-white border-0`}>
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>

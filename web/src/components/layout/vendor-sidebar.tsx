@@ -15,6 +15,7 @@ import {
   Users,
   FileText,
   Settings,
+  Clock,
 } from "lucide-react";
 
 const navSections = [
@@ -32,6 +33,7 @@ const navSections = [
       { href: "/vendor/draws", icon: Gamepad2, labelKey: "drawManagement" },
       { href: "/vendor/draws", icon: DollarSign, labelKey: "pricingLimits" },
       { href: "/vendor/number-limits", icon: Hash, labelKey: "numberLimits" },
+      { href: "/vendor/schedule", icon: Clock, labelKey: "Draw Schedule" },
       { href: "/vendor/payouts", icon: Banknote, labelKey: "payouts" },
     ],
   },

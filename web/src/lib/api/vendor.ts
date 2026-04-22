@@ -65,7 +65,20 @@ export const vendorAPI = {
   },
 
   // Payouts
-  async requestPayout(data: { amount: number; method: string; currency?: string }): Promise<Payout> {
+  async requestPayout(data: {
+    amount: number;
+    method: string;
+    currency?: string;
+    bankName?: string;
+    bankAccountName?: string;
+    bankAccountNumber?: string;
+    bankRoutingNumber?: string;
+    moncashPhone?: string;
+    zelleEmail?: string;
+    zellePhone?: string;
+    cashappTag?: string;
+    paypalEmail?: string;
+  }): Promise<Payout> {
     const response = await apiClient.post("/vendors/me/payouts", data);
     return response.data.data || response.data;
   },
@@ -142,5 +155,41 @@ export const vendorAPI = {
   async getVendorPayoutRates(vendorId: string): Promise<Record<string, number>> {
     const response = await apiClient.get(`/vendors/${vendorId}/payout-multipliers`);
     return response.data;
+  },
+
+  // Draw Schedules
+  async getDrawSchedules(): Promise<Array<{ id: string; vendorId: string; drawState: string; drawTime: string; openTime: string; closeTime: string; isActive: boolean }>> {
+    const response = await apiClient.get("/vendors/me/schedules");
+    return response.data.data || response.data;
+  },
+
+  async upsertDrawSchedule(data: { drawState: string; drawTime: string; openTime: string; closeTime: string }) {
+    const response = await apiClient.put("/vendors/me/schedules", data);
+    return response.data.data || response.data;
+  },
+
+  async deleteDrawSchedule(scheduleId: string) {
+    await apiClient.delete(`/vendors/me/schedules/${scheduleId}`);
+  },
+
+  async checkVendorDrawSchedule(vendorId: string, drawState: string, drawTime: string) {
+    const response = await apiClient.get(`/vendors/${vendorId}/schedule`, { params: { drawState, drawTime } });
+    return response.data.data || response.data;
+  },
+
+  // Vendor Documents
+  async getMyDocuments(): Promise<Array<{ id: string; vendor_id: string; doc_type: string; file_url: string; verified: boolean; uploaded_at: string }>> {
+    const response = await apiClient.get("/vendors/me/documents");
+    return response.data.data || response.data;
+  },
+
+  async uploadDocument(file: File, docType: "id_card" | "business_license") {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("docType", docType);
+    const response = await apiClient.post("/vendors/me/documents", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data.data || response.data;
   },
 };

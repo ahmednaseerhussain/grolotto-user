@@ -27,6 +27,7 @@ interface HistoryItem {
   won?: boolean;
   winAmount?: number;
   state?: string;
+  drawTime?: string;
   createdAt?: string;
   drawDate?: string;
 }
@@ -44,6 +45,8 @@ export default function VendorHistoryScreen() {
   const [filterState, setFilterState] = useState("all");
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
+  const [winnersOnly, setWinnersOnly] = useState(false);
+  const [groupByDraw, setGroupByDraw] = useState(false);
 
   useEffect(() => {
     fetchHistory();
@@ -76,6 +79,7 @@ export default function VendorHistoryScreen() {
     }
     if (filterGame !== "all") items = items.filter((i) => i.gameType === filterGame);
     if (filterState !== "all") items = items.filter((i) => i.state === filterState);
+    if (winnersOnly) items = items.filter((i) => i.won);
     if (filterDateFrom || filterDateTo) {
       items = items.filter((i) => {
         const d = i.createdAt || i.drawDate;
@@ -87,7 +91,7 @@ export default function VendorHistoryScreen() {
       });
     }
     return items;
-  }, [history, searchQuery, filterGame, filterState, filterDateFrom, filterDateTo]);
+  }, [history, searchQuery, filterGame, filterState, filterDateFrom, filterDateTo, winnersOnly]);
 
   const stats = useMemo(() => {
     const total = filtered.length;
@@ -107,6 +111,48 @@ export default function VendorHistoryScreen() {
   };
 
   const escapeCSV = (val: string) => `"${String(val).replace(/"/g, '""')}"`;
+
+  // Group items by draw (date + state + drawTime)
+  const groupedByDraw = useMemo(() => {
+    const groups: Record<string, { key: string; drawDate: string; state: string; drawTime: string; items: HistoryItem[]; hasResults: boolean }> = {};
+    for (const it of filtered) {
+      const d = (it.drawDate || it.createdAt || "").slice(0, 10);
+      const st = it.state || "?";
+      const dt = it.drawTime || "";
+      const key = `${d}|${st}|${dt}`;
+      if (!groups[key]) {
+        groups[key] = { key, drawDate: d, state: st, drawTime: dt, items: [], hasResults: false };
+      }
+      groups[key].items.push(it);
+      // Heuristic: if any ticket has won flag defined (true or false) with winAmount present, assume results published
+      if (it.won === true || (it.won === false && typeof it.winAmount === "number")) {
+        groups[key].hasResults = true;
+      }
+    }
+    return Object.values(groups).sort((a, b) => (b.drawDate > a.drawDate ? 1 : -1));
+  }, [filtered]);
+
+  const exportGroupCSV = (group: typeof groupedByDraw[number], postResult: boolean) => {
+    const headers = postResult
+      ? "Player,Game,Numbers,Amount,Won,WinAmount,State,DrawTime,Date\n"
+      : "Player,Game,Numbers,Amount,State,DrawTime,Date\n";
+    const rows = group.items
+      .map((i) =>
+        postResult
+          ? `${escapeCSV(i.playerName || "")},${escapeCSV(i.gameType)},${escapeCSV(i.numbers)},${i.betAmount},${i.won ? "YES" : "NO"},${i.winAmount || 0},${escapeCSV(i.state || "")},${escapeCSV(i.drawTime || "")},${escapeCSV(i.createdAt || "")}`
+          : `${escapeCSV(i.playerName || "")},${escapeCSV(i.gameType)},${escapeCSV(i.numbers)},${i.betAmount},${escapeCSV(i.state || "")},${escapeCSV(i.drawTime || "")},${escapeCSV(i.createdAt || "")}`
+      )
+      .join("\n");
+    const blob = new Blob([headers + rows], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const suffix = postResult ? "with-winners" : "pre-result";
+    a.download = `draw-${group.drawDate}-${group.state}-${group.drawTime}-${suffix}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV exported!");
+  };
 
   const handleExportCSV = () => {
     const headers = "Player,Game,Numbers,Amount,Won,WinAmount,State,Date\n";
@@ -232,6 +278,26 @@ export default function VendorHistoryScreen() {
               placeholder="To"
             />
           </div>
+          <div className="flex items-center gap-4 pt-1">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={winnersOnly}
+                onChange={(e) => setWinnersOnly(e.target.checked)}
+                className="h-4 w-4"
+              />
+              {t("Winners only") || "Winners only"}
+            </label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={groupByDraw}
+                onChange={(e) => setGroupByDraw(e.target.checked)}
+                className="h-4 w-4"
+              />
+              {t("Group by draw") || "Group by draw"}
+            </label>
+          </div>
         </CardContent>
       </Card>
 
@@ -249,6 +315,58 @@ export default function VendorHistoryScreen() {
           title={t("noHistory") || "No play history"}
           description={t("noHistoryDesc") || "Play history will appear here once players start betting."}
         />
+      ) : groupByDraw ? (
+        <div className="space-y-3">
+          {groupedByDraw.map((group) => {
+            const totalBet = group.items.reduce((s, i) => s + (i.betAmount || 0), 0);
+            const winCount = group.items.filter((i) => i.won).length;
+            return (
+              <Card key={group.key}>
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-gray-500" />
+                      <div>
+                        <p className="font-semibold text-sm">
+                          {DRAW_STATES[group.state] || group.state}
+                          {group.drawTime && <span className="text-gray-500 font-normal ml-1 capitalize">· {group.drawTime}</span>}
+                        </p>
+                        <p className="text-xs text-gray-500">{group.drawDate}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        {group.items.length} {t("tickets") || "tickets"}
+                      </Badge>
+                      {group.hasResults ? (
+                        <Badge variant="success" className="text-xs">
+                          {winCount} {t("winners") || "winners"}
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-xs">
+                          {t("pending") || "Pending"}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-gray-600 border-t pt-2">
+                    <span>{t("totalBet") || "Total Bet"}: <strong>{formatCurrency(totalBet, currency)}</strong></span>
+                    <div className="flex gap-1">
+                      <Button variant="outline" size="sm" onClick={() => exportGroupCSV(group, false)}>
+                        <Download className="h-3 w-3 mr-1" /> {t("preResultCsv") || "Pre-Result CSV"}
+                      </Button>
+                      {group.hasResults && (
+                        <Button variant="outline" size="sm" onClick={() => exportGroupCSV(group, true)}>
+                          <Download className="h-3 w-3 mr-1" /> {t("postResultCsv") || "With Winners CSV"}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       ) : (
         <div className="space-y-2">
           {filtered.map((item) => (

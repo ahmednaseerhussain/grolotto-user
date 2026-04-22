@@ -12,6 +12,36 @@ export function formatCurrency(amount: number, currency: "USD" | "HTG" = "USD"):
   return `$${amount.toFixed(2)}`;
 }
 
+/**
+ * Returns Tailwind classes for vendor balance display based on currency.
+ * HTG = red palette, USD = green palette.
+ */
+export function getVendorBalanceClasses(currency: "USD" | "HTG" | string = "HTG") {
+  if (currency === "USD") {
+    return {
+      gradient: "bg-linear-to-br from-green-600 to-emerald-700",
+      solidBg: "bg-green-600",
+      text: "text-green-600",
+      textLight: "text-green-100",
+      border: "border-green-200",
+      ring: "ring-green-500",
+      chipBg: "bg-green-100",
+      chipText: "text-green-700",
+    };
+  }
+  // HTG (default)
+  return {
+    gradient: "bg-linear-to-br from-red-600 to-rose-700",
+    solidBg: "bg-red-600",
+    text: "text-red-600",
+    textLight: "text-red-100",
+    border: "border-red-200",
+    ring: "ring-red-500",
+    chipBg: "bg-red-100",
+    chipText: "text-red-700",
+  };
+}
+
 export function formatDate(date: string | number | Date, format: "short" | "long" | "time" = "short"): string {
   const d = new Date(date);
   if (format === "long") {

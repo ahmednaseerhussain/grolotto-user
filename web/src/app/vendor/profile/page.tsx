@@ -198,7 +198,7 @@ export default function VendorProfileScreen() {
 
               {[
                 { key: "businessName", label: t("businessName") || "Business Name", icon: Store, readOnly: true },
-                { key: "ownerName", label: t("OwnerPName") || "Owner Name", icon: User, readOnly: true },
+                { key: "ownerName", label: t("Owner Name") || "Owner Name", icon: User, readOnly: true },
                 { key: "email", label: t("Email") || "Email", icon: Mail },
                 { key: "phone", label: t("Phone") || "Phone", icon: Phone },
                 { key: "address", label: t("Address") || "Address", icon: MapPin },

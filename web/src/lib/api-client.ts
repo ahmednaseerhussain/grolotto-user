@@ -163,7 +163,14 @@ export { apiClient, setTokens, clearTokens, getAccessToken, getRefreshToken };
 // Error helper
 export function getErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
-    return error.response?.data?.message || error.response?.data?.error || error.message;
+    const data = error.response?.data;
+    // Zod validation errors: { error: 'Validation failed', details: [{ field, message }] }
+    if (data?.details && Array.isArray(data.details) && data.details.length > 0) {
+      return data.details
+        .map((d: any) => (d.field ? `${d.field}: ${d.message}` : d.message))
+        .join(", ");
+    }
+    return data?.message || data?.error || error.message;
   }
   if (error instanceof Error) return error.message;
   return "An unexpected error occurred";

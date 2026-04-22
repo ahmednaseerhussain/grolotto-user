@@ -10,10 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  ArrowLeft, Wallet, DollarSign, Smartphone, HelpCircle, Loader2
+  ArrowLeft, Wallet, DollarSign, Smartphone, HelpCircle, Loader2, Mail, AtSign
 } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, getVendorBalanceClasses } from "@/lib/utils";
 import toast from "react-hot-toast";
+
+type PayoutMethod = "moncash" | "bank_transfer" | "zelle" | "cashapp" | "paypal";
 
 export default function PayoutsScreen() {
   const router = useRouter();
@@ -27,14 +29,37 @@ export default function PayoutsScreen() {
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [amount, setAmount] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [method, setMethod] = useState<PayoutMethod>("moncash");
   const [bankName, setBankName] = useState("");
   const [bankAccountName, setBankAccountName] = useState("");
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [bankRoutingNumber, setBankRoutingNumber] = useState("");
+  const [moncashPhone, setMoncashPhone] = useState("");
+  const [zelleEmail, setZelleEmail] = useState("");
+  const [zellePhone, setZellePhone] = useState("");
+  const [cashappTag, setCashappTag] = useState("");
+  const [paypalEmail, setPaypalEmail] = useState("");
 
   // Use vendor's operating currency — no toggle
   const vendorProfile = useAppStore((s) => s.vendorProfile);
   const withdrawalCurrency = (vendorProfile?.operatingCurrency || currency) as "HTG" | "USD";
+
+  // Method options by currency: HTG → MonCash only; USD → Zelle / Cash App / PayPal / Bank
+  const methodOptions: { value: PayoutMethod; label: string; icon: any; desc: string }[] =
+    withdrawalCurrency === "HTG"
+      ? [{ value: "moncash", label: "MonCash", icon: Smartphone, desc: "Fee: 2% | Min: 100 HTG" }]
+      : [
+        { value: "zelle", label: "Zelle", icon: Mail, desc: "Fee: 0% | Min: $10" },
+        { value: "cashapp", label: "Cash App", icon: AtSign, desc: "Fee: 0% | Min: $10" },
+        { value: "paypal", label: "PayPal", icon: DollarSign, desc: "Fee: 2% | Min: $10" },
+        { value: "bank_transfer", label: "Bank Transfer", icon: Wallet, desc: "Fee: 1% | Min: $10" },
+      ];
+
+  // Reset method when currency-driven options change
+  React.useEffect(() => {
+    setMethod(methodOptions[0]?.value || "moncash");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [withdrawalCurrency]);
 
   const balance = vendorStats?.availableBalance || vendorStats?.balance || 0;
   const displayBalance = balance;
@@ -57,17 +82,51 @@ export default function PayoutsScreen() {
       return;
     }
     if (!confirm(t("confirmWithdrawal") || `Are you sure you want to withdraw ${formatCurrency(amt, withdrawalCurrency)}?`)) return;
+
+    // Validate method-specific fields
+    if (method === "bank_transfer") {
+      if (!bankName.trim() || !bankAccountName.trim() || !bankAccountNumber.trim()) {
+        toast.error("Please fill in all bank details");
+        return;
+      }
+    } else if (method === "moncash") {
+      if (!moncashPhone.trim()) {
+        toast.error("Please enter your MonCash phone number");
+        return;
+      }
+    } else if (method === "zelle") {
+      if (!zelleEmail.trim() && !zellePhone.trim()) {
+        toast.error("Please enter your Zelle email or phone");
+        return;
+      }
+    } else if (method === "cashapp") {
+      if (!cashappTag.trim()) {
+        toast.error("Please enter your Cash App $cashtag");
+        return;
+      }
+    } else if (method === "paypal") {
+      if (!paypalEmail.trim()) {
+        toast.error("Please enter your PayPal email");
+        return;
+      }
+    }
+
     setProcessing(true);
     try {
       await vendorAPI.requestPayout({
         amount: amt,
-        method: "bank_transfer",
+        method,
         currency: withdrawalCurrency,
-        bankName,
-        bankAccountName,
-        bankAccountNumber,
-        bankRoutingNumber,
-      } as any);
+        bankName: method === "bank_transfer" ? bankName : undefined,
+        bankAccountName: method === "bank_transfer" ? bankAccountName : undefined,
+        bankAccountNumber: method === "bank_transfer" ? bankAccountNumber : undefined,
+        bankRoutingNumber: method === "bank_transfer" ? bankRoutingNumber : undefined,
+        moncashPhone: method === "moncash" ? moncashPhone : undefined,
+        zelleEmail: method === "zelle" ? zelleEmail : undefined,
+        zellePhone: method === "zelle" ? zellePhone : undefined,
+        cashappTag: method === "cashapp" ? cashappTag : undefined,
+        paypalEmail: method === "paypal" ? paypalEmail : undefined,
+      });
       toast.success(t("withdrawalSubmitted") || "Withdrawal request submitted!");
       setShowRequestForm(false);
       setAmount("");
@@ -96,7 +155,7 @@ export default function PayoutsScreen() {
       </div>
 
       {/* Balance Card */}
-      <Card className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white border-0">
+      <Card className={`${getVendorBalanceClasses(withdrawalCurrency).gradient} text-white border-0`}>
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm opacity-80">{t("availableBalance") || "Available Balance"}</p>
@@ -147,36 +206,86 @@ export default function PayoutsScreen() {
 
             <div>
               <label className="text-sm text-gray-600">{t("paymentMethod") || "Payment Method"}</label>
-              <div className="w-full mt-1 p-3 rounded-lg border-2 border-blue-500 bg-blue-50 flex items-center gap-3">
-                <div className="bg-blue-500 p-1.5 rounded">
-                  <Wallet className="h-4 w-4 text-white" />
-                </div>
-                <div className="text-left flex-1">
-                  <p className="font-medium text-sm">Bank Transfer</p>
-                  <p className="text-xs text-gray-500">{t("fees") || "Fee"}: 1% | {t("minimum") || "Min"}: $10</p>
-                </div>
+              <div className="mt-1 space-y-2">
+                {methodOptions.map((opt) => {
+                  const Icon = opt.icon;
+                  const selected = method === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setMethod(opt.value)}
+                      className={`w-full p-3 rounded-lg border-2 flex items-center gap-3 transition ${selected ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white hover:border-gray-300"}`}
+                    >
+                      <div className={`p-1.5 rounded ${selected ? "bg-blue-500" : "bg-gray-400"}`}>
+                        <Icon className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="text-left flex-1">
+                        <p className="font-medium text-sm">{opt.label}</p>
+                        <p className="text-xs text-gray-500">{opt.desc}</p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
 
-              {/* Bank Details Fields */}
-              <div className="mt-3 space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <h4 className="text-sm font-semibold text-blue-800">Bank Details</h4>
-                <div>
-                  <label className="text-xs text-gray-600">Bank Name</label>
-                  <Input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="e.g. Sogebank, BNC, Unibank" className="mt-1" />
+              {/* Method-specific fields */}
+              {method === "bank_transfer" && (
+                <div className="mt-3 space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="text-sm font-semibold text-blue-800">Bank Details</h4>
+                  <div>
+                    <label className="text-xs text-gray-600">Bank Name</label>
+                    <Input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="e.g. Sogebank, BNC, Unibank" className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600">Account Holder Name</label>
+                    <Input value={bankAccountName} onChange={(e) => setBankAccountName(e.target.value)} placeholder="Full name on account" className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600">Account Number</label>
+                    <Input value={bankAccountNumber} onChange={(e) => setBankAccountNumber(e.target.value)} placeholder="Account number" className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600">Routing Number</label>
+                    <Input value={bankRoutingNumber} onChange={(e) => setBankRoutingNumber(e.target.value)} placeholder="Routing number" className="mt-1" />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs text-gray-600">Account Holder Name</label>
-                  <Input value={bankAccountName} onChange={(e) => setBankAccountName(e.target.value)} placeholder="Full name on account" className="mt-1" />
+              )}
+
+              {method === "moncash" && (
+                <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <label className="text-xs text-gray-600">MonCash Phone Number</label>
+                  <Input value={moncashPhone} onChange={(e) => setMoncashPhone(e.target.value)} placeholder="e.g. +509 3456-7890" className="mt-1" />
                 </div>
-                <div>
-                  <label className="text-xs text-gray-600">Account Number</label>
-                  <Input value={bankAccountNumber} onChange={(e) => setBankAccountNumber(e.target.value)} placeholder="Account number" className="mt-1" />
+              )}
+
+              {method === "zelle" && (
+                <div className="mt-3 space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="text-sm font-semibold text-blue-800">Zelle Details</h4>
+                  <div>
+                    <label className="text-xs text-gray-600">Email</label>
+                    <Input type="email" value={zelleEmail} onChange={(e) => setZelleEmail(e.target.value)} placeholder="your@email.com" className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600">Or Phone Number</label>
+                    <Input value={zellePhone} onChange={(e) => setZellePhone(e.target.value)} placeholder="+1 555-555-5555" className="mt-1" />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs text-gray-600">Routing Number</label>
-                  <Input value={bankRoutingNumber} onChange={(e) => setBankRoutingNumber(e.target.value)} placeholder="Routing number" className="mt-1" />
+              )}
+
+              {method === "cashapp" && (
+                <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <label className="text-xs text-gray-600">Cash App $Cashtag</label>
+                  <Input value={cashappTag} onChange={(e) => setCashappTag(e.target.value)} placeholder="$yourcashtag" className="mt-1" />
                 </div>
-              </div>
+              )}
+
+              {method === "paypal" && (
+                <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <label className="text-xs text-gray-600">PayPal Email</label>
+                  <Input type="email" value={paypalEmail} onChange={(e) => setPaypalEmail(e.target.value)} placeholder="your@paypal.com" className="mt-1" />
+                </div>
+              )}
             </div>
 
             <div className="flex gap-2">

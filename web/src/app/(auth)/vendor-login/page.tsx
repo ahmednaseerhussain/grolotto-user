@@ -36,7 +36,16 @@ export default function VendorLoginPage() {
 
       setUser(user);
       toast.success(t("Login Success"));
-      router.push("/vendor/dashboard");
+
+      // Check vendor approval status and route accordingly
+      try {
+        const { vendorAPI } = await import("@/lib/api/vendor");
+        const profile = await vendorAPI.getMyProfile();
+        const approved = profile.status === "approved" || profile.status === "active";
+        router.push(approved ? "/vendor/dashboard" : "/vendor/pending");
+      } catch {
+        router.push("/vendor/pending");
+      }
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
