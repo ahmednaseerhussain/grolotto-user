@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as adminService from '../services/adminService';
 import * as vendorService from '../services/vendorService';
+import * as mustSendService from '../services/mustSendService';
 
 export async function getSystemStats(req: Request, res: Response, next: NextFunction) {
   try {
@@ -435,6 +436,41 @@ export async function processPlayerWithdrawal(req: Request, res: Response, next:
       req.body.transferReference
     );
     res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+
+// --- Vendor must-send -------------------------------------
+export async function listMustSend(req: Request, res: Response, next: NextFunction) {
+  try {
+    const status = req.query.status as string | undefined;
+    const records = await mustSendService.listForAdmin(status);
+    res.json({ records });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function createMustSend(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { vendorId, amount, currency, drawId, periodStart, periodEnd, notes } = req.body || {};
+    if (!vendorId) return res.status(400).json({ message: 'vendorId is required' });
+    const record = await mustSendService.createMustSend({
+      vendorId, amount, currency, drawId, periodStart, periodEnd, notes,
+    });
+    res.status(201).json(record);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function processMustSend(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { status, notes } = req.body || {};
+    const record = await mustSendService.processByAdmin(req.params.id, req.user!.id, status, notes);
+    res.json(record);
   } catch (error) {
     next(error);
   }

@@ -16,15 +16,37 @@ export async function getDrawStates(_req: Request, res: Response, next: NextFunc
     ];
     let rows: any[] = [];
     try {
+      // Return one row per (state, name) so the vendor/player UI can render
+      // each draw window with its admin-configured drawTime and cutoffTime.
       const r = await query(
-        `SELECT DISTINCT state AS code, MIN(name) AS name
-         FROM draw_configs WHERE is_active = TRUE
-         GROUP BY state ORDER BY state`
+        `SELECT id, state AS code, name, draw_time, cutoff_time, is_active
+         FROM draw_configs
+         WHERE is_active = TRUE
+         ORDER BY state, draw_time`
       );
       rows = r.rows;
     } catch { /* table missing */ }
-    const states = rows.length > 0 ? rows : FALLBACK;
-    res.json({ data: states });
+
+    if (rows.length === 0) {
+      res.json({ data: FALLBACK });
+      return;
+    }
+
+    // Group by state code so callers that previously expected {code,name}
+    // still receive that shape, plus a `times` array with the schedule details.
+    const byState = new Map<string, { code: string; name: string; times: any[] }>();
+    for (const row of rows) {
+      const entry = byState.get(row.code) || { code: row.code, name: row.name, times: [] };
+      entry.times.push({
+        id: row.id,
+        name: row.name,
+        drawTime: row.draw_time,
+        cutoffTime: row.cutoff_time,
+        isActive: row.is_active,
+      });
+      byState.set(row.code, entry);
+    }
+    res.json({ data: Array.from(byState.values()) });
   } catch (error) {
     next(error);
   }

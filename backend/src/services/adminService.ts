@@ -782,16 +782,18 @@ export async function broadcastNotification(
       );
       for (const v of vendorResult.rows) {
         await query(
-          `INSERT INTO ${table} (${fkColumn}, type, title, message) VALUES ($1, $2, $3, $4)`,
-          [v.id, type, title, message]
+          `INSERT INTO ${table} (${fkColumn}, type, title, message, created_by_role, created_by_id)
+           VALUES ($1, $2, $3, $4, 'admin', $5)`,
+          [v.id, type, title, message, sentBy || null]
         );
         totalSent++;
       }
     } else {
       for (const u of usersResult.rows) {
         await query(
-          `INSERT INTO ${table} (${fkColumn}, type, title, message) VALUES ($1, $2, $3, $4)`,
-          [u.id, type, title, message]
+          `INSERT INTO ${table} (${fkColumn}, type, title, message, created_by_role, created_by_id)
+           VALUES ($1, $2, $3, $4, 'admin', $5)`,
+          [u.id, type, title, message, sentBy || null]
         );
         totalSent++;
       }

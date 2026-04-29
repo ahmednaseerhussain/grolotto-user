@@ -120,14 +120,33 @@ export async function sendPushToRole(
 }
 
 /**
- * Get notifications for a user (supports both player_notifications and vendor_notifications).
+ * Get notifications for a user (supports player_notifications, vendor_notifications, and admin_notifications).
  */
 export async function getUserNotifications(
   userId: string,
-  role: 'player' | 'vendor',
+  role: 'player' | 'vendor' | 'admin',
   limit: number = 50,
   offset: number = 0
 ): Promise<{ notifications: Notification[]; total: number }> {
+  if (role === 'admin') {
+    // Admin inbox — admin-specific OR broadcast-to-admins (admin_id IS NULL)
+    const countResult = await query(
+      `SELECT COUNT(*) FROM admin_notifications WHERE admin_id = $1 OR admin_id IS NULL`,
+      [userId]
+    );
+    const result = await query(
+      `SELECT id, admin_id as user_id, type, title, message, is_read, metadata, created_at
+       FROM admin_notifications
+       WHERE admin_id = $1 OR admin_id IS NULL
+       ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
+      [userId, limit, offset]
+    );
+    return {
+      notifications: result.rows.map(mapNotification),
+      total: parseInt(countResult.rows[0].count),
+    };
+  }
+
   if (role === 'vendor') {
     // Get vendor ID from user ID
     const vendorResult = await query(
@@ -175,7 +194,15 @@ export async function getUserNotifications(
 /**
  * Get unread notification count.
  */
-export async function getUnreadCount(userId: string, role: 'player' | 'vendor'): Promise<number> {
+export async function getUnreadCount(userId: string, role: 'player' | 'vendor' | 'admin'): Promise<number> {
+  if (role === 'admin') {
+    const result = await query(
+      `SELECT COUNT(*) FROM admin_notifications
+       WHERE (admin_id = $1 OR admin_id IS NULL) AND is_read = FALSE`,
+      [userId]
+    );
+    return parseInt(result.rows[0].count);
+  }
   if (role === 'vendor') {
     const vendorResult = await query(
       `SELECT id FROM vendors WHERE user_id = $1`,
@@ -200,7 +227,15 @@ export async function getUnreadCount(userId: string, role: 'player' | 'vendor'):
 /**
  * Mark a single notification as read.
  */
-export async function markAsRead(notificationId: string, userId: string, role: 'player' | 'vendor'): Promise<void> {
+export async function markAsRead(notificationId: string, userId: string, role: 'player' | 'vendor' | 'admin'): Promise<void> {
+  if (role === 'admin') {
+    await query(
+      `UPDATE admin_notifications SET is_read = TRUE
+       WHERE id = $1 AND (admin_id = $2 OR admin_id IS NULL)`,
+      [notificationId, userId]
+    );
+    return;
+  }
   if (role === 'vendor') {
     const vendorResult = await query(`SELECT id FROM vendors WHERE user_id = $1`, [userId]);
     if (vendorResult.rows.length > 0) {
@@ -220,7 +255,15 @@ export async function markAsRead(notificationId: string, userId: string, role: '
 /**
  * Mark all notifications as read.
  */
-export async function markAllAsRead(userId: string, role: 'player' | 'vendor'): Promise<void> {
+export async function markAllAsRead(userId: string, role: 'player' | 'vendor' | 'admin'): Promise<void> {
+  if (role === 'admin') {
+    await query(
+      `UPDATE admin_notifications SET is_read = TRUE
+       WHERE (admin_id = $1 OR admin_id IS NULL) AND is_read = FALSE`,
+      [userId]
+    );
+    return;
+  }
   if (role === 'vendor') {
     const vendorResult = await query(`SELECT id FROM vendors WHERE user_id = $1`, [userId]);
     if (vendorResult.rows.length > 0) {
@@ -245,13 +288,22 @@ export async function createPlayerNotification(
   type: string,
   title: string,
   message: string,
-  metadata?: any
+  metadata?: any,
+  origin?: { role?: 'system' | 'admin' | 'player' | 'vendor'; id?: string }
 ): Promise<void> {
   try {
     await query(
-      `INSERT INTO player_notifications (user_id, type, title, message, metadata)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [userId, type, title, message, metadata ? JSON.stringify(metadata) : null]
+      `INSERT INTO player_notifications (user_id, type, title, message, metadata, created_by_role, created_by_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        userId,
+        type,
+        title,
+        message,
+        metadata ? JSON.stringify(metadata) : null,
+        origin?.role || 'system',
+        origin?.id || null,
+      ]
     );
     // Send push notification (fire and forget)
     sendPushToUser(userId, title, message, { type }).catch(() => {});
@@ -268,13 +320,14 @@ export async function createVendorNotification(
   vendorId: string,
   type: string,
   title: string,
-  message: string
+  message: string,
+  origin?: { role?: 'system' | 'admin' | 'player' | 'vendor'; id?: string }
 ): Promise<void> {
   try {
     await query(
-      `INSERT INTO vendor_notifications (vendor_id, type, title, message)
-       VALUES ($1, $2, $3, $4)`,
-      [vendorId, type, title, message]
+      `INSERT INTO vendor_notifications (vendor_id, type, title, message, created_by_role, created_by_id)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [vendorId, type, title, message, origin?.role || 'system', origin?.id || null]
     );
     // Look up user_id for push
     const userResult = await query(`SELECT user_id FROM vendors WHERE id = $1`, [vendorId]);
@@ -283,6 +336,39 @@ export async function createVendorNotification(
     }
   } catch (error) {
     console.error('Failed to create vendor notification:', error);
+  }
+}
+
+/**
+ * Notify all admins (or a single admin) of an event from the player/vendor side
+ * — e.g. payout request, withdrawal request, vendor signup, dispute, etc.
+ * Falls back silently if the admin_notifications table does not exist yet.
+ */
+export async function notifyAdmins(
+  type: string,
+  title: string,
+  message: string,
+  source?: { role?: 'player' | 'vendor' | 'system'; id?: string },
+  metadata?: any,
+  adminId?: string | null
+): Promise<void> {
+  try {
+    await query(
+      `INSERT INTO admin_notifications (admin_id, type, title, message, metadata, source_role, source_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        adminId || null,
+        type,
+        title,
+        message,
+        metadata ? JSON.stringify(metadata) : null,
+        source?.role || 'system',
+        source?.id || null,
+      ]
+    );
+  } catch (error) {
+    // Don't block primary flows if the table is missing or insert fails.
+    console.error('Failed to create admin notification:', error);
   }
 }
 

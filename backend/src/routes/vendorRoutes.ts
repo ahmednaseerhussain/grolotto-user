@@ -34,6 +34,11 @@ router.delete('/me/number-limits/:limitId', authenticate, authorize('vendor'), v
 
 // Payout requests
 router.post('/me/payouts', authenticate, authorize('vendor'), ctrl.requestPayout);
+router.get('/me/payouts', authenticate, authorize('vendor'), ctrl.getMyPayouts);
+
+// Vendor must-send (losses owed back to platform)
+router.get('/me/must-send', authenticate, authorize('vendor'), ctrl.getMyMustSend);
+router.post('/me/must-send/:id/proof', authenticate, authorize('vendor'), validateUUIDParams('id'), ctrl.submitMustSendProof);
 
 // Vendor documents (ID card / business license)
 router.get('/me/documents', authenticate, authorize('vendor'), getMyVendorDocuments);

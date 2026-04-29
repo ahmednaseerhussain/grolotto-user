@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as walletService from '../services/walletService';
+import * as notificationService from '../services/notificationService';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function getWallet(req: Request, res: Response, next: NextFunction) {
@@ -96,6 +97,15 @@ export async function requestWithdrawal(req: Request, res: Response, next: NextF
       : { bankName, accountHolderName, accountNumber, routingNumber: routingNumber || null, notes: notes || null };
 
     await walletService.updateWithdrawalMetadata(req.user!.id, idempotencyKey, metadata);
+
+    // Notify admins so the bell shows the pending request.
+    notificationService.notifyAdmins(
+      'withdrawal_request',
+      'New withdrawal request',
+      `Player requested ${amount} ${currency} via ${paymentMethod}.`,
+      { role: 'player', id: req.user!.id },
+      { amount, currency, method: paymentMethod }
+    ).catch(() => {});
 
     res.json({ message: 'Withdrawal request submitted', newBalance: result.newBalance });
   } catch (error) {

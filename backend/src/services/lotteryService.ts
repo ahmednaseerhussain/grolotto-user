@@ -596,6 +596,11 @@ export async function publishResults(
     let totalPayouts = 0;
     const vendorPayouts: Record<string, number> = {}; // vendorId → total payout amount
     const vendorCurrencies: Record<string, string> = {}; // vendorId → currency
+    const vendorBets: Record<string, number> = {}; // vendorId → total bets collected (for must-send calc)
+
+    for (const ticket of tickets.rows) {
+      vendorBets[ticket.vendor_id] = (vendorBets[ticket.vendor_id] || 0) + parseFloat(ticket.bet_amount);
+    }
 
     for (const winner of winners) {
       const { winAmount } = winner;
@@ -704,6 +709,42 @@ export async function publishResults(
        WHERE id = $3`,
       [totalPayouts, winners.length, roundId]
     );
+
+    // 11. Vendor "must send" — if payouts owed exceed bets collected, the vendor
+    //     owes the platform the difference.
+    for (const [vid, payoutAmount] of Object.entries(vendorPayouts)) {
+      const collected = vendorBets[vid] || 0;
+      const owed = payoutAmount - collected;
+      if (owed > 0.005) {
+        try {
+          await client.query(
+            `INSERT INTO vendor_must_send
+              (vendor_id, draw_id, amount, currency, status, notes)
+             VALUES ($1, $2, $3, $4, 'pending', $5)`,
+            [
+              vid,
+              roundId,
+              Math.round(owed * 100) / 100,
+              (vendorCurrencies[vid] || 'HTG') === 'USD' ? 'USD' : 'HTG',
+              `Auto-generated for ${drawState} (${targetDate}): payouts ${payoutAmount.toFixed(2)} − bets ${collected.toFixed(2)}`,
+            ]
+          );
+          notificationService.createVendorNotification(
+            vid,
+            'must_send',
+            'Action required: send funds',
+            `Your ${drawState} round had ${owed.toFixed(2)} more in winnings than bets. Please send the difference to the platform.`
+          );
+          notificationService.notifyAdmins(
+            'must_send_created',
+            'Vendor must-send generated',
+            `Vendor owes ${owed.toFixed(2)} from ${drawState} (${targetDate}).`,
+            { role: 'system' },
+            { vendorId: vid, roundId, owed }
+          ).catch(() => {});
+        } catch { /* table may be missing on legacy installs */ }
+      }
+    }
 
     return {
       roundId,

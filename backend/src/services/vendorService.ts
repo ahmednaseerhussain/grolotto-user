@@ -639,6 +639,21 @@ export async function requestPayout(
   if (amount > balance) throw new AppError('Insufficient balance', 400, 'INSUFFICIENT_BALANCE');
   if (amount <= 0) throw new AppError('Amount must be positive', 400);
 
+  // Method validation
+  const allowedMethods = ['moncash', 'cash', 'bank_transfer', 'zelle', 'cashapp', 'paypal'];
+  if (!allowedMethods.includes(method)) {
+    throw new AppError(`Unsupported payout method: ${method}`, 400);
+  }
+  if (method === 'cash' && currency !== 'HTG') {
+    throw new AppError('Cash payouts are only available for HTG balances.', 400);
+  }
+  if (method === 'moncash' && !bankDetails?.moncashPhone) {
+    throw new AppError('MonCash phone number is required.', 400);
+  }
+  if (method === 'bank_transfer' && (!bankDetails?.bankName || !bankDetails?.bankAccountNumber || !bankDetails?.bankAccountName)) {
+    throw new AppError('Bank name, account name, and account number are required.', 400);
+  }
+
   // Deduct from available balance and create payout request
   await query(
     'UPDATE vendors SET available_balance = available_balance - $1 WHERE id = $2',
@@ -666,6 +681,24 @@ export async function requestPayout(
   );
 
   return result.rows[0];
+}
+
+/**
+ * Return the current vendor's payout request history (newest first).
+ */
+export async function getMyPayouts(vendorId: string, limit = 50): Promise<any[]> {
+  const result = await query(
+    `SELECT id, amount, currency, method, status, request_date, processed_date,
+            bank_name, bank_account_name, bank_account_number, bank_routing_number,
+            moncash_phone, zelle_email, zelle_phone, cashapp_tag, paypal_email,
+            notes
+       FROM vendor_payouts
+      WHERE vendor_id = $1
+      ORDER BY request_date DESC
+      LIMIT $2`,
+    [vendorId, limit]
+  );
+  return result.rows;
 }
 
 /**

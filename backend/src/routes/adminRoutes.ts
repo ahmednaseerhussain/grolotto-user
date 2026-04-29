@@ -41,6 +41,11 @@ router.put('/settings/:key', authorizeResource('settings'), ctrl.updateAppSettin
 router.get('/payouts/pending', authorizeResource('payouts'), ctrl.getPendingPayouts);
 router.post('/payouts/:payoutId/process', validateUUIDParams('payoutId'), authorizeResource('payouts'), ctrl.processVendorPayout);
 
+// Vendor must-send (losses)
+router.get('/must-send', authorizeResource('payouts'), ctrl.listMustSend);
+router.post('/must-send', authorizeResource('payouts'), ctrl.createMustSend);
+router.post('/must-send/:id/process', validateUUIDParams('id'), authorizeResource('payouts'), ctrl.processMustSend);
+
 // Advertisements
 router.get('/advertisements', authorizeResource('ads'), ctrl.getAdvertisements);
 router.post('/advertisements', authorizeResource('ads'), ctrl.createAdvertisement);

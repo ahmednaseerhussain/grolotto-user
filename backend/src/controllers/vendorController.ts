@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import * as vendorService from '../services/vendorService';
 import * as lotteryService from '../services/lotteryService';
+import * as notificationService from '../services/notificationService';
+import * as mustSendService from '../services/mustSendService';
 
 export async function getActiveVendors(req: Request, res: Response, next: NextFunction) {
   try {
@@ -145,7 +147,46 @@ export async function requestPayout(req: Request, res: Response, next: NextFunct
       vendor.id, amount, method || 'moncash', currency || 'HTG',
       { bankName, bankAccountName, bankAccountNumber, bankRoutingNumber, moncashPhone, zelleEmail, zellePhone, cashappTag, paypalEmail }
     );
+    notificationService.notifyAdmins(
+      'vendor_payout_request',
+      'New vendor payout request',
+      `Vendor requested ${amount} ${currency || 'HTG'} via ${method || 'moncash'}.`,
+      { role: 'vendor', id: vendor.id },
+      { amount, currency: currency || 'HTG', method: method || 'moncash', payoutId: (payout as any)?.id }
+    ).catch(() => {});
     res.status(201).json(payout);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getMyPayouts(req: Request, res: Response, next: NextFunction) {
+  try {
+    const vendor = await vendorService.getVendorByUserId(req.user!.id);
+    const limit = parseInt(req.query.limit as string) || 50;
+    const payouts = await vendorService.getMyPayouts(vendor.id, limit);
+    res.json({ payouts });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getMyMustSend(req: Request, res: Response, next: NextFunction) {
+  try {
+    const vendor = await vendorService.getVendorByUserId(req.user!.id);
+    const records = await mustSendService.listForVendor(vendor.id);
+    res.json({ records });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function submitMustSendProof(req: Request, res: Response, next: NextFunction) {
+  try {
+    const vendor = await vendorService.getVendorByUserId(req.user!.id);
+    const { proofUrl, notes } = req.body || {};
+    const record = await mustSendService.markSubmitted(vendor.id, req.params.id, proofUrl, notes);
+    res.json(record);
   } catch (error) {
     next(error);
   }

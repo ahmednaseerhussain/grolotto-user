@@ -1,11 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 import * as notificationService from '../services/notificationService';
 
+function resolveRole(req: Request): 'player' | 'vendor' | 'admin' {
+  const r = req.user!.role;
+  if (r === 'vendor') return 'vendor';
+  if (r === 'admin' || r === 'super_admin') return 'admin';
+  return 'player';
+}
+
 export async function getNotifications(req: Request, res: Response, next: NextFunction) {
   try {
     const limit = parseInt(req.query.limit as string) || 50;
     const offset = parseInt(req.query.offset as string) || 0;
-    const role = (req.user!.role === 'vendor' ? 'vendor' : 'player') as 'player' | 'vendor';
+    const role = resolveRole(req);
 
     const result = await notificationService.getUserNotifications(req.user!.id, role, limit, offset);
     res.json(result);
@@ -16,7 +23,7 @@ export async function getNotifications(req: Request, res: Response, next: NextFu
 
 export async function getUnreadCount(req: Request, res: Response, next: NextFunction) {
   try {
-    const role = (req.user!.role === 'vendor' ? 'vendor' : 'player') as 'player' | 'vendor';
+    const role = resolveRole(req);
     const count = await notificationService.getUnreadCount(req.user!.id, role);
     res.json({ unreadCount: count });
   } catch (error) {
@@ -26,7 +33,7 @@ export async function getUnreadCount(req: Request, res: Response, next: NextFunc
 
 export async function markAsRead(req: Request, res: Response, next: NextFunction) {
   try {
-    const role = (req.user!.role === 'vendor' ? 'vendor' : 'player') as 'player' | 'vendor';
+    const role = resolveRole(req);
     await notificationService.markAsRead(req.params.id, req.user!.id, role);
     res.json({ success: true });
   } catch (error) {
@@ -36,7 +43,7 @@ export async function markAsRead(req: Request, res: Response, next: NextFunction
 
 export async function markAllAsRead(req: Request, res: Response, next: NextFunction) {
   try {
-    const role = (req.user!.role === 'vendor' ? 'vendor' : 'player') as 'player' | 'vendor';
+    const role = resolveRole(req);
     await notificationService.markAllAsRead(req.user!.id, role);
     res.json({ success: true });
   } catch (error) {

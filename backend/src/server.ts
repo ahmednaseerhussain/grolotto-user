@@ -431,6 +431,73 @@ async function runStartupMigrations() {
     `).catch(() => {});
     console.log('[Migration 020] payment_orders table created ');
 
+    // ─── Migration 023: client change requests ─────────────────────────
+    // Notification origin metadata so admin badge can ignore broadcasts
+    // the admin themselves created.
+    try {
+      await query(`
+        ALTER TABLE player_notifications
+          ADD COLUMN IF NOT EXISTS created_by_role VARCHAR(16) NOT NULL DEFAULT 'system',
+          ADD COLUMN IF NOT EXISTS created_by_id UUID;
+      `);
+      await query(`
+        ALTER TABLE vendor_notifications
+          ADD COLUMN IF NOT EXISTS created_by_role VARCHAR(16) NOT NULL DEFAULT 'system',
+          ADD COLUMN IF NOT EXISTS created_by_id UUID;
+      `);
+      await query(`CREATE INDEX IF NOT EXISTS idx_player_notif_creator ON player_notifications(created_by_role)`);
+      await query(`CREATE INDEX IF NOT EXISTS idx_vendor_notif_creator ON vendor_notifications(created_by_role)`);
+    } catch { /* non-critical */ }
+
+    // Add 'cash' to payout_method_type enum (in-person HTG payouts).
+    try {
+      await query(`ALTER TYPE payout_method_type ADD VALUE IF NOT EXISTS 'cash'`);
+      console.log('[Migration 023] Added cash to payout_method_type enum');
+    } catch { /* already exists or non-critical */ }
+
+    // vendor_must_send: track losses the vendor owes back to the platform.
+    await query(`
+      CREATE TABLE IF NOT EXISTS vendor_must_send (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        vendor_id UUID NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+        draw_id UUID,
+        period_start TIMESTAMPTZ,
+        period_end TIMESTAMPTZ,
+        amount NUMERIC(14,2) NOT NULL CHECK (amount > 0),
+        currency VARCHAR(3) NOT NULL DEFAULT 'HTG' CHECK (currency IN ('HTG','USD')),
+        status VARCHAR(16) NOT NULL DEFAULT 'pending'
+          CHECK (status IN ('pending','submitted','paid','waived')),
+        proof_url TEXT,
+        notes TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        resolved_at TIMESTAMPTZ,
+        resolved_by UUID REFERENCES users(id) ON DELETE SET NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_must_send_vendor ON vendor_must_send(vendor_id);
+      CREATE INDEX IF NOT EXISTS idx_must_send_status ON vendor_must_send(status);
+      CREATE INDEX IF NOT EXISTS idx_must_send_created ON vendor_must_send(created_at DESC);
+    `);
+
+    // admin_notifications: inbox for admin-targeted alerts (player/vendor activity).
+    await query(`
+      CREATE TABLE IF NOT EXISTS admin_notifications (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        admin_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        type VARCHAR(64) NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        is_read BOOLEAN NOT NULL DEFAULT FALSE,
+        metadata JSONB,
+        source_role VARCHAR(16),
+        source_id UUID,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_admin_notif_admin ON admin_notifications(admin_id);
+      CREATE INDEX IF NOT EXISTS idx_admin_notif_unread ON admin_notifications(admin_id, is_read);
+      CREATE INDEX IF NOT EXISTS idx_admin_notif_created ON admin_notifications(created_at DESC);
+    `);
+    console.log('[Migration 023] notification origin / cash payout / must-send / admin_notifications applied');
+
     console.log('[Migration] Startup migrations applied successfully');
   } catch (err) {
     console.error('[Migration] Startup migration error:', err);
