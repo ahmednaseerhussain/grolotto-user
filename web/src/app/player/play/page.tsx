@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import {
   ArrowLeft, Star, Trash2, ShoppingCart, AlertTriangle, CheckCircle, Loader2, ChevronRight
 } from "lucide-react";
-import { formatCurrency, GAME_LABELS, MULTIPLIERS } from "@/lib/utils";
+import { formatCurrency, GAME_LABELS, MULTIPLIERS, formatLotteryNumber, formatLotteryNumbers } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 const DRAWS = [
@@ -121,6 +121,29 @@ export default function PlayScreen() {
     }
   }, [vendor, selectedState]);
 
+  // When draw time changes, ensure the selected state is valid for that time.
+  // If not, switch to the first state that supports the chosen time.
+  useEffect(() => {
+    if (!vendor?.draws) return;
+    const draws: Record<string, any> = vendor.draws;
+    const hasAnySchedule = Object.values(draws).some(
+      (d: any) => Array.isArray(d?.drawTimes) && d.drawTimes.length > 0
+    );
+    if (!hasAnySchedule) return; // legacy: no schedule data, do nothing
+    const supports = (code: string) =>
+      Array.isArray(draws[code]?.drawTimes) && draws[code].drawTimes.includes(drawTime);
+    if (selectedState && !supports(selectedState)) {
+      const fallback = Object.keys(draws).find((code) => draws[code]?.enabled && supports(code));
+      if (fallback) {
+        setSelectedState(fallback);
+        setSelectedGame("");
+      } else {
+        setSelectedState("");
+        setSelectedGame("");
+      }
+    }
+  }, [drawTime, vendor, selectedState]);
+
   // Reset numbers on game change
   useEffect(() => {
     if (selectedGame) {
@@ -142,6 +165,65 @@ export default function PlayScreen() {
       .filter(([, d]: [string, any]) => d?.enabled)
       .map(([code]) => code)
     : [];
+
+  // States that have the currently-selected draw time scheduled & active.
+  // If a vendor has NO schedules configured at all (legacy), fall back to all enabled states.
+  const vendorHasAnySchedule = vendor?.draws
+    ? Object.values(vendor.draws).some((d: any) => Array.isArray(d?.drawTimes) && d.drawTimes.length > 0)
+    : false;
+  const statesForDrawTime = vendorHasAnySchedule
+    ? enabledStates.filter((code) => {
+      const d: any = (vendor?.draws || {})[code];
+      return Array.isArray(d?.drawTimes) && d.drawTimes.includes(drawTime);
+    })
+    : enabledStates;
+
+  // Available draw times across all enabled states (for the time selector)
+  const availableDrawTimes: string[] = vendor?.draws
+    ? Array.from(new Set(
+      Object.values(vendor.draws)
+        .filter((d: any) => d?.enabled && Array.isArray(d?.drawTimes))
+        .flatMap((d: any) => d.drawTimes as string[])
+    ))
+    : [];
+
+  // Format "HH:MM:SS" or "HH:MM" → "h:mm AM/PM"
+  const formatTime = (t?: string): string => {
+    if (!t) return "";
+    const [hStr, mStr] = t.split(":");
+    const h = parseInt(hStr, 10);
+    const m = parseInt(mStr || "0", 10);
+    if (isNaN(h)) return t;
+    const ampm = h >= 12 ? "PM" : "AM";
+    const h12 = ((h + 11) % 12) + 1;
+    return `${h12}:${m.toString().padStart(2, "0")} ${ampm}`;
+  };
+
+  // Get displayed open/close range for a given draw time.
+  // If a state is selected → use that state's schedule.
+  // Otherwise → aggregate min(open) - max(close) across all enabled states for that time.
+  const getDrawTimeRange = (time: string): { open: string; close: string } | null => {
+    const draws: Record<string, any> = vendor?.draws || {};
+    const collect = (code: string): { openTime: string; closeTime: string } | null => {
+      const sched = (draws[code]?.schedules || []).find(
+        (s: any) => s.drawTime === time && s.isActive !== false
+      );
+      return sched ? { openTime: sched.openTime, closeTime: sched.closeTime } : null;
+    };
+    if (selectedState) {
+      const s = collect(selectedState);
+      return s ? { open: s.openTime, close: s.closeTime } : null;
+    }
+    let minOpen: string | null = null;
+    let maxClose: string | null = null;
+    for (const code of enabledStates) {
+      const s = collect(code);
+      if (!s) continue;
+      if (!minOpen || s.openTime < minOpen) minOpen = s.openTime;
+      if (!maxClose || s.closeTime > maxClose) maxClose = s.closeTime;
+    }
+    return minOpen && maxClose ? { open: minOpen, close: maxClose } : null;
+  };
 
   const vendorDraws: Record<string, any> = vendor?.draws || {};
   const currentDraw = vendorDraws[selectedState];
@@ -230,13 +312,18 @@ export default function PlayScreen() {
   const handlePlaceBets = async () => {
     if (gameSelections.length === 0) return;
 
-    // Pre-check balance
+    // Pre-check balance — do NOT auto-redirect to payment.
+    // Client requested: tell the user to recharge their wallet first instead of
+    // sending them straight into the MonCash flow.
     const currentBalance = currency === "HTG"
       ? (wallet?.balanceHtg ?? wallet?.balance ?? 0)
       : (wallet?.balanceUsd ?? wallet?.balance ?? 0);
     if (totalAmount > currentBalance) {
-      toast.error(t("insufficientBalance") || "Insufficient balance");
-      router.push(`/player/payment?amount=${totalAmount - currentBalance}`);
+      const shortBy = totalAmount - currentBalance;
+      toast.error(
+        `${t("insufficientBalance") || "Insufficient balance"}. ${t("pleaseRechargeWallet") || "Please recharge your wallet first."} (${formatCurrency(shortBy, currency)})`,
+        { duration: 5000 }
+      );
       return;
     }
 
@@ -296,11 +383,11 @@ export default function PlayScreen() {
   }
 
   if (!vendor) {
-    // Show vendor selection screen - filter by selected currency
+    // Show vendor selection screen - filter by selected currency only
+    // (matches dashboard "Quick Play Vendors" so See All shows the same set)
     const availableVendors = (vendors || []).filter((v: any) => {
       const matchesCurrency = !v.operatingCurrency || v.operatingCurrency === currency;
-      if (!matchesCurrency) return false;
-      return v.draws && Object.values(v.draws).some((d: any) => d?.enabled);
+      return matchesCurrency;
     });
     return (
       <div className="space-y-6 max-w-4xl mx-auto">
@@ -393,53 +480,67 @@ export default function PlayScreen() {
       {/* State Selection */}
       <div>
         <h3 className="text-sm font-medium text-gray-700 mb-2">{t("selectState") || "Select State"}</h3>
-        <div className="flex flex-wrap gap-2">
-          {DRAWS.filter((d) => enabledStates.includes(d.code)).map((draw) => (
-            <button
-              key={draw.code}
-              onClick={() => { setSelectedState(draw.code); setSelectedGame(""); }}
-              className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${selectedState === draw.code
-                ? "bg-blue-600 text-white border-blue-600"
-                : "bg-white text-gray-700 border-gray-200 hover:border-blue-300"
-                }`}
-            >
-              {draw.flag} {draw.code}
-            </button>
-          ))}
-        </div>
+        {statesForDrawTime.length === 0 ? (
+          <p className="text-sm text-gray-500 italic">
+            {t("noStatesForDrawTime") || `No states available for ${drawTime} draw. Try another draw time.`}
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {DRAWS.filter((d) => statesForDrawTime.includes(d.code)).map((draw) => (
+              <button
+                key={draw.code}
+                onClick={() => { setSelectedState(draw.code); setSelectedGame(""); }}
+                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${selectedState === draw.code
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-blue-300"
+                  }`}
+              >
+                {draw.flag} {draw.code}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Draw Time Selection */}
       <div>
         <h3 className="text-sm font-medium text-gray-700 mb-2">{t("Draw Time") || "Draw Time"}</h3>
         <div className="flex gap-2">
-          <button
-            onClick={() => setDrawTime("morning")}
-            className={`flex-1 px-4 py-3 rounded-lg border text-sm font-medium transition-all flex items-center justify-center gap-2 ${drawTime === "morning"
-              ? "bg-green-600 text-white border-green-600"
-              : "bg-white text-gray-700 border-gray-200 hover:border-green-300"
-              }`}
-          >
-            🌅 {t("morning") || "Morning"}
-          </button>
-          <button
-            onClick={() => setDrawTime("midday")}
-            className={`flex-1 px-4 py-3 rounded-lg border text-sm font-medium transition-all flex items-center justify-center gap-2 ${drawTime === "midday"
-              ? "bg-amber-500 text-white border-amber-500"
-              : "bg-white text-gray-700 border-gray-200 hover:border-amber-300"
-              }`}
-          >
-            ☀️ {t("midday") || "Midday"}
-          </button>
-          <button
-            onClick={() => setDrawTime("evening")}
-            className={`flex-1 px-4 py-3 rounded-lg border text-sm font-medium transition-all flex items-center justify-center gap-2 ${drawTime === "evening"
-              ? "bg-indigo-600 text-white border-indigo-600"
-              : "bg-white text-gray-700 border-gray-200 hover:border-indigo-300"
-              }`}
-          >
-            🌙 {t("evening") || "Evening"}
-          </button>
+          {(["morning", "midday", "evening"] as const).map((time) => {
+            const isAvailable = availableDrawTimes.length === 0 || availableDrawTimes.includes(time);
+            const isSelected = drawTime === time;
+            const range = getDrawTimeRange(time);
+            const colorActive =
+              time === "morning" ? "bg-green-600 text-white border-green-600"
+                : time === "midday" ? "bg-amber-500 text-white border-amber-500"
+                  : "bg-indigo-600 text-white border-indigo-600";
+            const colorHover =
+              time === "morning" ? "hover:border-green-300"
+                : time === "midday" ? "hover:border-amber-300"
+                  : "hover:border-indigo-300";
+            const label = time === "morning" ? `🌅 ${t("morning") || "Morning"}`
+              : time === "midday" ? `☀️ ${t("midday") || "Midday"}`
+                : `🌙 ${t("evening") || "Evening"}`;
+            return (
+              <button
+                key={time}
+                onClick={() => isAvailable && setDrawTime(time)}
+                disabled={!isAvailable}
+                className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 ${!isAvailable ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed line-through"
+                    : isSelected ? colorActive
+                      : `bg-white text-gray-700 border-gray-200 ${colorHover}`
+                  }`}
+                title={!isAvailable ? "Not scheduled by this vendor" : range ? `${formatTime(range.open)} – ${formatTime(range.close)}` : undefined}
+              >
+                <span>{label}</span>
+                {range && (
+                  <span className={`text-[11px] font-normal ${isSelected ? "opacity-90" : "text-gray-500"}`}>
+                    {formatTime(range.open)} – {formatTime(range.close)}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -600,7 +701,7 @@ export default function PlayScreen() {
                       {GAME_LABELS[sel.gameType]}
                     </span>
                     <Badge variant="outline">{sel.state}</Badge>
-                    <span className="font-mono font-bold text-lg">{sel.gameType === "maryaj" ? sel.numbers.join("+") : sel.numbers.join("")}</span>
+                    <span className="font-mono font-bold text-lg">{sel.gameType === "maryaj" ? sel.numbers.map((n: any) => formatLotteryNumber(n, sel.gameType)).join("-") : sel.numbers.map((n: any) => formatLotteryNumber(n, sel.gameType)).join("")}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="font-semibold text-blue-600">{formatCurrency(sel.betAmount, currency)}</span>
@@ -636,7 +737,7 @@ export default function PlayScreen() {
                 <CheckCircle className="h-12 w-12 text-emerald-600" />
               </div>
             </div>
-            <DialogTitle className="text-center">{t("betPlacedSuccessfully") || "Bets Placed Successfully!"}</DialogTitle>
+            <DialogTitle className="text-center">{t("Bets Placed Successfully!") || "Bets Placed Successfully!"}</DialogTitle>
           </DialogHeader>
           <p className="text-center text-gray-500">
             Your bets have been placed. Good luck!

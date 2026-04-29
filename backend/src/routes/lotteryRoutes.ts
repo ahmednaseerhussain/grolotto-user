@@ -12,6 +12,7 @@ router.get('/tickets', authenticate, ctrl.getMyTickets);
 
 // Public
 router.get('/rounds', ctrl.getLotteryRounds);
+router.get('/states', ctrl.getDrawStates);
 
 // Admin publishes results globally per state per day
 router.post('/results', authenticate, authorize('admin'), validate(publishResultsSchema), ctrl.publishResults);

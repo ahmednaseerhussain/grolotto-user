@@ -305,8 +305,8 @@ export default function PaymentScreen() {
                   <CreditCard className="h-6 w-6 text-white" />
                 </div>
                 <div className="text-left flex-1">
-                  <p className="font-semibold text-gray-900">{t("creditDebitCard") || "Credit / Debit Card"}</p>
-                  <p className="text-sm text-gray-500">Pay instantly with Stripe</p>
+                  <p className="font-semibold text-gray-900">{t("Debit Card") || "Debit Card"}</p>
+                  <p className="text-sm text-gray-500">Pay instantly</p>
                 </div>
                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "stripe" ? "border-blue-500" : "border-gray-300"}`}>
                   {selectedMethod === "stripe" && <div className="w-3 h-3 rounded-full bg-blue-500" />}
@@ -416,7 +416,12 @@ export default function PaymentScreen() {
           </div>
           <div className="flex items-start gap-3">
             <div className="bg-amber-500 text-white font-bold w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0">3</div>
-            <p className="text-sm text-gray-600">Email the screenshot to <span className="font-mono text-amber-600">{paymentConfig.zelle_email || "payments@grolotto.com"}</span> with your GroLotto username</p>
+            <p className="text-sm text-gray-600">
+              Send the screenshot with your GroLotto username via email to{" "}
+              <span className="font-mono text-amber-600">{paymentConfig.zelle_email || "payments@grolotto.com"}</span>
+              {" "}or WhatsApp/SMS to{" "}
+              <span className="font-mono text-amber-600">{paymentConfig.support_phone || "+1 (555) 123-4567"}</span>
+            </p>
           </div>
           <div className="flex items-start gap-3">
             <div className="bg-amber-500 text-white font-bold w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0">4</div>
@@ -437,8 +442,10 @@ export default function PaymentScreen() {
             Our team will verify your payment and credit your wallet within a few hours.
           </p>
           <p className="text-gray-500 text-sm">
-            Make sure you&apos;ve emailed your screenshot to{" "}
+            Make sure you&apos;ve sent your screenshot to{" "}
             <span className="text-amber-600 font-medium">{paymentConfig.zelle_email || "payments@grolotto.com"}</span>
+            {" "}or{" "}
+            <span className="text-amber-600 font-medium">{paymentConfig.support_phone || "+1 (555) 123-4567"}</span>
           </p>
           <button
             onClick={() => { setDepositStep("select"); setSelectedMethod(null); setAmount(""); }}

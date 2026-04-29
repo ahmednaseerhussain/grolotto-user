@@ -300,6 +300,18 @@ export const translations = {
     fr: "Retrait",
     es: "Retiro"
   },
+  withdraw: {
+    ht: "Retire",
+    en: "Withdraw",
+    fr: "Retirer",
+    es: "Retirar"
+  },
+  cashOut: {
+    ht: "Retire Lajan",
+    en: "Cash Out",
+    fr: "Encaisser",
+    es: "Cobrar"
+  },
   myProfile: {
     ht: "Pwofil Mwen",
     en: "My Profile",
@@ -495,6 +507,12 @@ export const translations = {
     en: "Insufficient balance",
     fr: "Solde insuffisant",
     es: "Saldo insuficiente"
+  },
+  pleaseRechargeWallet: {
+    ht: "Tanpri rechaje bous ou anvan w jwe.",
+    en: "Please recharge your wallet first.",
+    fr: "Veuillez d'abord recharger votre portefeuille.",
+    es: "Por favor recargue su billetera primero."
   },
   selectMethod: {
     ht: "Tanpri chwazi yon metòd",

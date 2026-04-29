@@ -14,7 +14,7 @@ import {
   ArrowLeft, Users, Trophy, DollarSign, Loader2, FileText,
   Download, Calendar, MapPin
 } from "lucide-react";
-import { formatCurrency, GAME_LABELS, DRAW_STATES } from "@/lib/utils";
+import { formatCurrency, GAME_LABELS, DRAW_STATES, formatLotteryNumbers } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 interface PlayEntry {
@@ -55,7 +55,9 @@ export default function TodayPlayersWinnersScreen() {
         playerName: e.playerName || e.player_name,
         playerPhone: e.playerPhone || e.player_phone,
         gameType: e.gameType || e.game_type,
-        numbers: Array.isArray(e.numbers) ? e.numbers.join('-') : (e.numbers || ''),
+        numbers: Array.isArray(e.numbers)
+          ? formatLotteryNumbers(e.numbers, e.gameType || e.game_type, '-')
+          : (e.numbers || ''),
         betAmount: e.betAmount || e.bet_amount || 0,
         won: e.status === 'won',
         winAmount: e.winAmount || e.win_amount || 0,

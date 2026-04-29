@@ -12,7 +12,7 @@ import { EmptyState } from "@/components/common/empty-state";
 import {
   ArrowLeft, Calendar, Filter, Download, Trophy, Clock, XCircle, FileText
 } from "lucide-react";
-import { formatCurrency, GAME_LABELS } from "@/lib/utils";
+import { formatCurrency, GAME_LABELS, formatLotteryNumber } from "@/lib/utils";
 import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import toast from "react-hot-toast";
 
@@ -309,7 +309,7 @@ export default function HistoryScreen() {
                     <div className="flex gap-1 mb-1 justify-end">
                       {(ticket.numbers || []).map((n: any, i: number) => (
                         <span key={i} className="w-7 h-7 flex items-center justify-center bg-amber-100 text-amber-800 rounded-full text-xs font-bold">
-                          {n}
+                          {formatLotteryNumber(n, ticket.gameType)}
                         </span>
                       ))}
                     </div>

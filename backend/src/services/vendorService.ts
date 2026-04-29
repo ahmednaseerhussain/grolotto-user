@@ -30,6 +30,8 @@ export interface VendorPublic {
 interface DrawConfig {
   enabled: boolean;
   games: Record<string, { enabled: boolean; minAmount: number; maxAmount: number }>;
+  drawTimes?: string[];
+  schedules?: Array<{ drawTime: string; openTime: string; closeTime: string; isActive: boolean }>;
 }
 
 /**
@@ -148,8 +150,34 @@ async function getVendorDrawConfigs(vendorId: string): Promise<Record<string, Dr
     [vendorId]
   );
 
+  // Load schedules (best-effort — table may not exist on older DBs)
+  let scheduleRows: any[] = [];
+  try {
+    const schedRes = await query(
+      `SELECT draw_state, draw_time, open_time::text AS open_time, close_time::text AS close_time, is_active
+       FROM vendor_draw_schedules WHERE vendor_id = $1`,
+      [vendorId]
+    );
+    scheduleRows = schedRes.rows;
+  } catch { /* table missing — ignore */ }
+
+  // Build the dynamic state list:
+  //   1. States configured by admin in draw_configs
+  //   2. Plus any state already saved on this vendor (so legacy data is preserved)
+  //   3. Fallback to the original hardcoded set if nothing is found
+  const FALLBACK_STATES = ['NY', 'FL', 'GA', 'TX', 'PA', 'CT', 'TN', 'NJ'];
+  let adminStates: string[] = [];
+  try {
+    const r = await query(
+      `SELECT DISTINCT state FROM draw_configs WHERE is_active = TRUE ORDER BY state`
+    );
+    adminStates = r.rows.map((x: any) => x.state).filter(Boolean);
+  } catch { /* draw_configs table missing — ignore */ }
+  const vendorStates = drawConfigs.rows.map((r: any) => r.draw_state);
+  const merged = Array.from(new Set([...adminStates, ...vendorStates]));
+  const allStates = merged.length > 0 ? merged : FALLBACK_STATES;
+
   const draws: Record<string, DrawConfig> = {};
-  const allStates = ['NY', 'FL', 'GA', 'TX', 'PA', 'CT', 'TN', 'NJ'];
 
   // Initialize all states as disabled
   for (const state of allStates) {
@@ -162,6 +190,8 @@ async function getVendorDrawConfigs(vendorId: string): Promise<Record<string, Dr
         loto4: { enabled: false, minAmount: 1, maxAmount: 100 },
         loto5: { enabled: false, minAmount: 1, maxAmount: 100 },
       },
+      drawTimes: [],
+      schedules: [],
     };
   }
 
@@ -182,10 +212,44 @@ async function getVendorDrawConfigs(vendorId: string): Promise<Record<string, Dr
       };
     }
 
+    if (!draws[dc.draw_state]) {
+      // State exists on vendor but wasn't pre-initialized (edge case)
+      draws[dc.draw_state] = {
+        enabled: dc.enabled,
+        games: {
+          senp: { enabled: false, minAmount: 1, maxAmount: 100 },
+          maryaj: { enabled: false, minAmount: 1, maxAmount: 100 },
+          loto3: { enabled: false, minAmount: 1, maxAmount: 100 },
+          loto4: { enabled: false, minAmount: 1, maxAmount: 100 },
+          loto5: { enabled: false, minAmount: 1, maxAmount: 100 },
+        },
+        drawTimes: [],
+        schedules: [],
+      };
+    }
+
     draws[dc.draw_state] = {
       enabled: dc.enabled,
       games: { ...draws[dc.draw_state].games, ...games },
+      drawTimes: draws[dc.draw_state].drawTimes || [],
+      schedules: draws[dc.draw_state].schedules || [],
     };
+  }
+
+  // Attach schedules per state
+  for (const s of scheduleRows) {
+    if (!draws[s.draw_state]) continue;
+    if (!draws[s.draw_state].schedules) draws[s.draw_state].schedules = [];
+    if (!draws[s.draw_state].drawTimes) draws[s.draw_state].drawTimes = [];
+    draws[s.draw_state].schedules!.push({
+      drawTime: s.draw_time,
+      openTime: s.open_time,
+      closeTime: s.close_time,
+      isActive: s.is_active,
+    });
+    if (s.is_active && !draws[s.draw_state].drawTimes!.includes(s.draw_time)) {
+      draws[s.draw_state].drawTimes!.push(s.draw_time);
+    }
   }
 
   return draws;

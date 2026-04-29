@@ -14,17 +14,22 @@ import {
 } from "lucide-react";
 import { formatCurrency, GAME_LABELS } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { lotteryAPI } from "@/lib/api/lottery";
 
-const DRAWS = [
-  { code: "NY", name: "New York", flag: "🗽" },
-  { code: "FL", name: "Florida", flag: "🌴" },
-  { code: "GA", name: "Georgia", flag: "🍑" },
-  { code: "TX", name: "Texas", flag: "⛳" },
-  { code: "PA", name: "Pennsylvania", flag: "🔔" },
-  { code: "CT", name: "Connecticut", flag: "🏛️" },
-  { code: "TN", name: "Tennessee", flag: "🎵" },
-  { code: "NJ", name: "New Jersey", flag: "🏖️" },
-];
+// Display metadata (flag emoji + friendly name) for known states.
+// Unknown states fall back to the code itself plus a default flag.
+const STATE_META: Record<string, { name: string; flag: string }> = {
+  NY: { name: "New York", flag: "🗽" },
+  FL: { name: "Florida", flag: "🌴" },
+  GA: { name: "Georgia", flag: "🍑" },
+  TX: { name: "Texas", flag: "⛳" },
+  PA: { name: "Pennsylvania", flag: "🔔" },
+  CT: { name: "Connecticut", flag: "🏛️" },
+  TN: { name: "Tennessee", flag: "🎵" },
+  NJ: { name: "New Jersey", flag: "🏖️" },
+};
+
+const DEFAULT_DRAWS = Object.entries(STATE_META).map(([code, m]) => ({ code, ...m }));
 
 const GAMES = ["senp", "maryaj", "loto3", "loto4", "loto5"];
 
@@ -41,9 +46,36 @@ export default function DrawManagementScreen() {
   const [editingLimits, setEditingLimits] = useState<{ drawCode: string; gameKey: string } | null>(null);
   const [tempLimits, setTempLimits] = useState({ min: "", max: "" });
   const [saving, setSaving] = useState(false);
+  const [DRAWS, setDRAWS] = useState<Array<{ code: string; name: string; flag: string }>>(DEFAULT_DRAWS);
 
   const vendor = vendorProfile || vendors.find((v: any) => v.userId === user?.id);
   const draws: Record<string, any> = vendor?.draws || {};
+
+  // Fetch the dynamic state list from backend (admin-managed) on mount.
+  // Merge with any vendor-saved states so legacy data still appears.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const apiStates = await lotteryAPI.getStates();
+        const vendorCodes = Object.keys(draws);
+        const codes = Array.from(new Set([
+          ...apiStates.map((s) => s.code),
+          ...vendorCodes,
+        ]));
+        const apiByCode: Record<string, string> = {};
+        apiStates.forEach((s) => { apiByCode[s.code] = s.name; });
+        const merged = codes.map((code) => ({
+          code,
+          name: apiByCode[code] || STATE_META[code]?.name || code,
+          flag: STATE_META[code]?.flag || "🎲",
+        }));
+        if (!cancelled && merged.length > 0) setDRAWS(merged);
+      } catch { /* keep defaults */ }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vendor?.id]);
 
   const getActiveDrawsCount = () =>
     Object.values(draws).filter((d: any) => d?.enabled).length;

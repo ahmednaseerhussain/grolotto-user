@@ -36,4 +36,9 @@ export const lotteryAPI = {
     const response = await apiClient.get("/lottery/rounds", { params });
     return response.data.data || response.data;
   },
+
+  async getStates(): Promise<Array<{ code: string; name: string }>> {
+    const response = await apiClient.get("/lottery/states");
+    return response.data.data || response.data;
+  },
 };

@@ -54,10 +54,14 @@ const MARYAJ_PAIR_COLORS = [
   "bg-red-500",
 ];
 
-function NumberBall({ number, color = "bg-amber-500", size = "w-11 h-11" }: { number: number | string; color?: string; size?: string }) {
+function NumberBall({ number, color = "bg-amber-500", size = "w-11 h-11", gameType }: { number: number | string; color?: string; size?: string; gameType?: string }) {
+  // Display: pad to 2 digits for senp/maryaj/unknown, keep single for loto3/4/5
+  const isSingleDigitGame = gameType === "loto3" || gameType === "loto4" || gameType === "loto5";
+  const s = String(number ?? "");
+  const display = isSingleDigitGame ? s : (s.length >= 2 ? s : s.padStart(2, "0"));
   return (
     <div className={`${size} rounded-full ${color} text-white flex items-center justify-center font-bold shadow-md text-base`}>
-      {number}
+      {display}
     </div>
   );
 }
@@ -297,13 +301,13 @@ export default function ResultsScreen() {
                                     {singleDigit !== null && (
                                       <div className="flex flex-col items-center gap-1">
                                         <span className={`text-[10px] font-semibold text-gray-500`}>&nbsp;</span>
-                                        <NumberBall number={singleDigit} color="bg-gray-500" size="w-10 h-10" />
+                                        <NumberBall number={singleDigit} color="bg-gray-500" size="w-10 h-10" gameType="senp" />
                                       </div>
                                     )}
                                     {senpNums.map((n: number, i: number) => (
                                       <div key={i} className="flex flex-col items-center gap-1">
                                         <span className={`text-[10px] font-semibold ${gc.text}`}>{labels[i] || ""}</span>
-                                        <NumberBall number={n} color={gc.ball} size="w-10 h-10" />
+                                        <NumberBall number={n} color={gc.ball} size="w-10 h-10" gameType="senp" />
                                       </div>
                                     ))}
                                   </div>
@@ -345,9 +349,9 @@ export default function ResultsScreen() {
                                       const pairColor = MARYAJ_PAIR_COLORS[i % MARYAJ_PAIR_COLORS.length];
                                       return (
                                         <div key={i} className="flex items-center gap-1.5">
-                                          <NumberBall number={a} color={pairColor} size="w-9 h-9" />
+                                          <NumberBall number={a} color={pairColor} size="w-9 h-9" gameType="maryaj" />
                                           <span className={`text-sm font-bold ${gc.text}`}>×</span>
-                                          <NumberBall number={b} color={pairColor} size="w-9 h-9" />
+                                          <NumberBall number={b} color={pairColor} size="w-9 h-9" gameType="maryaj" />
                                         </div>
                                       );
                                     })}
@@ -391,7 +395,7 @@ export default function ResultsScreen() {
                                       </span>
                                       <div className="flex items-center gap-2">
                                         {numsArr.map((n: number, i: number) => (
-                                          <NumberBall key={i} number={n} color={gc.ball} size="w-9 h-9" />
+                                          <NumberBall key={i} number={n} color={gc.ball} size="w-9 h-9" gameType={gameType} />
                                         ))}
                                       </div>
                                     </div>

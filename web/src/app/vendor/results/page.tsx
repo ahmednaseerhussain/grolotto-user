@@ -14,7 +14,7 @@ import {
   ArrowLeft, Loader2, Clock, CheckCircle, DollarSign,
   Ticket, Trophy, Percent, ChevronRight, X
 } from "lucide-react";
-import { formatCurrency, GAME_LABELS, DRAW_STATES } from "@/lib/utils";
+import { formatCurrency, GAME_LABELS, DRAW_STATES, formatLotteryNumber } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 interface Round {
@@ -156,7 +156,7 @@ export default function VendorResultsScreen() {
                     <div className="flex items-center gap-2 mt-2 justify-center">
                       {numsArr.map((n: number, i: number) => (
                         <div key={i} className="w-10 h-10 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold shadow">
-                          {n}
+                          {formatLotteryNumber(n, gameType)}
                         </div>
                       ))}
                     </div>
@@ -285,15 +285,19 @@ export default function VendorResultsScreen() {
                     </p>
                     {(round as any).winningNumbers && (round.status === "completed") && (() => {
                       const wn = (round as any).winningNumbers;
-                      const allNums = Object.values(wn).flat() as number[];
-                      return allNums.length > 0 ? (
+                      // Build a flat list of [gameType, value] pairs preserving game context for padding
+                      const flatPairs: Array<[string, number]> = [];
+                      Object.entries(wn).forEach(([gt, arr]) => {
+                        if (Array.isArray(arr)) arr.forEach((n: number) => flatPairs.push([gt, n]));
+                      });
+                      return flatPairs.length > 0 ? (
                         <div className="flex gap-1.5 mt-2">
-                          {allNums.slice(0, 6).map((n: number, i: number) => (
+                          {flatPairs.slice(0, 6).map(([gt, n], i) => (
                             <div key={i} className="w-7 h-7 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">
-                              {n}
+                              {formatLotteryNumber(n, gt)}
                             </div>
                           ))}
-                          {allNums.length > 6 && <span className="text-xs text-gray-400 self-center">+{allNums.length - 6}</span>}
+                          {flatPairs.length > 6 && <span className="text-xs text-gray-400 self-center">+{flatPairs.length - 6}</span>}
                         </div>
                       ) : null;
                     })()}

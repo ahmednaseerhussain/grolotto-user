@@ -18,7 +18,7 @@ import {
   Plus, Sparkles, User, SlidersHorizontal, ArrowDownCircle, CreditCard,
   Gift
 } from "lucide-react";
-import { formatCurrency, GAME_LABELS, DRAW_STATES } from "@/lib/utils";
+import { formatCurrency, GAME_LABELS, DRAW_STATES, formatLotteryNumber } from "@/lib/utils";
 
 const GAME_TYPE_COLORS: Record<string, string> = {
   senp: "bg-red-500",
@@ -294,8 +294,8 @@ export default function PlayerDashboard() {
       {/* ── Section 3: Wallet Banner (currency-specific color) ── */}
       <div
         className={`rounded-2xl px-5 py-4 cursor-pointer shadow-sm hover:shadow-md transition-shadow ${currency === "HTG"
-          ? "bg-gradient-to-r from-red-700 to-red-600"
-          : "bg-gradient-to-r from-green-700 to-green-600"
+          ? "bg-linear-to-r from-red-700 to-red-600"
+          : "bg-linear-to-r from-green-700 to-green-600"
           }`}
         onClick={() => router.push("/player/payment")}
       >
@@ -332,7 +332,7 @@ export default function PlayerDashboard() {
       {/* ── Section 4: Quick Actions 2x2 Grid ── */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { icon: ArrowDownCircle, label: t("Withdraw") || "Withdraw", subtitle: t("CashOut") || "Cash Out", gradient: "from-red-500 to-red-600", href: "/player/withdraw" },
+          { icon: ArrowDownCircle, label: t("withdraw") || "Withdraw", subtitle: t("cashOut") || "Cash Out", gradient: "from-red-500 to-red-600", href: "/player/withdraw" },
           { icon: Sparkles, label: t("tchala") || "Tchala", subtitle: t("dreamNumbers") || "Dream Numbers", gradient: "from-amber-500 to-orange-500", href: "/player/tchala" },
           { icon: Trophy, label: t("results") || "Results", subtitle: "" + (t("offers") || "Offers"), gradient: "from-emerald-500 to-green-600", href: "/player/results" },
           { icon: Clock, label: t("history") || "History", subtitle: t("pastPlays") || "Past Plays", gradient: "from-violet-500 to-purple-600", href: "/player/history" },
@@ -340,9 +340,9 @@ export default function PlayerDashboard() {
           <button
             key={action.href}
             onClick={() => router.push(action.href)}
-            className={`relative overflow-hidden flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-br ${action.gradient} text-white hover:opacity-90 transition-all shadow-sm`}
+            className={`relative overflow-hidden flex items-center gap-3 p-4 rounded-2xl bg-linear-to-br ${action.gradient} text-white hover:opacity-90 transition-all shadow-sm`}
           >
-            <action.icon className="h-8 w-8 flex-shrink-0" />
+            <action.icon className="h-8 w-8 shrink-0" />
             <div className="text-left">
               <span className="text-base font-bold block">{action.label}</span>
               <span className="text-xs opacity-80">{action.subtitle}</span>
@@ -352,9 +352,9 @@ export default function PlayerDashboard() {
       </div>
 
       {/* ── Buy Gift Card from Debit Card ── */}
-      {/* <button
+      <button
         onClick={() => window.open("https://grolotto.com/buy-gift-card", "_blank", "noopener,noreferrer")}
-        className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-500 text-white hover:opacity-90 transition-all shadow-md"
+        className="w-full flex items-center gap-4 p-4 rounded-2xl bg-linear-to-r from-indigo-600 to-blue-500 text-white hover:opacity-90 transition-all shadow-md"
       >
         <div className="bg-white/20 p-3 rounded-xl">
           <CreditCard className="h-6 w-6" />
@@ -364,8 +364,8 @@ export default function PlayerDashboard() {
           <span className="text-xs opacity-80">{t("payWithDebitCard") || "Pay with your debit card"}</span>
         </div>
         <ChevronRight className="h-5 w-5 opacity-70" />
-      </button> */}
-      <div className="w-full p-4 rounded-xl border-2 border-gray-200 bg-white">
+      </button>
+      {/* <div className="w-full p-4 rounded-xl border-2 border-gray-200 bg-white">
         <div className="flex items-center gap-4">
           <div className="bg-amber-500 w-12 h-12 rounded-full flex items-center justify-center">
             <Gift className="h-6 w-6 text-white" />
@@ -374,7 +374,6 @@ export default function PlayerDashboard() {
             <p className="font-semibold text-gray-900">{t("giftCard") || "Gift Card"}</p>
             <p className="text-sm text-gray-500">                Buy Gift Card From Your Debit Card
             </p>
-            {/* <p className="text-sm text-gray-500">{t("buyOrRedeemGiftCards") || "Buy or redeem gift cards"}</p> */}
           </div>
         </div>
         <div className="flex gap-2 mt-3">
@@ -391,7 +390,7 @@ export default function PlayerDashboard() {
             🎟️ {t("redeemCode") || "Redeem Code"}
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* ── Section 5: Latest Results ── */}
       <div>
@@ -411,7 +410,7 @@ export default function PlayerDashboard() {
             {todayResults.map((round: any) => (
               <Card
                 key={round.id}
-                className="min-w-[180px] max-w-[200px] hover:shadow-md transition-shadow cursor-pointer flex-shrink-0 border border-gray-200"
+                className="min-w-45 max-w-50 hover:shadow-md transition-shadow cursor-pointer shrink-0 border border-gray-200"
                 onClick={() => router.push("/player/results")}
               >
                 <CardContent className="p-3">
@@ -421,14 +420,14 @@ export default function PlayerDashboard() {
                   <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mb-2 ${DRAW_TIME_COLORS[round.drawTime] || "text-gray-600 bg-gray-50"}`}>
                     {DRAW_TIME_LABELS[round.drawTime] || round.drawTime}
                   </span>
-                  {round.winningNumbers && Object.entries(round.winningNumbers).slice(0, 1).map(([, nums]: [string, any]) => (
+                  {round.winningNumbers && Object.entries(round.winningNumbers).slice(0, 1).map(([gameType, nums]: [string, any]) => (
                     <div key="nums" className="flex gap-1.5 my-1">
                       {(Array.isArray(nums) ? nums : []).map((n: number, i: number) => (
                         <span
                           key={i}
                           className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-400 text-white text-sm font-extrabold shadow-sm"
                         >
-                          {n}
+                          {formatLotteryNumber(n, gameType)}
                         </span>
                       ))}
                     </div>
@@ -507,7 +506,7 @@ export default function PlayerDashboard() {
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3 mb-3">
                       {/* Vendor avatar */}
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-sm">
+                      <div className="w-12 h-12 rounded-xl bg-linear-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-sm">
                         {(vendor.businessName || vendor.firstName || "V").charAt(0).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -538,7 +537,7 @@ export default function PlayerDashboard() {
                     )}
                     <button
                       onClick={(e) => { e.stopPropagation(); router.push(`/player/play?vendorId=${vendor.id}`); }}
-                      className="w-full bg-gradient-to-r from-green-600 to-green-500 text-white font-bold py-2.5 rounded-xl text-sm hover:from-green-700 hover:to-green-600 transition-all shadow-sm"
+                      className="w-full bg-linear-to-r from-green-600 to-green-500 text-white font-bold py-2.5 rounded-xl text-sm hover:from-green-700 hover:to-green-600 transition-all shadow-sm"
                     >
                       {t("playNow") || "PLAY NOW"}
                     </button>

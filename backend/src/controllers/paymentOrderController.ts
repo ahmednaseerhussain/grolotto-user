@@ -12,7 +12,7 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
       return res.status(400).json({ error: 'amount, currency and paymentMethod are required' });
     }
 
-    const validMethods = ['zelle', 'cashapp', 'stripe'];
+    const validMethods = ['zelle', 'cashapp', 'stripe', 'paypal', 'bank_transfer'];
     if (!validMethods.includes(paymentMethod)) {
       return res.status(400).json({ error: `Invalid payment method. Use: ${validMethods.join(', ')}` });
     }

@@ -110,16 +110,16 @@ export default function ForgotPasswordPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <KeyRound className="h-5 w-5 text-amber-600" />
-                            {t("resetPassword") || "Reset Password"}
+                            {t("Reset Password") || "Reset Password"}
                         </CardTitle>
                         <CardDescription>
-                            {t("enterOtpAndNewPassword") || "Enter the 6-digit code sent to your email and your new password."}
+                            {t("Enter the 6-digit code sent to your email and your new password.") || "Enter the 6-digit code sent to your email and your new password."}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleResetPassword} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">{t("resetCode") || "Reset Code"}</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">{t("Reset Code") || "Reset Code"}</label>
                                 <Input
                                     type="text"
                                     inputMode="numeric"
@@ -132,12 +132,12 @@ export default function ForgotPasswordPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">{t("newPassword") || "New Password"}</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">{t("New Password") || "New Password"}</label>
                                 <Input
                                     type="password"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
-                                    placeholder={t("enterNewPassword") || "Enter new password"}
+                                    placeholder={t("Enter new password ") || "Enter new password"}
                                     required
                                     minLength={6}
                                 />
@@ -148,20 +148,20 @@ export default function ForgotPasswordPage() {
                                     type="password"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder={t("confirmNewPassword") || "Confirm new password"}
+                                    placeholder={t("Confirm new password") || "Confirm new password"}
                                     required
                                     minLength={6}
                                 />
                             </div>
                             <Button type="submit" loading={isLoading} className="w-full" size="lg">
-                                {t("resetPassword") || "Reset Password"}
+                                {t("Reset Password") || "Reset Password"}
                             </Button>
                             <button
                                 type="button"
                                 onClick={() => setStep("email")}
                                 className="text-sm text-blue-600 hover:text-blue-700 w-full text-center"
                             >
-                                {t("resendCode") || "Resend code"}
+                                {t("Resend Code") || "Resend code"}
                             </button>
                         </form>
                     </CardContent>

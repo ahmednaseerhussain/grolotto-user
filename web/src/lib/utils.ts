@@ -82,3 +82,33 @@ export const GAME_LABELS: Record<string, string> = {
   loto4: "Lotto 4",
   loto5: "Lotto 5",
 };
+
+/**
+ * Format a single lottery ball/number for display.
+ * - senp / maryaj / unknown 2-digit games → pad to 2 digits ("5" → "05", "10" → "10")
+ * - loto3 / loto4 / loto5 → each entry is a single digit (0-9), shown as-is
+ */
+export function formatLotteryNumber(n: number | string | null | undefined, gameType?: string): string {
+  if (n === null || n === undefined) return "";
+  const s = String(n).trim();
+  if (!s) return "";
+  if (gameType === "loto3" || gameType === "loto4" || gameType === "loto5") return s;
+  return s.length >= 2 ? s : s.padStart(2, "0");
+}
+
+/**
+ * Format an array of lottery numbers as a single display string.
+ * - maryaj → "05-12"
+ * - loto3/4/5 → "1 2 3" (or join with provided sep)
+ * - senp / default → "05"
+ */
+export function formatLotteryNumbers(
+  arr: Array<number | string> | null | undefined,
+  gameType?: string,
+  sep = " "
+): string {
+  if (!Array.isArray(arr)) return "";
+  const parts = arr.map((n) => formatLotteryNumber(n, gameType));
+  if (gameType === "maryaj") return parts.join("-");
+  return parts.join(sep);
+}

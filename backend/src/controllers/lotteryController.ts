@@ -1,5 +1,34 @@
 import { Request, Response, NextFunction } from 'express';
 import * as lotteryService from '../services/lotteryService';
+import { query } from '../database/pool';
+
+export async function getDrawStates(_req: Request, res: Response, next: NextFunction) {
+  try {
+    const FALLBACK = [
+      { code: 'NY', name: 'New York' },
+      { code: 'FL', name: 'Florida' },
+      { code: 'GA', name: 'Georgia' },
+      { code: 'TX', name: 'Texas' },
+      { code: 'PA', name: 'Pennsylvania' },
+      { code: 'CT', name: 'Connecticut' },
+      { code: 'TN', name: 'Tennessee' },
+      { code: 'NJ', name: 'New Jersey' },
+    ];
+    let rows: any[] = [];
+    try {
+      const r = await query(
+        `SELECT DISTINCT state AS code, MIN(name) AS name
+         FROM draw_configs WHERE is_active = TRUE
+         GROUP BY state ORDER BY state`
+      );
+      rows = r.rows;
+    } catch { /* table missing */ }
+    const states = rows.length > 0 ? rows : FALLBACK;
+    res.json({ data: states });
+  } catch (error) {
+    next(error);
+  }
+}
 
 export async function placeBet(req: Request, res: Response, next: NextFunction) {
   try {
