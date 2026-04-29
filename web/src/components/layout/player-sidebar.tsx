@@ -111,7 +111,10 @@ export function PlayerBottomNav() {
   const isBetActive = pathname === "/player/play" || pathname?.startsWith("/player/play/");
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] z-40">
+    <nav
+      className="lg:hidden fixed left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] z-50"
+      style={{ bottom: 0, paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
       <div className="flex items-end justify-between px-4 pb-2 pt-1 max-w-md mx-auto">
         {leftItems.map(renderItem)}
         {/* Center Bet Button */}

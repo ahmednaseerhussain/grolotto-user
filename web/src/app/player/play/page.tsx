@@ -508,8 +508,14 @@ export default function PlayScreen() {
         <div className="flex gap-2">
           {(["morning", "midday", "evening"] as const).map((time) => {
             const isAvailable = availableDrawTimes.length === 0 || availableDrawTimes.includes(time);
-            const isSelected = drawTime === time;
             const range = getDrawTimeRange(time);
+            // Past-cutoff check: if current local time has passed the close time,
+            // mark this draw as closed for today.
+            const now = new Date();
+            const currentHHMM = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+            const isClosed = !!(range?.close && currentHHMM > range.close.slice(0, 5));
+            const isSelectable = isAvailable && !isClosed;
+            const isSelected = drawTime === time && isSelectable;
             const colorActive =
               time === "morning" ? "bg-green-600 text-white border-green-600"
                 : time === "midday" ? "bg-amber-500 text-white border-amber-500"
@@ -524,16 +530,25 @@ export default function PlayScreen() {
             return (
               <button
                 key={time}
-                onClick={() => isAvailable && setDrawTime(time)}
-                disabled={!isAvailable}
+                onClick={() => isSelectable && setDrawTime(time)}
+                disabled={!isSelectable}
                 className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 ${!isAvailable ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed line-through"
+                  : isClosed ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
                     : isSelected ? colorActive
                       : `bg-white text-gray-700 border-gray-200 ${colorHover}`
                   }`}
-                title={!isAvailable ? "Not scheduled by this vendor" : range ? `${formatTime(range.open)} – ${formatTime(range.close)}` : undefined}
+                title={
+                  !isAvailable ? "Not scheduled by this vendor"
+                    : isClosed ? `Not available — closed at ${formatTime(range?.close)}`
+                      : range ? `${formatTime(range.open)} – ${formatTime(range.close)}` : undefined
+                }
               >
                 <span>{label}</span>
-                {range && (
+                {isClosed ? (
+                  <span className={`text-[11px] font-normal text-red-500`}>
+                    {t("notAvailable") || "Not available"}
+                  </span>
+                ) : range && (
                   <span className={`text-[11px] font-normal ${isSelected ? "opacity-90" : "text-gray-500"}`}>
                     {formatTime(range.open)} – {formatTime(range.close)}
                   </span>

@@ -10,12 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  ArrowLeft, Wallet, DollarSign, Smartphone, HelpCircle, Loader2, Mail, AtSign
+  ArrowLeft, Wallet, DollarSign, Smartphone, HelpCircle, Loader2, Mail, AtSign, Banknote
 } from "lucide-react";
 import { formatCurrency, getVendorBalanceClasses } from "@/lib/utils";
 import toast from "react-hot-toast";
 
-type PayoutMethod = "moncash" | "bank_transfer" | "zelle" | "cashapp" | "paypal";
+type PayoutMethod = "moncash" | "bank_transfer" | "zelle" | "cashapp" | "paypal" | "cash";
 
 export default function PayoutsScreen() {
   const router = useRouter();
@@ -24,7 +24,9 @@ export default function PayoutsScreen() {
   const currency = useAppStore((s) => s.currency);
   const setCurrency = useAppStore((s) => s.setCurrency);
   const vendorStats = useAppStore((s) => s.vendorStats);
+  const setVendorStats = useAppStore((s) => s.setVendorStats);
   const payouts = useAppStore((s) => s.payouts);
+  const setPayouts = useAppStore((s) => s.setPayouts);
 
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [amount, setAmount] = useState("");
@@ -44,10 +46,16 @@ export default function PayoutsScreen() {
   const vendorProfile = useAppStore((s) => s.vendorProfile);
   const withdrawalCurrency = (vendorProfile?.operatingCurrency || currency) as "HTG" | "USD";
 
-  // Method options by currency: HTG → MonCash only; USD → Zelle / Cash App / PayPal / Bank
+  // Method options by currency
+  // HTG → MonCash, Cash, Bank Transfer
+  // USD → Zelle / Cash App / PayPal / Bank
   const methodOptions: { value: PayoutMethod; label: string; icon: any; desc: string }[] =
     withdrawalCurrency === "HTG"
-      ? [{ value: "moncash", label: "MonCash", icon: Smartphone, desc: "Fee: 2% | Min: 100 HTG" }]
+      ? [
+        { value: "moncash", label: "MonCash", icon: Smartphone, desc: "Fee: 2% | Min: 100 HTG" },
+        { value: "cash", label: "Cash", icon: Banknote, desc: "Pick up in person | Min: 100 HTG" },
+        { value: "bank_transfer", label: "Bank Transfer", icon: Wallet, desc: "Fee: 1% | Min: 100 HTG" },
+      ]
       : [
         { value: "zelle", label: "Zelle", icon: Mail, desc: "Fee: 0% | Min: $10" },
         { value: "cashapp", label: "Cash App", icon: AtSign, desc: "Fee: 0% | Min: $10" },
@@ -94,6 +102,8 @@ export default function PayoutsScreen() {
         toast.error("Please enter your MonCash phone number");
         return;
       }
+    } else if (method === "cash") {
+      // No additional details required for in-person cash pickup
     } else if (method === "zelle") {
       if (!zelleEmail.trim() && !zellePhone.trim()) {
         toast.error("Please enter your Zelle email or phone");
@@ -113,7 +123,7 @@ export default function PayoutsScreen() {
 
     setProcessing(true);
     try {
-      await vendorAPI.requestPayout({
+      const newPayout = await vendorAPI.requestPayout({
         amount: amt,
         method,
         currency: withdrawalCurrency,
@@ -128,6 +138,24 @@ export default function PayoutsScreen() {
         paypalEmail: method === "paypal" ? paypalEmail : undefined,
       });
       toast.success(t("withdrawalSubmitted") || "Withdrawal request submitted!");
+      // Optimistically prepend to history list
+      if (newPayout) {
+        setPayouts([newPayout as any, ...payouts]);
+      }
+      // Refresh balance from server (backend deducts available_balance synchronously)
+      try {
+        const fresh = await vendorAPI.getMyStats();
+        if (fresh) setVendorStats(fresh);
+      } catch {
+        // Fallback: optimistic local decrement so UI reflects deduction
+        if (vendorStats) {
+          setVendorStats({
+            ...vendorStats,
+            availableBalance: Math.max(0, (vendorStats.availableBalance || vendorStats.balance || 0) - amt),
+            balance: Math.max(0, (vendorStats.balance || 0) - amt),
+          } as any);
+        }
+      }
       setShowRequestForm(false);
       setAmount("");
     } catch (err: any) {
@@ -256,6 +284,14 @@ export default function PayoutsScreen() {
                 <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <label className="text-xs text-gray-600">MonCash Phone Number</label>
                   <Input value={moncashPhone} onChange={(e) => setMoncashPhone(e.target.value)} placeholder="e.g. +509 3456-7890" className="mt-1" />
+                </div>
+              )}
+
+              {method === "cash" && (
+                <div className="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                  <p className="text-xs text-amber-800">
+                    Cash payouts are picked up in person. The admin will contact you once your request is approved.
+                  </p>
                 </div>
               )}
 

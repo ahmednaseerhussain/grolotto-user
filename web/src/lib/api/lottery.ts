@@ -37,7 +37,19 @@ export const lotteryAPI = {
     return response.data.data || response.data;
   },
 
-  async getStates(): Promise<Array<{ code: string; name: string }>> {
+  async getStates(): Promise<
+    Array<{
+      code: string;
+      name: string;
+      times?: Array<{
+        id: string;
+        name: string;
+        drawTime: string;
+        cutoffTime: string;
+        isActive: boolean;
+      }>;
+    }>
+  > {
     const response = await apiClient.get("/lottery/states");
     return response.data.data || response.data;
   },

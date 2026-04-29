@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
-  ArrowLeft, ChevronDown, ChevronUp, Check, X, Save, BarChart3, Loader2, Pencil
+  ArrowLeft, ChevronDown, ChevronUp, Check, X, Save, BarChart3, Loader2, Pencil, Clock
 } from "lucide-react";
 import { formatCurrency, GAME_LABELS } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -29,7 +29,7 @@ const STATE_META: Record<string, { name: string; flag: string }> = {
   NJ: { name: "New Jersey", flag: "🏖️" },
 };
 
-const DEFAULT_DRAWS = Object.entries(STATE_META).map(([code, m]) => ({ code, ...m }));
+const DEFAULT_DRAWS: Array<{ code: string; name: string; flag: string; times?: any[] }> = [];
 
 const GAMES = ["senp", "maryaj", "loto3", "loto4", "loto5"];
 
@@ -46,7 +46,7 @@ export default function DrawManagementScreen() {
   const [editingLimits, setEditingLimits] = useState<{ drawCode: string; gameKey: string } | null>(null);
   const [tempLimits, setTempLimits] = useState({ min: "", max: "" });
   const [saving, setSaving] = useState(false);
-  const [DRAWS, setDRAWS] = useState<Array<{ code: string; name: string; flag: string }>>(DEFAULT_DRAWS);
+  const [DRAWS, setDRAWS] = useState<Array<{ code: string; name: string; flag: string; times?: Array<{ id: string; name: string; drawTime: string; cutoffTime: string; isActive: boolean }> }>>(DEFAULT_DRAWS);
 
   const vendor = vendorProfile || vendors.find((v: any) => v.userId === user?.id);
   const draws: Record<string, any> = vendor?.draws || {};
@@ -63,14 +63,15 @@ export default function DrawManagementScreen() {
           ...apiStates.map((s) => s.code),
           ...vendorCodes,
         ]));
-        const apiByCode: Record<string, string> = {};
-        apiStates.forEach((s) => { apiByCode[s.code] = s.name; });
+        const apiByCode: Record<string, { name: string; times?: any[] }> = {};
+        apiStates.forEach((s) => { apiByCode[s.code] = { name: s.name, times: s.times }; });
         const merged = codes.map((code) => ({
           code,
-          name: apiByCode[code] || STATE_META[code]?.name || code,
+          name: apiByCode[code]?.name || STATE_META[code]?.name || code,
           flag: STATE_META[code]?.flag || "🎲",
+          times: apiByCode[code]?.times || [],
         }));
-        if (!cancelled && merged.length > 0) setDRAWS(merged);
+        if (!cancelled) setDRAWS(merged);
       } catch { /* keep defaults */ }
     })();
     return () => { cancelled = true; };
@@ -213,6 +214,13 @@ export default function DrawManagementScreen() {
 
       {/* Draw Accordions */}
       <div className="space-y-3">
+        {DRAWS.length === 0 && (
+          <Card>
+            <CardContent className="p-6 text-center text-sm text-gray-500">
+               "No state lotteries are configured yet. Please contact the administrator."
+            </CardContent>
+          </Card>
+        )}
         {DRAWS.map((draw) => {
           const drawData = draws[draw.code] || {};
           const isEnabled = drawData.enabled || false;
@@ -252,6 +260,30 @@ export default function DrawManagementScreen() {
                 {/* Expanded Games */}
                 {isExpanded && isEnabled && (
                   <div className="border-t px-4 pb-4 pt-3 space-y-3">
+                    {/* Admin-managed draw times (vendor-editable closeTime) */}
+                    {draw.times && draw.times.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">{t("drawTimes") || "Draw Times"}</p>
+                        {draw.times.map((slot) => (
+                          <DrawTimeSlot
+                            key={slot.id}
+                            stateCode={draw.code}
+                            slot={slot}
+                            onSaved={async () => {
+                              try {
+                                const apiStates = await lotteryAPI.getStates();
+                                const apiByCode: Record<string, { name: string; times?: any[] }> = {};
+                                apiStates.forEach((s) => { apiByCode[s.code] = { name: s.name, times: s.times }; });
+                                setDRAWS((prev) => prev.map((d) => ({
+                                  ...d,
+                                  times: apiByCode[d.code]?.times || d.times,
+                                })));
+                              } catch { /* ignore */ }
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
                     {GAMES.map((game) => {
                       const gameData = drawData.games?.[game] || {};
                       const gameEnabled = gameData.enabled || false;
@@ -324,6 +356,78 @@ export default function DrawManagementScreen() {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+
+function DrawTimeSlot({
+  stateCode,
+  slot,
+  onSaved,
+}: {
+  stateCode: string;
+  slot: { id: string; name: string; drawTime: string; cutoffTime: string; isActive: boolean };
+  onSaved: () => void | Promise<void>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [closeTime, setCloseTime] = useState(slot.cutoffTime?.slice(0, 5) || "");
+  const [saving, setSaving] = useState(false);
+
+  const drawTime = slot.drawTime?.slice(0, 5) || "";
+
+  const save = async () => {
+    if (!/^\d{2}:\d{2}$/.test(closeTime)) {
+      toast.error("Close time must be HH:MM");
+      return;
+    }
+    setSaving(true);
+    try {
+      await vendorAPI.upsertDrawSchedule({
+        drawState: stateCode,
+        drawTime,
+        openTime: "00:00",
+        closeTime,
+      });
+      toast.success("Cutoff updated");
+      setEditing(false);
+      await onSaved();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to update cutoff");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between rounded border border-gray-200 bg-gray-50 px-3 py-2">
+      <div className="flex items-center gap-2 text-sm">
+        <Clock className="h-4 w-4 text-gray-500" />
+        <span className="font-medium">{slot.name}</span>
+        <span className="text-gray-500">{drawTime}</span>
+      </div>
+      {editing ? (
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">Close:</span>
+          <Input
+            type="time"
+            value={closeTime}
+            onChange={(e) => setCloseTime(e.target.value)}
+            className="h-7 w-28 text-xs"
+          />
+          <Button size="sm" className="h-7 px-2" onClick={save} loading={saving}>
+            <Check className="h-3 w-3" />
+          </Button>
+          <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setEditing(false)}>
+            <X className="h-3 w-3" />
+          </Button>
+        </div>
+      ) : (
+        <button onClick={() => setEditing(true)} className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+          Cutoff: {slot.cutoffTime?.slice(0, 5) || "--:--"}
+          <Pencil className="h-3 w-3" />
+        </button>
+      )}
     </div>
   );
 }
