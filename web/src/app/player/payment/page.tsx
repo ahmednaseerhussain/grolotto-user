@@ -168,9 +168,9 @@ export default function PaymentScreen() {
         <div className="bg-green-500 p-6 rounded-full mb-6">
           <CheckCircle className="h-16 w-16 text-white" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-3">Success!</h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-3">{t("successTitle") || "Success!"}</h2>
         <p className="text-lg text-gray-600">
-          {formatCurrency(parseFloat(amount), currency)} has been added to your wallet
+          {formatCurrency(parseFloat(amount), currency)} {t("addedToWallet") || "has been added to your wallet"}
         </p>
       </div>
     );
@@ -183,18 +183,18 @@ export default function PaymentScreen() {
         <Button variant="ghost" size="sm" onClick={() => router.back()}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-xl font-bold text-gray-900">Make Payment</h1>
+        <h1 className="text-xl font-bold text-gray-900">{t("makePayment") || "Make Payment"}</h1>
       </div>
 
       {/* Current Balance */}
       <div className="bg-linear-to-r from-blue-600 to-purple-600 rounded-2xl p-6">
-        <p className="text-blue-100 text-sm mb-2">Current Balance</p>
+        <p className="text-blue-100 text-sm mb-2">{t("currentBalance") || "Current Balance"}</p>
         <p className="text-white text-4xl font-bold">{formatCurrency(balance, currency)}</p>
       </div>
 
       {/* Amount */}
       <div>
-        <label className="text-sm font-semibold text-gray-700 block mb-3">Enter Amount</label>
+        <label className="text-sm font-semibold text-gray-700 block mb-3">{t("enterAmount") || "Enter Amount"}</label>
         <div className="flex items-center gap-2 bg-gray-50 rounded-xl border-2 border-gray-200 px-4 py-4">
           <span className="text-2xl text-gray-400">{currency === "HTG" ? "G" : "$"}</span>
           <input
@@ -225,7 +225,7 @@ export default function PaymentScreen() {
 
       {/* Payment Method */}
       <div>
-        <label className="text-sm font-semibold text-gray-700 block mb-3">Select Payment Method</label>
+        <label className="text-sm font-semibold text-gray-700 block mb-3">{t("selectPaymentMethod") || "Select Payment Method"}</label>
         <div className="space-y-3">
           {/* MonCash — HTG only */}
           {currency === "HTG" && (
@@ -241,7 +241,7 @@ export default function PaymentScreen() {
               </div>
               <div className="text-left flex-1">
                 <p className="font-semibold text-gray-900">MonCash</p>
-                <p className="text-sm text-gray-500">Digicel mobile money</p>
+                <p className="text-sm text-gray-500">{t("digicelMobileMoneyDesc") || "Digicel mobile money"}</p>
               </div>
               <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "moncash" ? "border-red-500" : "border-gray-300"
                 }`}>
@@ -266,7 +266,7 @@ export default function PaymentScreen() {
                 </div>
                 <div className="text-left flex-1">
                   <p className="font-semibold text-gray-900">Zelle</p>
-                  <p className="text-sm text-gray-500">Send payment &amp; email screenshot</p>
+                  <p className="text-sm text-gray-500">{t("sendPaymentScreenshot") || "Send payment & email screenshot"}</p>
                 </div>
                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "zelle" ? "border-purple-500" : "border-gray-300"}`}>
                   {selectedMethod === "zelle" && <div className="w-3 h-3 rounded-full bg-purple-500" />}
@@ -286,7 +286,7 @@ export default function PaymentScreen() {
                 </div>
                 <div className="text-left flex-1">
                   <p className="font-semibold text-gray-900">CashApp</p>
-                  <p className="text-sm text-gray-500">Send payment &amp; email screenshot</p>
+                  <p className="text-sm text-gray-500">{t("sendPaymentScreenshot") || "Send payment & email screenshot"}</p>
                 </div>
                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "cashapp" ? "border-green-500" : "border-gray-300"}`}>
                   {selectedMethod === "cashapp" && <div className="w-3 h-3 rounded-full bg-green-500" />}
@@ -306,7 +306,7 @@ export default function PaymentScreen() {
                 </div>
                 <div className="text-left flex-1">
                   <p className="font-semibold text-gray-900">{t("Debit Card") || "Debit Card"}</p>
-                  <p className="text-sm text-gray-500">Pay instantly</p>
+                  <p className="text-sm text-gray-500">{t("payInstantly") || "Pay instantly"}</p>
                 </div>
                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "stripe" ? "border-blue-500" : "border-gray-300"}`}>
                   {selectedMethod === "stripe" && <div className="w-3 h-3 rounded-full bg-blue-500" />}
@@ -326,7 +326,7 @@ export default function PaymentScreen() {
                 </div>
                 <div className="text-left flex-1">
                   <p className="font-semibold text-gray-900">{t("paypal") || "PayPal"}</p>
-                  <p className="text-sm text-gray-500">Send payment &amp; email screenshot</p>
+                  <p className="text-sm text-gray-500">{t("sendPaymentScreenshot") || "Send payment & email screenshot"}</p>
                 </div>
                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "paypal" ? "border-indigo-500" : "border-gray-300"}`}>
                   {selectedMethod === "paypal" && <div className="w-3 h-3 rounded-full bg-indigo-500" />}
@@ -346,7 +346,7 @@ export default function PaymentScreen() {
                 </div>
                 <div className="text-left flex-1">
                   <p className="font-semibold text-gray-900">{t("bankTransfer") || "Bank Transfer"}</p>
-                  <p className="text-sm text-gray-500">Transfer &amp; email proof</p>
+                  <p className="text-sm text-gray-500">{t("transferEmailProof") || "Transfer & email proof"}</p>
                 </div>
                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "bank_transfer" ? "border-amber-500" : "border-gray-300"}`}>
                   {selectedMethod === "bank_transfer" && <div className="w-3 h-3 rounded-full bg-amber-500" />}
@@ -384,7 +384,7 @@ export default function PaymentScreen() {
       {/* Phone Number */}
       {selectedMethod === "moncash" && (
         <div>
-          <label className="text-sm font-semibold text-gray-700 block mb-3">MonCash Phone Number</label>
+          <label className="text-sm font-semibold text-gray-700 block mb-3">{t("moncashPhone") || "MonCash Phone Number"}</label>
           <div className="bg-gray-50 rounded-xl border border-gray-200 px-4 py-4">
             <input
               type="tel"
@@ -400,7 +400,7 @@ export default function PaymentScreen() {
       {/* Zelle / CashApp Instructions */}
       {(selectedMethod === "zelle" || selectedMethod === "cashapp") && depositStep === "select" && (
         <div className="bg-gray-50 rounded-xl p-5 space-y-3 border border-gray-200">
-          <h4 className="font-semibold text-gray-900">How it works</h4>
+          <h4 className="font-semibold text-gray-900">{t("howItWorks") || "How it works"}</h4>
           <div className="flex items-start gap-3">
             <div className="bg-amber-500 text-white font-bold w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0">1</div>
             <p className="text-sm text-gray-600">
@@ -436,10 +436,9 @@ export default function PaymentScreen() {
           <div className="bg-amber-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
             <Clock className="h-10 w-10 text-amber-500" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900">Payment Under Review</h3>
+          <h3 className="text-xl font-bold text-gray-900">{t("paymentUnderReview") || "Payment Under Review"}</h3>
           <p className="text-gray-600">
-            We&apos;ve received your {selectedMethod === "zelle" ? "Zelle" : "CashApp"} deposit notification.
-            Our team will verify your payment and credit your wallet within a few hours.
+            {t("verificationInProgress") || "We've received your deposit notification. Our team will verify and credit your wallet within a few hours."}
           </p>
           <p className="text-gray-500 text-sm">
             Make sure you&apos;ve sent your screenshot to{" "}
@@ -451,7 +450,7 @@ export default function PaymentScreen() {
             onClick={() => { setDepositStep("select"); setSelectedMethod(null); setAmount(""); }}
             className="mt-4 px-6 py-3 rounded-xl bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition-colors"
           >
-            Back to Deposit
+            {t("backToDeposit") || "Back to Deposit"}
           </button>
         </div>
       )}
@@ -459,18 +458,18 @@ export default function PaymentScreen() {
       {/* Summary */}
       {parseFloat(amount) > 0 && depositStep === "select" && (
         <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-2">
-          <p className="text-sm text-gray-500 mb-3">Payment Summary</p>
+          <p className="text-sm text-gray-500 mb-3">{t("paymentSummary") || "Payment Summary"}</p>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Amount</span>
+            <span className="text-gray-600">{t("amountLabel") || "Amount"}</span>
             <span className="font-semibold text-gray-900">{formatCurrency(parseFloat(amount), currency)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Processing Fee</span>
+            <span className="text-gray-600">{t("processingFee") || "Processing Fee"}</span>
             <span className="font-semibold text-gray-900">{formatCurrency(0, currency)}</span>
           </div>
           <div className="border-t border-gray-200 my-2"></div>
           <div className="flex justify-between">
-            <span className="font-bold text-gray-900">Total</span>
+            <span className="font-bold text-gray-900">{t("total") || "Total"}</span>
             <span className="font-bold text-lg text-green-600">{formatCurrency(parseFloat(amount), currency)}</span>
           </div>
         </div>

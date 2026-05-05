@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/use-translation";
+import { useAppStore } from "@/store/app-store";
 import {
   Home,
   History,
@@ -35,6 +36,7 @@ const navItems = [
 export function PlayerSidebar() {
   const pathname = usePathname();
   const t = useTranslation();
+  const hasUnread = useAppStore((s) => s.notifications.some((n: any) => !n.isRead));
 
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r border-gray-200 h-screen sticky top-0">
@@ -53,6 +55,7 @@ export function PlayerSidebar() {
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
             const Icon = item.icon;
+            const showDot = item.href === "/player/notifications" && hasUnread;
             return (
               <li key={item.href}>
                 <Link
@@ -64,7 +67,12 @@ export function PlayerSidebar() {
                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                   )}
                 >
-                  <Icon className={cn("h-5 w-5", isActive ? "text-amber-600" : "text-gray-400")} />
+                  <span className="relative inline-flex">
+                    <Icon className={cn("h-5 w-5", isActive ? "text-amber-600" : "text-gray-400")} />
+                    {showDot && (
+                      <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
+                    )}
+                  </span>
                   {t(item.labelKey)}
                 </Link>
               </li>
@@ -80,6 +88,7 @@ export function PlayerSidebar() {
 export function PlayerBottomNav() {
   const pathname = usePathname();
   const t = useTranslation();
+  const hasUnread = useAppStore((s) => s.notifications.some((n: any) => !n.isRead));
 
   const leftItems = [
     { href: "/player/dashboard", icon: Home, labelKey: "home" },
@@ -93,6 +102,7 @@ export function PlayerBottomNav() {
   const renderItem = (item: { href: string; icon: any; labelKey: string }) => {
     const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
     const Icon = item.icon;
+    const showDot = item.href === "/player/notifications" && hasUnread;
     return (
       <Link
         key={item.href}
@@ -102,7 +112,12 @@ export function PlayerBottomNav() {
           isActive ? "text-amber-600" : "text-gray-400"
         )}
       >
-        <Icon className="h-5 w-5" />
+        <span className="relative inline-flex">
+          <Icon className="h-5 w-5" />
+          {showDot && (
+            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
+          )}
+        </span>
         <span className="text-[10px] font-semibold">{t(item.labelKey)}</span>
       </Link>
     );

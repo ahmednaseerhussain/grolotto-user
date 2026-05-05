@@ -107,6 +107,7 @@ export function VendorBottomNav() {
 
   const bottomItems = [
     { href: "/vendor/dashboard", icon: LayoutDashboard, labelKey: "dashboard" },
+    { href: "/vendor/draws", icon: Gamepad2, labelKey: "drawManagement" },
     { href: "/vendor/history", icon: History, labelKey: "history" },
     { href: "/vendor/profile", icon: User, labelKey: "profile" },
     { href: "/vendor/settings", icon: Settings, labelKey: "settings" },
@@ -123,12 +124,12 @@ export function VendorBottomNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-colors",
+                "flex flex-col items-center gap-1 px-2 py-1 rounded-lg transition-colors min-w-0 flex-1",
                 isActive ? "text-emerald-600" : "text-gray-400"
               )}
             >
               <Icon className="h-5 w-5" />
-              <span className="text-[10px] font-medium">{t(item.labelKey)}</span>
+              <span className="text-[10px] font-medium truncate max-w-full">{t(item.labelKey)}</span>
             </Link>
           );
         })}

@@ -31,6 +31,7 @@ interface AppState {
 
   // Shared
   vendors: Vendor[];
+  vendorsFetchedAt: number | null;
   advertisements: Advertisement[];
   payouts: Payout[];
 
@@ -84,6 +85,7 @@ export const useAppStore = create<AppState>()(
       vendorProfile: null,
       vendorStats: null,
       vendors: [],
+      vendorsFetchedAt: null,
       advertisements: [],
       payouts: [],
 
@@ -141,7 +143,7 @@ export const useAppStore = create<AppState>()(
       setPayouts: (payouts) => set({ payouts }),
 
       // Shared
-      setVendors: (vendors) => set({ vendors }),
+      setVendors: (vendors) => set({ vendors, vendorsFetchedAt: Date.now() }),
       setAdvertisements: (ads) => set({ advertisements: ads }),
     }),
     {

@@ -66,15 +66,33 @@ export default function PlayerDashboard() {
 
   const loadData = useCallback(async () => {
     try {
-      setLoading(true);
-      const [vendorRes, walletRes, adsRes] = await Promise.allSettled([
-        vendorAPI.getVendors(),
+      // Show vendors from cache immediately so the section never blocks
+      const state = useAppStore.getState();
+      const vendorsFresh =
+        state.vendorsFetchedAt && Date.now() - state.vendorsFetchedAt < 5 * 60_000;
+      const hasVendorCache = state.vendors.length > 0;
+      // Only show loading skeleton if we have no vendors at all
+      setLoading(!hasVendorCache);
+
+      // Wallet + ads always fetched (cheap)
+      const [walletRes, adsRes] = await Promise.allSettled([
         walletAPI.getBalance(),
         publicAPI.getActiveAds(),
       ]);
-      if (vendorRes.status === "fulfilled") setVendors(vendorRes.value as any || []);
       if (walletRes.status === "fulfilled") setWallet(walletRes.value as any || null);
       if (adsRes.status === "fulfilled") setAdvertisements(adsRes.value as any || []);
+
+      // Vendor fetch decoupled: don't block other UI; refresh only if stale
+      if (!vendorsFresh) {
+        vendorAPI
+          .getVendors()
+          .then((list) => setVendors((list as any) || []))
+          .catch(() => { /* ignore */ })
+          .finally(() => setLoading(false));
+      } else {
+        setLoading(false);
+      }
+
       try {
         const rounds = await lotteryAPI.getRounds();
         const today = new Date().toISOString().split('T')[0];
@@ -85,7 +103,6 @@ export default function PlayerDashboard() {
       } catch { /* results optional */ }
     } catch (err) {
       console.error("Failed to load dashboard data", err);
-    } finally {
       setLoading(false);
     }
   }, [setVendors, setWallet, setAdvertisements]);
@@ -352,7 +369,7 @@ export default function PlayerDashboard() {
       </div>
 
       {/* ── Buy Gift Card from Debit Card ── */}
-      <button
+      {/* <button
         onClick={() => window.open("https://grolotto.com/buy-gift-card", "_blank", "noopener,noreferrer")}
         className="w-full flex items-center gap-4 p-4 rounded-2xl bg-linear-to-r from-indigo-600 to-blue-500 text-white hover:opacity-90 transition-all shadow-md"
       >
@@ -364,8 +381,8 @@ export default function PlayerDashboard() {
           <span className="text-xs opacity-80">{t("payWithDebitCard") || "Pay with your debit card"}</span>
         </div>
         <ChevronRight className="h-5 w-5 opacity-70" />
-      </button>
-      {/* <div className="w-full p-4 rounded-xl border-2 border-gray-200 bg-white">
+      </button> */}
+      <div className="w-full p-4 rounded-xl border-2 border-gray-200 bg-white">
         <div className="flex items-center gap-4">
           <div className="bg-amber-500 w-12 h-12 rounded-full flex items-center justify-center">
             <Gift className="h-6 w-6 text-white" />
@@ -390,7 +407,7 @@ export default function PlayerDashboard() {
             🎟️ {t("redeemCode") || "Redeem Code"}
           </button>
         </div>
-      </div> */}
+      </div>
 
       {/* ── Section 5: Latest Results ── */}
       <div>

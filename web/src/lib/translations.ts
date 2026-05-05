@@ -3569,6 +3569,130 @@ export const translations = {
     es: "Cómo Funciona"
   },
 
+  // Payment page extras
+  digicelMobileMoneyDesc: {
+    ht: "Lajan mobil Digicel",
+    en: "Digicel mobile money",
+    fr: "Argent mobile Digicel",
+    es: "Dinero móvil Digicel"
+  },
+  payInstantly: {
+    ht: "Peye imedyatman",
+    en: "Pay instantly",
+    fr: "Payer instantanément",
+    es: "Pagar al instante"
+  },
+  sendPaymentScreenshot: {
+    ht: "Voye peman ak imèl kapti ekran an",
+    en: "Send payment & email screenshot",
+    fr: "Envoyer le paiement et la capture d'écran par e-mail",
+    es: "Enviar pago y captura de pantalla por correo"
+  },
+  transferEmailProof: {
+    ht: "Transfere ak voye prèv pa imèl",
+    en: "Transfer & email proof",
+    fr: "Virer et envoyer la preuve par e-mail",
+    es: "Transferir y enviar prueba por correo"
+  },
+  paymentUnderReview: {
+    ht: "Peman an Anba Revizyon",
+    en: "Payment Under Review",
+    fr: "Paiement en Cours d'Examen",
+    es: "Pago en Revisión"
+  },
+  verificationInProgress: {
+    ht: "Nou resevwa notifikasyon depo ou. Ekip nou an ap verifye epi kredite bous ou nan kèk èdtan.",
+    en: "We've received your deposit notification. Our team will verify and credit your wallet within a few hours.",
+    fr: "Nous avons reçu votre notification de dépôt. Notre équipe vérifiera et créditera votre portefeuille dans quelques heures.",
+    es: "Recibimos tu notificación de depósito. Nuestro equipo verificará y acreditará tu cartera en unas horas."
+  },
+  paymentSummary: {
+    ht: "Rezime Peman",
+    en: "Payment Summary",
+    fr: "Résumé du Paiement",
+    es: "Resumen del Pago"
+  },
+  processingFee: {
+    ht: "Frè Tretman",
+    en: "Processing Fee",
+    fr: "Frais de Traitement",
+    es: "Tarifa de Procesamiento"
+  },
+  total: {
+    ht: "Total",
+    en: "Total",
+    fr: "Total",
+    es: "Total"
+  },
+  amountLabel: {
+    ht: "Kantite",
+    en: "Amount",
+    fr: "Montant",
+    es: "Monto"
+  },
+  backToDeposit: {
+    ht: "Retounen nan Depo",
+    en: "Back to Deposit",
+    fr: "Retour au Dépôt",
+    es: "Volver al Depósito"
+  },
+  successTitle: {
+    ht: "Siksè!",
+    en: "Success!",
+    fr: "Succès !",
+    es: "¡Éxito!"
+  },
+  addedToWallet: {
+    ht: "ajoute nan bous ou",
+    en: "has been added to your wallet",
+    fr: "a été ajouté à votre portefeuille",
+    es: "se ha añadido a tu cartera"
+  },
+
+  // Tchala page extras
+  tchalaDescription: {
+    ht: "Tchala se yon tradisyon Ayisyen ki entèprete rèv yo nan nimewo lotri ki pote chans. Chèche yon senbòl rèv oswa yon mo kle pou jwenn nimewo chans ou yo!",
+    en: "Tchala is a Haitian tradition of interpreting dreams into lucky lottery numbers. Search for a dream symbol or keyword to find your lucky numbers!",
+    fr: "Tchala est une tradition haïtienne d'interprétation des rêves en numéros de loterie chanceux. Recherchez un symbole ou un mot-clé pour trouver vos numéros chanceux !",
+    es: "Tchala es una tradición haitiana de interpretar los sueños en números de lotería de la suerte. ¡Busca un símbolo o palabra clave para encontrar tus números de la suerte!"
+  },
+  welcomeToTchala: {
+    ht: "Byenveni nan Tchala",
+    en: "Welcome to Tchala",
+    fr: "Bienvenue sur Tchala",
+    es: "Bienvenido a Tchala"
+  },
+  searchDreamInstructions: {
+    ht: "Chèche yon rèv pou jwenn nimewo chans ou yo",
+    en: "Search a dream to find your lucky numbers",
+    fr: "Recherchez un rêve pour trouver vos numéros chanceux",
+    es: "Busca un sueño para encontrar tus números de la suerte"
+  },
+  searchYourDream: {
+    ht: "Chèche rèv ou...",
+    en: "Search your dream...",
+    fr: "Recherchez votre rêve...",
+    es: "Busca tu sueño..."
+  },
+  popularSearches: {
+    ht: "Rechèch popilè",
+    en: "Popular searches",
+    fr: "Recherches populaires",
+    es: "Búsquedas populares"
+  },
+  noResultsFound: {
+    ht: "Pa gen rezilta yo jwenn",
+    en: "No results found",
+    fr: "Aucun résultat trouvé",
+    es: "No se encontraron resultados"
+  },
+  tryDifferentDream: {
+    ht: "Eseye yon lòt mo kle rèv",
+    en: "Try a different dream keyword",
+    fr: "Essayez un autre mot-clé de rêve",
+    es: "Prueba con otra palabra clave de sueño"
+  },
+
   // Gift card external redirect
   buyGiftCardOnline: {
     ht: "Achte Kat Kado sou Entènèt",

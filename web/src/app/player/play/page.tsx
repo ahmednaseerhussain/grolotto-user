@@ -73,41 +73,58 @@ export default function PlayScreen() {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Load vendor
+  // Load vendor (or vendor list when no vendorId).
+  // NOTE: do NOT depend on `vendors` here — `setVendors` updates it, which would
+  // re-trigger this effect and cause an infinite refetch loop (perceived hang).
   useEffect(() => {
+    let cancelled = false;
     const loadVendor = async () => {
       if (!vendorId) {
-        // No vendor selected - load all vendors for selection
-        try {
-          const res = await vendorAPI.getVendors();
-          const list = Array.isArray(res) ? res : (res as any)?.vendors || [];
-          if (list.length > 0) {
+        // No vendor selected - selection screen. Use cache immediately if fresh
+        // (stale-while-revalidate), otherwise show skeletons.
+        const state = useAppStore.getState();
+        const fresh = state.vendorsFetchedAt && Date.now() - state.vendorsFetchedAt < 5 * 60_000;
+        if (state.vendors.length > 0) {
+          // Render from cache right away
+          setLoading(false);
+        } else {
+          setLoading(true);
+        }
+        if (!fresh) {
+          try {
+            const res = await vendorAPI.getVendors();
+            if (cancelled) return;
+            const list = Array.isArray(res) ? res : (res as any)?.vendors || [];
             useAppStore.getState().setVendors(list);
-          }
-        } catch { }
-        setLoading(false);
+          } catch { }
+        }
+        if (!cancelled) setLoading(false);
         return;
       }
       setLoading(true);
       try {
-        const found = vendors.find((v: any) => String(v.id) === String(vendorId));
-        if (found) setVendor(found);
+        const cached = useAppStore.getState().vendors;
+        const found = cached.find((v: any) => String(v.id) === String(vendorId));
+        if (found && !cancelled) setVendor(found);
         const fullVendor = await vendorAPI.getVendorById(vendorId);
-        if (fullVendor) setVendor(fullVendor);
+        if (fullVendor && !cancelled) setVendor(fullVendor);
       } catch (err) {
         console.error(err);
         try {
           const res = await vendorAPI.getVendors();
+          if (cancelled) return;
           const list = Array.isArray(res) ? res : (res as any)?.vendors || [];
+          useAppStore.getState().setVendors(list);
           const v = list.find((x: any) => String(x.id) === String(vendorId));
           if (v) setVendor(v);
         } catch { }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     loadVendor();
-  }, [vendorId, vendors]);
+    return () => { cancelled = true; };
+  }, [vendorId]);
 
   // Auto-select first state
   useEffect(() => {
@@ -375,6 +392,28 @@ export default function PlayScreen() {
   };
 
   if (loading) {
+    // If we're on the selection screen (no vendorId), show skeleton grid
+    // instead of a single spinner so the page feels responsive.
+    if (!vendorId) {
+      return (
+        <div className="space-y-6 max-w-4xl mx-auto">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={() => router.back()}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-xl font-bold">{t("Select Vendor") || "Select a Vendor"}</h1>
+              <p className="text-sm text-gray-500">{t("Choose Vendor To Play") || "Choose a vendor to place your bets"}</p>
+            </div>
+          </div>
+          <div className="grid gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="animate-pulse bg-gray-100 rounded-xl h-28" />
+            ))}
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-amber-500" />

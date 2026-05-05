@@ -6,6 +6,7 @@ import { useAppStore } from "@/store/app-store";
 import { VendorSidebar, VendorBottomNav } from "@/components/layout/vendor-sidebar";
 import { TopNav } from "@/components/layout/top-nav";
 import { vendorAPI } from "@/lib/api/vendor";
+import { useInactivityLogout } from "@/hooks/use-inactivity-logout";
 
 export default function VendorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -30,6 +31,9 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
 
   const ready = hasHydrated || hydrationTimedOut;
   const isPendingRoute = pathname === "/vendor/pending";
+
+  // Auto-logout after 3 minutes of inactivity
+  useInactivityLogout(180_000);
 
   useEffect(() => {
     if (!ready) return;

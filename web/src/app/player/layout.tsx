@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store/app-store";
 import { PlayerSidebar, PlayerBottomNav } from "@/components/layout/player-sidebar";
 import { TopNav } from "@/components/layout/top-nav";
+import { notificationsAPI } from "@/lib/api/notifications";
+import { useInactivityLogout } from "@/hooks/use-inactivity-logout";
 
 export default function PlayerLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -26,6 +28,9 @@ export default function PlayerLayout({ children }: { children: React.ReactNode }
 
   const ready = hasHydrated || hydrationTimedOut;
 
+  // Auto-logout after 3 minutes of inactivity
+  useInactivityLogout(180_000);
+
   useEffect(() => {
     if (!ready) return;
     if (!isAuthenticated || !user) {
@@ -34,6 +39,25 @@ export default function PlayerLayout({ children }: { children: React.ReactNode }
       router.replace("/vendor/dashboard");
     }
   }, [isAuthenticated, user, router, ready]);
+
+  // Load notifications once authenticated so unread-dot is accurate across pages
+  useEffect(() => {
+    if (!ready || !isAuthenticated || !user || user.role !== "player") return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await notificationsAPI.getNotifications();
+        if (!cancelled) {
+          useAppStore.getState().setNotifications(Array.isArray(res) ? res : []);
+        }
+      } catch {
+        // silent
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, isAuthenticated, user]);
 
   if (!ready || !isAuthenticated || !user || user.role !== "player") {
     return (

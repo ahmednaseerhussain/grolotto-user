@@ -103,8 +103,7 @@ export default function TchalaScreen() {
       <Card className="bg-purple-50 border-purple-200">
         <CardContent className="p-4">
           <p className="text-sm text-purple-800">
-            <strong>Tchala</strong> is a Haitian tradition of interpreting dreams into lucky lottery numbers.
-            Search for a dream symbol or keyword to find your lucky numbers!
+            <strong>Tchala</strong> {t("tchalaDescription") || "is a Haitian tradition of interpreting dreams into lucky lottery numbers. Search for a dream symbol or keyword to find your lucky numbers!"}
           </p>
         </CardContent>
       </Card>
@@ -113,7 +112,7 @@ export default function TchalaScreen() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
         <Input
-          placeholder="Search your dream..."
+          placeholder={t("searchYourDream") || "Search your dream..."}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch(searchQuery)}
@@ -137,8 +136,8 @@ export default function TchalaScreen() {
       ) : searched && results.length === 0 ? (
         <EmptyState
           icon={<Moon className="h-12 w-12 text-gray-300" />}
-          title="No results found"
-          description="Try a different dream keyword"
+          title={t("noResultsFound") || "No results found"}
+          description={t("tryDifferentDream") || "Try a different dream keyword"}
         />
       ) : searched ? (
         <div className="space-y-3">
@@ -167,10 +166,10 @@ export default function TchalaScreen() {
         /* Welcome / Popular Searches */
         <div className="text-center py-8">
           <Sparkles className="h-16 w-16 text-purple-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-700">Welcome to Tchala</h3>
-          <p className="text-sm text-gray-500 mt-1 mb-6">Search a dream to find your lucky numbers</p>
+          <h3 className="text-lg font-semibold text-gray-700">{t("welcomeToTchala") || "Welcome to Tchala"}</h3>
+          <p className="text-sm text-gray-500 mt-1 mb-6">{t("searchDreamInstructions") || "Search a dream to find your lucky numbers"}</p>
           <div>
-            <p className="text-xs text-gray-400 mb-2">Popular searches</p>
+            <p className="text-xs text-gray-400 mb-2">{t("popularSearches") || "Popular searches"}</p>
             <div className="flex flex-wrap justify-center gap-2">
               {POPULAR_SEARCHES.map((term) => (
                 <button

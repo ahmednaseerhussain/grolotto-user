@@ -126,7 +126,7 @@ export default function HelpPage() {
           </h1>
         </div>
 
-        <div className="text-center py-6 bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border border-emerald-200">
+        <div className="text-center py-6 bg-linear-to-br from-emerald-50 to-green-50 rounded-xl border border-emerald-200">
           <HelpCircle className="h-12 w-12 text-emerald-600 mx-auto mb-3" />
           <h2 className="text-lg font-bold text-gray-800 mb-1">{t("howCanWeHelp") || "How can we help you?"}</h2>
           <p className="text-gray-500 text-sm">{t("helpSubtitle") || "Find answers to common questions below"}</p>
