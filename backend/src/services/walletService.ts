@@ -127,6 +127,31 @@ export async function debitWallet(
       [userId, amount, currency, payoutMethod, description, idempotencyKey]
     );
 
+    // Notify user that withdrawal was requested (fire-and-forget)
+    notificationService.createPlayerNotification(
+      userId,
+      'withdrawal',
+      'Withdrawal Requested',
+      `Your withdrawal request of ${amount} ${currency} via ${payoutMethod} is pending review.`,
+      { amount, currency, payoutMethod, status: 'pending' }
+    );
+
+    // Also notify any vendor record linked to this user (vendor withdrawals)
+    try {
+      const vendorRow = await client.query(
+        `SELECT id FROM vendors WHERE user_id = $1 LIMIT 1`,
+        [userId]
+      );
+      if (vendorRow.rows.length > 0) {
+        notificationService.createVendorNotification(
+          vendorRow.rows[0].id,
+          'withdrawal',
+          'Withdrawal Requested',
+          `Your withdrawal request of ${amount} ${currency} via ${payoutMethod} is pending review.`
+        );
+      }
+    } catch { /* non-fatal */ }
+
     return {
       newBalance: parseFloat(walletResult.rows[0].new_balance),
     };

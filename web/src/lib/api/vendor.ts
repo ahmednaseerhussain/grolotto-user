@@ -177,6 +177,12 @@ export const vendorAPI = {
     return response.data.data || response.data;
   },
 
+  async getPublicVendorSchedules(vendorId: string): Promise<Array<{ id: string; vendorId: string; drawState: string; drawTime: string; openTime: string; closeTime: string; isActive: boolean }>> {
+    const response = await apiClient.get(`/vendors/${vendorId}/schedules`);
+    const data = response.data?.schedules || response.data?.data || response.data || [];
+    return Array.isArray(data) ? data : [];
+  },
+
   // Vendor Documents
   async getMyDocuments(): Promise<Array<{ id: string; vendor_id: string; doc_type: string; file_url: string; verified: boolean; uploaded_at: string }>> {
     const response = await apiClient.get("/vendors/me/documents");

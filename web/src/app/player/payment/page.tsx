@@ -314,7 +314,7 @@ export default function PaymentScreen() {
               </button>
 
               {/* PayPal */}
-              <button
+              {/* <button
                 onClick={() => setSelectedMethod("paypal")}
                 className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${selectedMethod === "paypal"
                   ? "border-indigo-500 bg-indigo-50"
@@ -331,10 +331,10 @@ export default function PaymentScreen() {
                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "paypal" ? "border-indigo-500" : "border-gray-300"}`}>
                   {selectedMethod === "paypal" && <div className="w-3 h-3 rounded-full bg-indigo-500" />}
                 </div>
-              </button>
+              </button> */}
 
               {/* Bank Transfer */}
-              <button
+              {/* <button
                 onClick={() => setSelectedMethod("bank_transfer")}
                 className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${selectedMethod === "bank_transfer"
                   ? "border-amber-500 bg-amber-50"
@@ -351,7 +351,7 @@ export default function PaymentScreen() {
                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "bank_transfer" ? "border-amber-500" : "border-gray-300"}`}>
                   {selectedMethod === "bank_transfer" && <div className="w-3 h-3 rounded-full bg-amber-500" />}
                 </div>
-              </button>
+              </button> */}
             </>
           )}
 

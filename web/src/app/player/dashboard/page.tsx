@@ -389,7 +389,9 @@ export default function PlayerDashboard() {
           </div>
           <div className="text-left flex-1">
             <p className="font-semibold text-gray-900">{t("giftCard") || "Gift Card"}</p>
-            <p className="text-sm text-gray-500">                Buy Gift Card From Your Debit Card
+            <p className="text-sm text-gray-500">
+              {/* Buy Gift Card From Your Debit Card */}
+              Share Credits Through Gift Card
             </p>
           </div>
         </div>
@@ -398,7 +400,7 @@ export default function PlayerDashboard() {
             onClick={() => router.push("/player/gift-cards")}
             className="flex-1 py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold transition-colors"
           >
-            🎁 {t("buyGiftCard") || "Buy Gift Card"}
+            🎁 {t("shareGiftCard") || "Share Gift Card"}
           </button>
           <button
             onClick={() => router.push("/player/gift-cards?tab=redeem")}

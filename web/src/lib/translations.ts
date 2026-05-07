@@ -3304,6 +3304,12 @@ export const translations = {
     fr: "Acheter",
     es: "Comprar"
   },
+  shareGiftCard: {
+    ht: "Pataje Kat Kado",
+    en: "Share Gift Card",
+    fr: "Partager Carte Cadeau",
+    es: "Compartir Tarjeta Regalo"
+  },
   redeemCode: {
     ht: "Itilize Kòd",
     en: "Redeem",
@@ -3618,12 +3624,6 @@ export const translations = {
     fr: "Frais de Traitement",
     es: "Tarifa de Procesamiento"
   },
-  total: {
-    ht: "Total",
-    en: "Total",
-    fr: "Total",
-    es: "Total"
-  },
   amountLabel: {
     ht: "Kantite",
     en: "Amount",
@@ -3679,12 +3679,6 @@ export const translations = {
     en: "Popular searches",
     fr: "Recherches populaires",
     es: "Búsquedas populares"
-  },
-  noResultsFound: {
-    ht: "Pa gen rezilta yo jwenn",
-    en: "No results found",
-    fr: "Aucun résultat trouvé",
-    es: "No se encontraron resultados"
   },
   tryDifferentDream: {
     ht: "Eseye yon lòt mo kle rèv",

@@ -53,6 +53,8 @@ router.get('/:id/payout-multipliers', validateUUIDParams('id'), ctrl.getPublicPa
 
 // Public: check vendor draw schedule (for player bet flow)
 router.get('/:vendorId/schedule', validateUUIDParams('vendorId'), ctrl.checkDrawScheduleStatus);
+// Public: list all schedules for a vendor (used by player play page to filter open draws)
+router.get('/:vendorId/schedules', validateUUIDParams('vendorId'), ctrl.getPublicSchedules);
 
 // Vendor lottery rounds (read-only — admin publishes results globally)
 router.get('/me/rounds', authenticate, authorize('vendor'), ctrl.getMyRounds);

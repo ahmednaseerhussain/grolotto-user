@@ -63,6 +63,9 @@ export default function PlayScreen() {
   const wallet = useAppStore((s) => s.wallet);
 
   const [vendor, setVendor] = useState<any>(null);
+  const [vendorSchedules, setVendorSchedules] = useState<Array<{
+    drawState: string; drawTime: string; openTime: string; closeTime: string; isActive: boolean;
+  }>>([]);
   const [selectedState, setSelectedState] = useState("");
   const [selectedGame, setSelectedGame] = useState("");
   const [numbers, setNumbers] = useState<string[]>([]);
@@ -108,6 +111,11 @@ export default function PlayScreen() {
         if (found && !cancelled) setVendor(found);
         const fullVendor = await vendorAPI.getVendorById(vendorId);
         if (fullVendor && !cancelled) setVendor(fullVendor);
+        // Fetch vendor's open/close schedules so we can hide draws that are out-of-hours
+        try {
+          const schedules = await vendorAPI.getPublicVendorSchedules(vendorId);
+          if (!cancelled) setVendorSchedules(schedules || []);
+        } catch { /* non-fatal — fall back to legacy drawTimes */ }
       } catch (err) {
         console.error(err);
         try {
@@ -183,17 +191,40 @@ export default function PlayScreen() {
       .map(([code]) => code)
     : [];
 
+  // ─── Schedule enforcement ───────────────────────────────
+  // For each (state, drawTime) the vendor has explicitly scheduled with open/close,
+  // hide it when the current time is outside the open window.
+  const isWithinOpenWindow = (openTime?: string, closeTime?: string) => {
+    if (!openTime || !closeTime) return true;
+    const toMinutes = (t: string) => {
+      const [h, m] = t.split(":").map(Number);
+      return (h || 0) * 60 + (m || 0);
+    };
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const open = toMinutes(openTime);
+    const close = toMinutes(closeTime);
+    return currentMinutes >= open && currentMinutes <= close;
+  };
+  const isStateTimeOpen = (stateCode: string, time: string) => {
+    const sched = vendorSchedules.find(
+      (s) => s.isActive && s.drawState === stateCode && s.drawTime === time
+    );
+    if (!sched) return true; // no schedule defined → no restriction
+    return isWithinOpenWindow(sched.openTime, sched.closeTime);
+  };
+
   // States that have the currently-selected draw time scheduled & active.
   // If a vendor has NO schedules configured at all (legacy), fall back to all enabled states.
   const vendorHasAnySchedule = vendor?.draws
     ? Object.values(vendor.draws).some((d: any) => Array.isArray(d?.drawTimes) && d.drawTimes.length > 0)
     : false;
-  const statesForDrawTime = vendorHasAnySchedule
+  const statesForDrawTime = (vendorHasAnySchedule
     ? enabledStates.filter((code) => {
       const d: any = (vendor?.draws || {})[code];
       return Array.isArray(d?.drawTimes) && d.drawTimes.includes(drawTime);
     })
-    : enabledStates;
+    : enabledStates).filter((code) => isStateTimeOpen(code, drawTime));
 
   // Available draw times across all enabled states (for the time selector)
   const availableDrawTimes: string[] = vendor?.draws
@@ -201,7 +232,14 @@ export default function PlayScreen() {
       Object.values(vendor.draws)
         .filter((d: any) => d?.enabled && Array.isArray(d?.drawTimes))
         .flatMap((d: any) => d.drawTimes as string[])
-    ))
+    )).filter((t) =>
+      // keep a draw time only if at least one enabled state is currently open for it
+      enabledStates.some((code) => {
+        const d: any = (vendor?.draws || {})[code];
+        const supportsTime = !vendorHasAnySchedule || (Array.isArray(d?.drawTimes) && d.drawTimes.includes(t));
+        return supportsTime && isStateTimeOpen(code, t);
+      })
+    )
     : [];
 
   // Format "HH:MM:SS" or "HH:MM" → "h:mm AM/PM"

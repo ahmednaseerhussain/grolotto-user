@@ -448,6 +448,34 @@ export async function processVendorPayout(
     );
   }
 
+  // Notify vendor about the decision (fire-and-forget)
+  try {
+    const payout = result.rows[0];
+    const amount = parseFloat(payout.amount);
+    const isApproved = action === 'approved';
+    createVendorNotification(
+      payout.vendor_id,
+      'payout',
+      isApproved ? 'Payout Approved' : 'Payout Rejected',
+      isApproved
+        ? `Your payout of ${amount} has been approved.${transferReference ? ` Reference: ${transferReference}` : ''}`
+        : `Your payout of ${amount} was rejected and refunded to your available balance.${notes ? ` Note: ${notes}` : ''}`
+    );
+    // Also notify the underlying user (so it shows in player notification feed if they share account)
+    const userRow = await query(`SELECT user_id FROM vendors WHERE id = $1`, [payout.vendor_id]);
+    if (userRow.rows.length > 0) {
+      createPlayerNotification(
+        userRow.rows[0].user_id,
+        'payout',
+        isApproved ? 'Payout Approved' : 'Payout Rejected',
+        isApproved
+          ? `Your payout of ${amount} has been approved.${transferReference ? ` Reference: ${transferReference}` : ''}`
+          : `Your payout of ${amount} was rejected and refunded to your available balance.${notes ? ` Note: ${notes}` : ''}`,
+        { amount, status: action, transferReference, notes }
+      );
+    }
+  } catch { /* non-fatal */ }
+
   return result.rows[0];
 }
 
@@ -749,7 +777,7 @@ export async function deleteGiftCard(cardId: number) {
 // Broadcast Notifications
 // ──────────────────────────────────────────────────────────
 
-import { sendPushToRole } from './notificationService';
+import { sendPushToRole, createPlayerNotification, createVendorNotification } from './notificationService';
 
 export async function broadcastNotification(
   title: string,
@@ -1045,6 +1073,34 @@ export async function processPlayerWithdrawal(
       [tx.amount, tx.user_id]
     );
   }
+
+  // Notify the user about the decision (fire-and-forget)
+  try {
+    const tx = result.rows[0];
+    const amount = parseFloat(tx.amount);
+    const isApproved = action === 'approved';
+    createPlayerNotification(
+      tx.user_id,
+      'withdrawal',
+      isApproved ? 'Withdrawal Approved' : 'Withdrawal Rejected',
+      isApproved
+        ? `Your withdrawal of ${amount} ${tx.currency} has been approved.${transferReference ? ` Reference: ${transferReference}` : ''}`
+        : `Your withdrawal of ${amount} ${tx.currency} was rejected and refunded to your wallet.${adminNotes ? ` Note: ${adminNotes}` : ''}`,
+      { amount, currency: tx.currency, status, transferReference, adminNotes }
+    );
+    // Also notify vendor record if this user is a vendor
+    const vendorRow = await query(`SELECT id FROM vendors WHERE user_id = $1 LIMIT 1`, [tx.user_id]);
+    if (vendorRow.rows.length > 0) {
+      createVendorNotification(
+        vendorRow.rows[0].id,
+        'withdrawal',
+        isApproved ? 'Withdrawal Approved' : 'Withdrawal Rejected',
+        isApproved
+          ? `Your withdrawal of ${amount} ${tx.currency} has been approved.${transferReference ? ` Reference: ${transferReference}` : ''}`
+          : `Your withdrawal of ${amount} ${tx.currency} was rejected and refunded to your wallet.${adminNotes ? ` Note: ${adminNotes}` : ''}`
+      );
+    }
+  } catch { /* non-fatal */ }
 
   return result.rows[0];
 }

@@ -287,13 +287,23 @@ export async function deleteDrawSchedule(req: Request, res: Response, next: Next
 export async function checkDrawScheduleStatus(req: Request, res: Response, next: NextFunction) {
   try {
     const vendorId = req.params.vendorId;
-    const drawState = req.query.state as string;
+    const drawState = (req.query.drawState as string) || (req.query.state as string);
     const drawTime = req.query.drawTime as string;
     if (!drawState || !drawTime) {
-      return res.status(400).json({ error: 'state and drawTime are required' });
+      return res.status(400).json({ error: 'drawState and drawTime are required' });
     }
     const result = await vendorService.checkDrawSchedule(vendorId, drawState, drawTime);
     res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getPublicSchedules(req: Request, res: Response, next: NextFunction) {
+  try {
+    const vendorId = req.params.vendorId;
+    const schedules = await vendorService.getDrawSchedules(vendorId);
+    res.json({ schedules });
   } catch (error) {
     next(error);
   }
