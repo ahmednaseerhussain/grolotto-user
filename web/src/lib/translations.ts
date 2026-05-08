@@ -3268,6 +3268,24 @@ export const translations = {
     fr: "Jouez et gagnez",
     es: "Juega y gana"
   },
+  shareCreditsGiftCard: {
+    ht: "Pataje Kredi pa Kat Kado",
+    en: "Share Credits Through Gift Card",
+    fr: "Partager des crédits via carte cadeau",
+    es: "Compartir créditos mediante tarjeta de regalo"
+  },
+  noResultsPublishedToday: {
+    ht: "Pa gen rezilta pibliye jodi a",
+    en: "No results published yet today",
+    fr: "Aucun résultat publié aujourd'hui",
+    es: "No hay resultados publicados hoy"
+  },
+  tryDifferentSearch: {
+    ht: "Eseye yon lòt mo rechèch",
+    en: "Try a different search term",
+    fr: "Essayez un autre terme de recherche",
+    es: "Intenta con otro término de búsqueda"
+  },
   manageYourBusiness: {
     ht: "Jere biznis ou",
     en: "Manage your business",
@@ -3655,6 +3673,212 @@ export const translations = {
     es: "se ha añadido a tu cartera"
   },
 
+  // Gift Cards page
+  giftCardPurchased: {
+    ht: "Kat Kado Achte!",
+    en: "Gift Card Purchased!",
+    fr: "Carte Cadeau Achetée !",
+    es: "¡Tarjeta de Regalo Comprada!"
+  },
+  shareCodeWithFriend: {
+    ht: "Pataje kòd sa a ak zanmi ou",
+    en: "Share this code with your friend",
+    fr: "Partagez ce code avec votre ami",
+    es: "Comparte este código con tu amigo"
+  },
+  giftCardValue: {
+    ht: "Valè Kat Kado",
+    en: "Gift Card Value",
+    fr: "Valeur de la Carte Cadeau",
+    es: "Valor de la Tarjeta de Regalo"
+  },
+  buyAnotherGiftCard: {
+    ht: "Achte yon lòt Kat Kado",
+    en: "Buy Another Gift Card",
+    fr: "Acheter une autre Carte Cadeau",
+    es: "Comprar otra Tarjeta de Regalo"
+  },
+  giftCardRedeemed: {
+    ht: "Kat Kado Reyalize!",
+    en: "Gift Card Redeemed!",
+    fr: "Carte Cadeau Échangée !",
+    es: "¡Tarjeta de Regalo Canjeada!"
+  },
+  goToDashboard: {
+    ht: "Ale nan Tablo de Bò",
+    en: "Go to Dashboard",
+    fr: "Aller au tableau de bord",
+    es: "Ir al panel"
+  },
+  redeemAnotherCode: {
+    ht: "Reyalize yon lòt Kòd",
+    en: "Redeem Another Code",
+    fr: "Échanger un autre code",
+    es: "Canjear otro código"
+  },
+  yourBalance: {
+    ht: "Balans Ou",
+    en: "Your Balance",
+    fr: "Votre solde",
+    es: "Tu saldo"
+  },
+  selectAmount: {
+    ht: "Chwazi Montan",
+    en: "Select Amount",
+    fr: "Sélectionner le montant",
+    es: "Seleccionar monto"
+  },
+  recipientNameOptional: {
+    ht: "Non Destinatè (opsyonèl)",
+    en: "Recipient Name (optional)",
+    fr: "Nom du destinataire (optionnel)",
+    es: "Nombre del destinatario (opcional)"
+  },
+  friendsNamePlaceholder: {
+    ht: "Non zanmi...",
+    en: "Friend's name...",
+    fr: "Nom de l'ami...",
+    es: "Nombre del amigo..."
+  },
+  messageOptional: {
+    ht: "Mesaj (opsyonèl)",
+    en: "Message (optional)",
+    fr: "Message (optionnel)",
+    es: "Mensaje (opcional)"
+  },
+  addPersonalMessage: {
+    ht: "Ajoute yon mesaj pèsonèl...",
+    en: "Add a personal message...",
+    fr: "Ajouter un message personnel...",
+    es: "Agregar un mensaje personal..."
+  },
+  choosePaymentMethod: {
+    ht: "Chwazi Metòd Peman",
+    en: "Choose Payment Method",
+    fr: "Choisir le mode de paiement",
+    es: "Elegir método de pago"
+  },
+  giftCardAmount: {
+    ht: "Montan Kat Kado",
+    en: "Gift Card Amount",
+    fr: "Montant de la carte cadeau",
+    es: "Monto de la tarjeta de regalo"
+  },
+  walletBalance: {
+    ht: "Balans Bous",
+    en: "Wallet Balance",
+    fr: "Solde du portefeuille",
+    es: "Saldo de la billetera"
+  },
+  insufficientBalanceMsg: {
+    ht: "Balans pa ase",
+    en: "Insufficient balance",
+    fr: "Solde insuffisant",
+    es: "Saldo insuficiente"
+  },
+  amountToSend: {
+    ht: "Montan pou Voye",
+    en: "Amount to Send",
+    fr: "Montant à envoyer",
+    es: "Monto a enviar"
+  },
+  takeScreenshot: {
+    ht: "Pran yon ekrankopi konfirmasyon an",
+    en: "Take a screenshot of the confirmation",
+    fr: "Prenez une capture d'écran de la confirmation",
+    es: "Toma una captura de pantalla de la confirmación"
+  },
+  emailTheScreenshot: {
+    ht: "Imel ekrankopi a",
+    en: "Email the screenshot",
+    fr: "Envoyez la capture d'écran par email",
+    es: "Envía la captura de pantalla por correo"
+  },
+  includeUsername: {
+    ht: "Mete non itilizatè GroLotto ou nan imel la",
+    en: "Include your GroLotto username in the email",
+    fr: "Incluez votre nom d'utilisateur GroLotto dans l'email",
+    es: "Incluye tu nombre de usuario de GroLotto en el correo"
+  },
+  iSentPayment: {
+    ht: "Mwen Voye Peman an",
+    en: "I've Sent the Payment",
+    fr: "J'ai envoyé le paiement",
+    es: "He enviado el pago"
+  },
+  backToGiftCards: {
+    ht: "Retounen nan Kat Kado",
+    en: "Back to Gift Cards",
+    fr: "Retour aux cartes cadeaux",
+    es: "Volver a tarjetas de regalo"
+  },
+  enter16CharCode: {
+    ht: "Antre kòd 16 karaktè a nan kat kado ou",
+    en: "Enter the 16-character code from your gift card",
+    fr: "Entrez le code à 16 caractères de votre carte cadeau",
+    es: "Ingresa el código de 16 caracteres de tu tarjeta de regalo"
+  },
+  giftCardCode: {
+    ht: "Kòd Kat Kado",
+    en: "Gift Card Code",
+    fr: "Code de la carte cadeau",
+    es: "Código de la tarjeta de regalo"
+  },
+  verifying: {
+    ht: "Ap verifye...",
+    en: "Verifying...",
+    fr: "Vérification...",
+    es: "Verificando..."
+  },
+  noGiftCardsPurchased: {
+    ht: "Pa gen kat kado achte toujou",
+    en: "No gift cards purchased yet",
+    fr: "Aucune carte cadeau achetée pour l'instant",
+    es: "Aún no hay tarjetas de regalo compradas"
+  },
+  buyFirstGiftCard: {
+    ht: "Achte Premye Kat Kado Ou",
+    en: "Buy Your First Gift Card",
+    fr: "Achetez votre première carte cadeau",
+    es: "Compra tu primera tarjeta de regalo"
+  },
+  savePaymentReceipt: {
+    ht: "Sove resi peman oswa ekrankopi konfirmasyon an",
+    en: "Save the payment receipt or confirmation screen",
+    fr: "Sauvegardez le reçu ou l'écran de confirmation",
+    es: "Guarda el recibo o la pantalla de confirmación"
+  },
+  clickButtonBelow: {
+    ht: "Klike bouton ki anba a",
+    en: "Click the button below",
+    fr: "Cliquez sur le bouton ci-dessous",
+    es: "Haz clic en el botón de abajo"
+  },
+  weWillVerifyPayment: {
+    ht: "Nou pral verifye peman ou epi kredite bous ou",
+    en: "We'll verify your payment and credit your wallet",
+    fr: "Nous vérifierons votre paiement et créditerons votre portefeuille",
+    es: "Verificaremos tu pago y acreditaremos tu billetera"
+  },
+  addedToWalletMsg: {
+    ht: "Ajoute nan bous ou",
+    en: "Added to your wallet",
+    fr: "Ajouté à votre portefeuille",
+    es: "Agregado a tu billetera"
+  },
+  pay: {
+    ht: "Peye",
+    en: "Pay",
+    fr: "Payer",
+    es: "Pagar"
+  },
+  continueText: {
+    ht: "Kontinye",
+    en: "Continue",
+    fr: "Continuer",
+    es: "Continuar"
+  },
+
   // Tchala page extras
   tchalaDescription: {
     ht: "Tchala se yon tradisyon Ayisyen ki entèprete rèv yo nan nimewo lotri ki pote chans. Chèche yon senbòl rèv oswa yon mo kle pou jwenn nimewo chans ou yo!",
@@ -3963,6 +4187,196 @@ export const translations = {
     en: "Still need help? Reach out to our support team:",
     fr: "Besoin d'aide supplémentaire ? Contactez notre équipe :",
     es: "¿Aún necesitas ayuda? Contacta a nuestro equipo:"
+  },
+
+  // Gift card error/action messages
+  failedToLoadGiftCards: {
+    ht: "Echèk nan chaje kat kado yo",
+    en: "Failed to load gift cards",
+    fr: "Échec du chargement des cartes cadeaux",
+    es: "Error al cargar las tarjetas de regalo"
+  },
+  failedToPurchaseGiftCard: {
+    ht: "Echèk nan achte kat kado",
+    en: "Failed to purchase gift card",
+    fr: "Échec de l'achat de la carte cadeau",
+    es: "Error al comprar la tarjeta de regalo"
+  },
+  failedToCreatePaymentOrder: {
+    ht: "Echèk nan kreye lòd peman",
+    en: "Failed to create payment order",
+    fr: "Échec de la création de la commande de paiement",
+    es: "Error al crear la orden de pago"
+  },
+  pleaseEnterGiftCardCode: {
+    ht: "Tanpri antre kòd kat kado a",
+    en: "Please enter a gift card code",
+    fr: "Veuillez entrer un code de carte cadeau",
+    es: "Por favor ingresa un código de tarjeta de regalo"
+  },
+  invalidGiftCardCode: {
+    ht: "Kòd kat kado a pa valid. Tanpri verifye epi eseye ankò.",
+    en: "Invalid gift card code. Please check and try again.",
+    fr: "Code de carte cadeau invalide. Vérifiez et réessayez.",
+    es: "Código de tarjeta de regalo inválido. Verifica e intenta de nuevo."
+  },
+  giftCardAlreadyRedeemed: {
+    ht: "Kat kado sa a deja rachte.",
+    en: "This gift card has already been redeemed.",
+    fr: "Cette carte cadeau a déjà été utilisée.",
+    es: "Esta tarjeta de regalo ya fue canjeada."
+  },
+  giftCardExpired: {
+    ht: "Kat kado sa a ekspire.",
+    en: "This gift card has expired.",
+    fr: "Cette carte cadeau a expiré.",
+    es: "Esta tarjeta de regalo ha expirado."
+  },
+  cannotRedeemOwnCard: {
+    ht: "Ou pa kapab rachte pwòp kat kado ou a.",
+    en: "You cannot redeem your own gift card.",
+    fr: "Vous ne pouvez pas utiliser votre propre carte cadeau.",
+    es: "No puedes canjear tu propia tarjeta de regalo."
+  },
+  failedToRedeemGiftCard: {
+    ht: "Echèk nan rachte kat kado",
+    en: "Failed to redeem gift card",
+    fr: "Échec du rachat de la carte cadeau",
+    es: "Error al canjear la tarjeta de regalo"
+  },
+  codeCopied: {
+    ht: "Kòd kopye!",
+    en: "Code copied!",
+    fr: "Code copié !",
+    es: "¡Código copiado!"
+  },
+  codeCopiedShare: {
+    ht: "Kòd kopye! Pataje li ak zanmi ou.",
+    en: "Code copied! Share it with your friend.",
+    fr: "Code copié ! Partagez-le avec votre ami.",
+    es: "¡Código copiado! Compártelo con tu amigo."
+  },
+  copyCode: {
+    ht: "Kopye Kòd",
+    en: "Copy Code",
+    fr: "Copier le code",
+    es: "Copiar código"
+  },
+  shareLabel: {
+    ht: "Pataje",
+    en: "Share",
+    fr: "Partager",
+    es: "Compartir"
+  },
+  copyLabel: {
+    ht: "Kopye",
+    en: "Copy",
+    fr: "Copier",
+    es: "Copiar"
+  },
+  forRecipient: {
+    ht: "Pou:",
+    en: "For:",
+    fr: "Pour :",
+    es: "Para:"
+  },
+  paymentInstructions: {
+    ht: "Enstriksyon Peman",
+    en: "Payment Instructions",
+    fr: "Instructions de paiement",
+    es: "Instrucciones de pago"
+  },
+  sendTo: {
+    ht: "Voye bay:",
+    en: "Send to:",
+    fr: "Envoyer à :",
+    es: "Enviar a:"
+  },
+  receivedPaymentNotification: {
+    ht: "Nou resevwa notifikasyon peman ou. Ekip nou an pral verifye peman ou an epi kredite bous ou nan kèk èdtan.",
+    en: "We've received your payment notification. Our team will verify your payment and credit your wallet within a few hours.",
+    fr: "Nous avons reçu votre notification de paiement. Notre équipe vérifiera votre paiement et créditera votre portefeuille en quelques heures.",
+    es: "Recibimos tu notificación de pago. Nuestro equipo verificará tu pago y acreditará tu billetera en unas pocas horas."
+  },
+  makeSureEmailedScreenshotTo: {
+    ht: "Asire ou voye ekrankopi ou pa imel bay",
+    en: "Make sure you've emailed your screenshot to",
+    fr: "Assurez-vous d'avoir envoyé votre capture d'écran par email à",
+    es: "Asegúrate de haber enviado tu captura de pantalla por correo a"
+  },
+
+  // Payment page toast/instruction messages
+  completingPaymentMoncash: {
+    ht: "Ap konplete peman nan MonCash...",
+    en: "Completing payment in MonCash...",
+    fr: "Finalisation du paiement dans MonCash...",
+    es: "Completando el pago en MonCash..."
+  },
+  completePaymentStripe: {
+    ht: "Konplete peman nan fenèt Stripe la.",
+    en: "Complete payment in the Stripe popup.",
+    fr: "Complétez le paiement dans la fenêtre Stripe.",
+    es: "Completa el pago en la ventana emergente de Stripe."
+  },
+  stripePaymentFailed: {
+    ht: "Peman Stripe pa kapab verifye.",
+    en: "Stripe payment could not be verified.",
+    fr: "Le paiement Stripe n'a pas pu être vérifié.",
+    es: "No se pudo verificar el pago de Stripe."
+  },
+  paymentVerificationTimeout: {
+    ht: "Tan verifye peman an fini. Tanpri verifye balans ou.",
+    en: "Payment verification timed out. Please check your balance.",
+    fr: "La vérification du paiement a expiré. Vérifiez votre solde.",
+    es: "La verificación del pago expiró. Revisa tu saldo."
+  },
+  failedToCreatePayment: {
+    ht: "Echèk nan kreye peman. Tanpri eseye ankò.",
+    en: "Failed to create payment. Please try again.",
+    fr: "Échec de la création du paiement. Veuillez réessayer.",
+    es: "Error al crear el pago. Por favor intenta de nuevo."
+  },
+  sendScreenshotUsernameEmail: {
+    ht: "Voye ekrankopi a ak non itilizatè GroLotto ou pa imel bay",
+    en: "Send the screenshot with your GroLotto username via email to",
+    fr: "Envoyez la capture d'écran avec votre nom d'utilisateur GroLotto par email à",
+    es: "Envía la captura de pantalla con tu nombre de usuario de GroLotto por email a"
+  },
+  orWhatsAppSmsTo: {
+    ht: "oswa WhatsApp/SMS bay",
+    en: "or WhatsApp/SMS to",
+    fr: "ou WhatsApp/SMS à",
+    es: "o WhatsApp/SMS a"
+  },
+  makeSureSentScreenshotTo: {
+    ht: "Asire ou voye ekrankopi ou bay",
+    en: "Make sure you've sent your screenshot to",
+    fr: "Assurez-vous d'avoir envoyé votre capture d'écran à",
+    es: "Asegúrate de haber enviado tu captura de pantalla a"
+  },
+  sendLabel: {
+    ht: "Voye",
+    en: "Send",
+    fr: "Envoyez",
+    es: "Envía"
+  },
+  yourAmountLabel: {
+    ht: "montan ou",
+    en: "your amount",
+    fr: "votre montant",
+    es: "tu monto"
+  },
+  viaLabel: {
+    ht: "via",
+    en: "via",
+    fr: "via",
+    es: "via"
+  },
+  toLabel: {
+    ht: "bay",
+    en: "to",
+    fr: "à",
+    es: "a"
   }
 };
 

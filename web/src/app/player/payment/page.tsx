@@ -88,14 +88,14 @@ export default function PaymentScreen() {
           amount: parseFloat(amount),
           currency: 'USD',
         });
-        toast.success("Complete payment in the Stripe popup.");
+        toast.success(t("completePaymentStripe") || "Complete payment in the Stripe popup.");
         const confirmed = await paymentOrderAPI.confirmStripePayment(intent.paymentIntentId);
         if (confirmed.success) {
           try { const w = await walletAPI.getBalance(); if (w) setWallet(w); } catch { }
           setShowSuccess(true);
           setTimeout(() => { setShowSuccess(false); router.push("/player/dashboard"); }, 3000);
         } else {
-          toast.error("Stripe payment could not be verified.");
+          toast.error(t("stripePaymentFailed") || "Stripe payment could not be verified.");
         }
         setProcessing(false);
         return;
@@ -110,7 +110,7 @@ export default function PaymentScreen() {
         const paymentWindow = window.open(paymentUrl, "_blank", "width=600,height=700");
 
         // Poll for completion
-        toast("Completing payment in MonCash...", { duration: 5000 });
+        toast(t("completingPaymentMoncash") || "Completing payment in MonCash...", { duration: 5000 });
 
         let verified = false;
         for (let attempt = 0; attempt < 12; attempt++) {
@@ -150,13 +150,13 @@ export default function PaymentScreen() {
             router.push("/player/dashboard");
           }, 3000);
         } else {
-          toast.error("Payment verification timed out. Please check your balance.");
+          toast.error(t("paymentVerificationTimeout") || "Payment verification timed out. Please check your balance.");
         }
       } else {
-        toast.error("Failed to create payment. Please try again.");
+        toast.error(t("failedToCreatePayment") || "Failed to create payment. Please try again.");
       }
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Payment failed");
+      toast.error(err?.response?.data?.message || t("paymentFailed") || "Payment failed");
     } finally {
       setProcessing(false);
     }
@@ -305,7 +305,7 @@ export default function PaymentScreen() {
                   <CreditCard className="h-6 w-6 text-white" />
                 </div>
                 <div className="text-left flex-1">
-                  <p className="font-semibold text-gray-900">{t("Debit Card") || "Debit Card"}</p>
+                  <p className="font-semibold text-gray-900">{t("debitCard") || "Debit Card"}</p>
                   <p className="text-sm text-gray-500">{t("payInstantly") || "Pay instantly"}</p>
                 </div>
                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedMethod === "stripe" ? "border-blue-500" : "border-gray-300"}`}>
@@ -404,7 +404,7 @@ export default function PaymentScreen() {
           <div className="flex items-start gap-3">
             <div className="bg-amber-500 text-white font-bold w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0">1</div>
             <p className="text-sm text-gray-600">
-              Send <span className="font-semibold text-gray-900">{amount ? formatCurrency(parseFloat(amount), currency) : "your amount"}</span> via {selectedMethod === "zelle" ? "Zelle" : "CashApp"} to{" "}
+              {t("sendLabel") || "Send"} <span className="font-semibold text-gray-900">{amount ? formatCurrency(parseFloat(amount), currency) : (t("yourAmountLabel") || "your amount")}</span> {t("viaLabel") || "via"} {selectedMethod === "zelle" ? "Zelle" : "CashApp"} {t("toLabel") || "to"}{" "}
               <span className="font-mono text-amber-600">
                 {selectedMethod === "zelle" ? (paymentConfig.zelle_email || "payments@grolotto.com") : (paymentConfig.cashapp_tag || "$GroLotto")}
               </span>
@@ -412,20 +412,20 @@ export default function PaymentScreen() {
           </div>
           <div className="flex items-start gap-3">
             <div className="bg-amber-500 text-white font-bold w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0">2</div>
-            <p className="text-sm text-gray-600">Take a screenshot of the payment confirmation</p>
+            <p className="text-sm text-gray-600">{t("takeScreenshot") || "Take a screenshot of the payment confirmation"}</p>
           </div>
           <div className="flex items-start gap-3">
             <div className="bg-amber-500 text-white font-bold w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0">3</div>
             <p className="text-sm text-gray-600">
-              Send the screenshot with your GroLotto username via email to{" "}
+              {t("sendScreenshotUsernameEmail") || "Send the screenshot with your GroLotto username via email to"}{" "}
               <span className="font-mono text-amber-600">{paymentConfig.zelle_email || "payments@grolotto.com"}</span>
-              {" "}or WhatsApp/SMS to{" "}
+              {" "}{t("orWhatsAppSmsTo") || "or WhatsApp/SMS to"}{" "}
               <span className="font-mono text-amber-600">{paymentConfig.support_phone || "+1 (555) 123-4567"}</span>
             </p>
           </div>
           <div className="flex items-start gap-3">
             <div className="bg-amber-500 text-white font-bold w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0">4</div>
-            <p className="text-sm text-gray-600">Click the Pay button below — we&apos;ll verify and credit your wallet</p>
+            <p className="text-sm text-gray-600">{t("clickButtonBelow") || "Click the button below"} — {t("weWillVerifyPayment") || "we'll verify and credit your wallet"}</p>
           </div>
         </div>
       )}
@@ -441,7 +441,7 @@ export default function PaymentScreen() {
             {t("verificationInProgress") || "We've received your deposit notification. Our team will verify and credit your wallet within a few hours."}
           </p>
           <p className="text-gray-500 text-sm">
-            Make sure you&apos;ve sent your screenshot to{" "}
+            {t("makeSureSentScreenshotTo") || "Make sure you've sent your screenshot to"}{" "}
             <span className="text-amber-600 font-medium">{paymentConfig.zelle_email || "payments@grolotto.com"}</span>
             {" "}or{" "}
             <span className="text-amber-600 font-medium">{paymentConfig.support_phone || "+1 (555) 123-4567"}</span>
@@ -484,10 +484,10 @@ export default function PaymentScreen() {
             }`}
         >
           {processing
-            ? "Processing..."
+            ? (t("processing") || "Processing...")
             : selectedMethod === "gift_card"
               ? `${t("openWebsite") || "Open Website"} →`
-              : `🔒 Pay ${amount ? formatCurrency(parseFloat(amount), currency) : ""}`}
+              : `🔒 ${t("pay") || "Pay"} ${amount ? formatCurrency(parseFloat(amount), currency) : ""}`}
         </button>
       )}
     </div>

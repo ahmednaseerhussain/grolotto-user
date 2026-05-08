@@ -205,7 +205,7 @@ export default function PlayerDashboard() {
             {t("welcomePlayer") || "Welcome, Player!"}
           </h1>
           <p className="text-sm text-gray-500">
-            {t("Play & Win") || "Play & Win Big Today!"}
+            {t("playAndWin") || "Play & Win Big Today!"}
           </p>
         </div>
         <Button variant="ghost" size="sm" onClick={() => router.push("/player/profile")}>
@@ -390,8 +390,7 @@ export default function PlayerDashboard() {
           <div className="text-left flex-1">
             <p className="font-semibold text-gray-900">{t("giftCard") || "Gift Card"}</p>
             <p className="text-sm text-gray-500">
-              {/* Buy Gift Card From Your Debit Card */}
-              Share Credits Through Gift Card
+              {t("shareCreditsGiftCard") || "Share Credits Through Gift Card"}
             </p>
           </div>
         </div>
@@ -462,7 +461,7 @@ export default function PlayerDashboard() {
           <Card className="bg-gray-50 border-dashed">
             <CardContent className="p-4 text-center">
               <Trophy className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">{t("No results published yet") || "No results published yet today"}</p>
+              <p className="text-sm text-gray-500">{t("noResultsPublishedToday") || "No results published yet today"}</p>
               <Button variant="ghost" size="sm" className="mt-2" onClick={() => router.push("/player/results")}>
                 {t("viewAllResults") || "View All Results"}
               </Button>
@@ -509,7 +508,7 @@ export default function PlayerDashboard() {
           <EmptyState
             icon={<Search className="h-12 w-12 text-gray-300" />}
             title={t("noVendorsFound") || "No vendors found"}
-            description="Try a different search term"
+            description={t("tryDifferentSearch") || "Try a different search term"}
           />
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
