@@ -420,6 +420,12 @@ export const translations = {
     fr: "Prix & Limites",
     es: "Precios y Límites"
   },
+  drawSchedule: {
+    ht: "Orè Tiraj",
+    en: "Draw Schedule",
+    fr: "Calendrier des Tirages",
+    es: "Horario de Sorteos"
+  },
   todayPlayersWinners: {
     ht: "Jwè ak Gayan Jodi a",
     en: "Today's Players",

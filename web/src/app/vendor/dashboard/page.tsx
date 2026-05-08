@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Users, Ticket, Wallet, Settings, Shield, History, LogOut, Banknote,
   ChevronRight, ChevronDown, Calendar, Loader2, Trophy, Gamepad2,
-  DollarSign, TrendingUp, TrendingDown, Award
+  DollarSign, TrendingUp, TrendingDown, Award, Clock
 } from "lucide-react";
 import { formatCurrency, getVendorBalanceClasses } from "@/lib/utils";
 import type { VendorStats } from "@/types";
@@ -83,6 +83,7 @@ export default function VendorDashboard() {
     { label: t("withdrawal") || "Withdrawal", icon: Banknote, href: "/vendor/payouts", color: "bg-red-50 text-red-600" },
     { label: t("myProfile") || "My Profile", icon: Users, href: "/vendor/profile", color: "bg-indigo-50 text-indigo-600" },
     { label: t("todaysPlayers") || "Today's Players", icon: Calendar, href: "/vendor/today", color: "bg-pink-50 text-pink-600" },
+    { label: t("drawSchedule") || "Draw Schedule", icon: Clock, href: "/vendor/schedule", color: "bg-teal-50 text-teal-600" },
   ];
 
   if (loading) {
