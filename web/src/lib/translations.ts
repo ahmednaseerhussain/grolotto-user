@@ -420,6 +420,19 @@ export const translations = {
     fr: "Prix & Limites",
     es: "Precios y Límites"
   },
+  addMoneyUsingGiftCard: {
+  ht: "Ajoute Lajan ak Kat Kado",
+  en: "Add Money Using Gift Card",
+  fr: "Ajouter de l'Argent avec une Carte Cadeau",
+  es: "Agregar Dinero con Tarjeta de Regalo"
+},
+buyGiftCardFromWebsite: {
+  ht: "Achte Kat Kado sou Sit Wèb",
+  en: "Buy Gift Card From Website",
+  fr: "Acheter une Carte Cadeau sur le Site",
+  es: "Comprar Tarjeta de Regalo en el Sitio Web"
+},
+
   drawSchedule: {
     ht: "Orè Tiraj",
     en: "Draw Schedule",

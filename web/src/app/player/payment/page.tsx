@@ -356,7 +356,45 @@ export default function PaymentScreen() {
           )}
 
           {/* Gift Card — currency-specific, redirects to website */}
-          <button
+          <div className="w-full p-4 rounded-xl border-2 border-gray-200 bg-white">
+            <div className="flex items-center gap-4">
+              <div className="bg-amber-500 w-12 h-12 rounded-full flex items-center justify-center">
+                <Gift className="h-6 w-6 text-white" />
+              </div>
+              <div className="text-left flex-1">
+                <p className="font-semibold text-gray-900">{t("addMoneyUsingGiftCard") || "Add Money Using Gift Card"}</p>
+                {/* <p className="text-sm text-gray-500">
+                  {t("shareCreditsGiftCard") || "Share Credits Through Gift Card"}
+                </p> */}
+              </div>
+            </div>
+            <div className="flex gap-2 mt-3">
+              <button onClick={() => window.open("https://grolotto.com/buy-gift-card", "_blank", "noopener,noreferrer")}
+                className="flex-1 py-2 px-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-colors"
+              >
+                🌐 {t("buyGiftCardFromWebsite") || "Buy Gift Card From Website"}
+              </button>
+              <button onClick={() => router.push("/player/gift-cards?tab=redeem")}
+                className="flex-1 py-2 px-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-colors"
+              >
+                🎟️ {t("redeemCode") || "Redeem Code"}
+              </button>
+            </div>
+          </div>
+          {/* <button
+        onClick={() => window.open("https://grolotto.com/buy-gift-card", "_blank", "noopener,noreferrer")}
+        className="w-full flex items-center gap-4 p-4 rounded-2xl bg-linear-to-r from-indigo-600 to-blue-500 text-white hover:opacity-90 transition-all shadow-md"
+      >
+        <div className="bg-white/20 p-3 rounded-xl">
+          <CreditCard className="h-6 w-6" />
+        </div>
+        <div className="text-left flex-1">
+          <span className="text-base font-bold block">{t("buyGiftCardFromDebitCard") || "Buy Gift Card from Debit Card"}</span>
+          <span className="text-xs opacity-80">{t("payWithDebitCard") || "Pay with your debit card"}</span>
+        </div>
+        <ChevronRight className="h-5 w-5 opacity-70" />
+      </button> */}
+          {/* <button
             onClick={() => setSelectedMethod("gift_card")}
             className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all ${selectedMethod === "gift_card"
               ? "border-orange-500 bg-orange-50"
@@ -377,7 +415,7 @@ export default function PaymentScreen() {
               </p>
             </div>
             <ExternalLink className="h-5 w-5 text-gray-400" />
-          </button>
+          </button> */}
         </div>
       </div>
 

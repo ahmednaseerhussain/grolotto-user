@@ -401,12 +401,12 @@ export default function PlayerDashboard() {
           >
             🎁 {t("shareGiftCard") || "Share Gift Card"}
           </button>
-          <button
+          {/* <button
             onClick={() => router.push("/player/gift-cards?tab=redeem")}
             className="flex-1 py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold transition-colors"
           >
             🎟️ {t("redeemCode") || "Redeem Code"}
-          </button>
+          </button> */}
         </div>
       </div>
 
