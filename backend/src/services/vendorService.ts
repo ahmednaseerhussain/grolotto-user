@@ -1,5 +1,6 @@
 import { query, withTransaction } from '../database/pool';
 import { AppError } from '../middleware/errorHandler';
+import { notifyAdmins } from './notificationService';
 
 export interface VendorPublic {
   id: string;
@@ -630,7 +631,7 @@ export async function requestPayout(
 ) {
   // Check vendor balance
   const vendorResult = await query(
-    'SELECT available_balance FROM vendors WHERE id = $1',
+    'SELECT v.available_balance, v.business_name, v.first_name, v.last_name, v.display_name FROM vendors v WHERE v.id = $1',
     [vendorId]
   );
   if (vendorResult.rows.length === 0) throw new AppError('Vendor not found', 404);
@@ -680,7 +681,28 @@ export async function requestPayout(
     ]
   );
 
-  return result.rows[0];
+  const payout = result.rows[0];
+
+  // Notify admins of new payout request (best-effort).
+  try {
+    const v = vendorResult.rows[0];
+    const vendorLabel =
+      v.business_name ||
+      v.display_name ||
+      `${v.first_name ?? ''} ${v.last_name ?? ''}`.trim() ||
+      'A vendor';
+    await notifyAdmins(
+      'payout_request',
+      'New payout request',
+      `${vendorLabel} requested ${currency} ${amount.toFixed(2)} via ${method}`,
+      { role: 'vendor', id: vendorId },
+      { payoutId: payout.id, amount, currency, method }
+    );
+  } catch (e) {
+    console.error('Failed to notify admins of payout request:', e);
+  }
+
+  return payout;
 }
 
 /**

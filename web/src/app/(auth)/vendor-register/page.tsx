@@ -51,6 +51,7 @@ export default function VendorRegisterPage() {
       const age = (Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
       if (age < 18) newErrors.dateOfBirth = "You must be at least 18 years old";
     }
+    if (!formData.businessName.trim()) newErrors.businessName = "Business name is required";
     if (!formData.password) newErrors.password = t("passwordRequired");
     else if (formData.password.length < 6) newErrors.password = t("minimum6Chars");
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = t("passwordsDontMatch");
@@ -158,8 +159,9 @@ export default function VendorRegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t("businessName")} ({t("optional")})</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("businessName")} *</label>
               <Input value={formData.businessName} onChange={(e) => updateField("businessName", e.target.value)} placeholder={t("yourBusinessName")} />
+              {errors.businessName && <p className="text-xs text-red-500 mt-1">{errors.businessName}</p>}
             </div>
 
             {/* Operating Currency */}
@@ -171,8 +173,8 @@ export default function VendorRegisterPage() {
                   type="button"
                   onClick={() => updateField("operatingCurrency", "HTG")}
                   className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${formData.operatingCurrency === "HTG"
-                      ? "border-emerald-500 bg-emerald-50"
-                      : "border-gray-200 hover:border-gray-300"
+                    ? "border-emerald-500 bg-emerald-50"
+                    : "border-gray-200 hover:border-gray-300"
                     }`}
                 >
                   <span className="text-2xl">🇭🇹</span>
@@ -183,8 +185,8 @@ export default function VendorRegisterPage() {
                   type="button"
                   onClick={() => updateField("operatingCurrency", "USD")}
                   className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${formData.operatingCurrency === "USD"
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300"
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-gray-300"
                     }`}
                 >
                   <span className="text-2xl">🇺🇸</span>
