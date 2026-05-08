@@ -54,18 +54,28 @@ const MARYAJ_PAIR_COLORS = [
   "bg-red-500",
 ];
 
+// function NumberBall({ number, color = "bg-amber-500", size = "w-11 h-11", gameType }: { number: number | string; color?: string; size?: string; gameType?: string }) {
+//   // Display: pad to 2 digits for senp/maryaj/unknown, keep single for loto3/4/5
+//   const isSingleDigitGame = gameType === "loto3" || gameType === "loto4" || gameType === "loto5";
+//   const s = String(number ?? "");
+//   const display = isSingleDigitGame ? s : (s.length >= 2 ? s : s.padStart(2, "0"));
+//   return (
+//     <div className={`${size} rounded-full ${color} text-white flex items-center justify-center font-bold shadow-md text-base`}>
+//       {display}
+//     </div>
+//   );
+// }
+
+
 function NumberBall({ number, color = "bg-amber-500", size = "w-11 h-11", gameType }: { number: number | string; color?: string; size?: string; gameType?: string }) {
-  // Display: pad to 2 digits for senp/maryaj/unknown, keep single for loto3/4/5
-  const isSingleDigitGame = gameType === "loto3" || gameType === "loto4" || gameType === "loto5";
-  const s = String(number ?? "");
-  const display = isSingleDigitGame ? s : (s.length >= 2 ? s : s.padStart(2, "0"));
+  // Display value exactly as it comes from backend (no padding).
+  const display = String(number ?? "");
   return (
     <div className={`${size} rounded-full ${color} text-white flex items-center justify-center font-bold shadow-md text-base`}>
       {display}
     </div>
   );
 }
-
 export default function ResultsScreen() {
   const router = useRouter();
   const t = useTranslation();
