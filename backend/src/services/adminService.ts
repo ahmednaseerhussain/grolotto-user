@@ -186,7 +186,7 @@ export async function getAllUsers(role?: string, page: number = 1, limit: number
             w.balance_usd, w.total_won, w.total_bet,
             v.id as vendor_id, v.first_name as v_first_name, v.last_name as v_last_name,
             v.status as vendor_status, v.total_revenue, v.available_balance as v_available_balance,
-            v.commission_rate, v.display_name as business_name,
+            v.commission_rate, v.business_name, v.display_name,
             u.city, u.country
      FROM users u
      LEFT JOIN wallets w ON w.user_id = u.id
@@ -219,6 +219,7 @@ export async function getAllUsers(role?: string, page: number = 1, limit: number
     availableBalance: parseFloat(r.v_available_balance || '0'),
     commissionRate: parseFloat(r.commission_rate || '0'),
     businessName: r.business_name || null,
+    displayName: r.display_name || null,
     city: r.city || null,
     country: r.country || null,
   }));
