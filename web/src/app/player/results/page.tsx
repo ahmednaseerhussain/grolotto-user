@@ -317,7 +317,7 @@ export default function ResultsScreen() {
                                     {senpNums.map((n: number, i: number) => (
                                       <div key={i} className="flex flex-col items-center gap-1">
                                         <span className={`text-[10px] font-semibold ${gc.text}`}>{labels[i] || ""}</span>
-                                        <NumberBall number={n} color={gc.ball} size="w-10 h-10" gameType="senp" />
+                                        <NumberBall number={String(n).padStart(2, "0")} color={gc.ball} size="w-10 h-10" gameType="senp" />
                                       </div>
                                     ))}
                                   </div>
@@ -359,9 +359,9 @@ export default function ResultsScreen() {
                                       const pairColor = MARYAJ_PAIR_COLORS[i % MARYAJ_PAIR_COLORS.length];
                                       return (
                                         <div key={i} className="flex items-center gap-1.5">
-                                          <NumberBall number={a} color={pairColor} size="w-9 h-9" gameType="maryaj" />
+                                          <NumberBall number={String(a).padStart(2, "0")} color={pairColor} size="w-9 h-9" gameType="maryaj" />
                                           <span className={`text-sm font-bold ${gc.text}`}>×</span>
-                                          <NumberBall number={b} color={pairColor} size="w-9 h-9" gameType="maryaj" />
+                                          <NumberBall number={String(b).padStart(2, "0")} color={pairColor} size="w-9 h-9" gameType="maryaj" />
                                         </div>
                                       );
                                     })}
@@ -375,7 +375,7 @@ export default function ResultsScreen() {
                               const nums = winNums[gameType];
                               if (!nums || !Array.isArray(nums) || nums.length === 0) return null;
                               const gc = GAME_COLORS[gameType] || GAME_COLORS.senp;
-                              const concatenated = nums.join("");
+                              const concatenated = nums.map((n: number) => String(n ?? "")).join("");
                               return (
                                 <div key={gameType} className={`${gc.bg} rounded-lg p-3`}>
                                   <div className="flex items-center justify-between">
