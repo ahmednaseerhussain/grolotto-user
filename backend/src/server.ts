@@ -543,6 +543,7 @@ const ALLOWED_WEB_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:19006',
+  'https://app.grolotto.com',
 ].filter(Boolean) as string[];
 
 app.use(cors({
