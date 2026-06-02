@@ -2,8 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import * as notificationService from '../services/notificationService';
 
 function resolveRole(req: Request): 'player' | 'vendor' | 'admin' {
-  const r = req.user!.role;
-  if (r === 'vendor') return 'vendor';
+const r = req.user!.role as string;  if (r === 'vendor') return 'vendor';
   if (r === 'admin' || r === 'super_admin') return 'admin';
   return 'player';
 }

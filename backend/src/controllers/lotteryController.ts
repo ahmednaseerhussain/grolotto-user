@@ -36,7 +36,7 @@ export async function getDrawStates(_req: Request, res: Response, next: NextFunc
     // still receive that shape, plus a `times` array with the schedule details.
     const byState = new Map<string, { code: string; name: string; times: any[] }>();
     for (const row of rows) {
-      const entry = byState.get(row.code) || { code: row.code, name: row.name, times: [] };
+const entry: { code: string; name: string; times: any[] } = byState.get(row.code) || { code: row.code, name: row.name, times: [] };
       entry.times.push({
         id: row.id,
         name: row.name,
