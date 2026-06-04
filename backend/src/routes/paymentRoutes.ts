@@ -99,16 +99,25 @@ router.post('/stripe/confirm', authenticate, async (req, res, next) => {
   }
 });
 
-// === Payment config (public — returns Zelle email, CashApp tag) ===
+// === Payment config (public — returns Zelle, CashApp, social handles) ===
 router.get('/config', async (_req, res, next) => {
   try {
     const { query: dbQuery } = require('../database/pool');
     const result = await dbQuery(
-      `SELECT key, value FROM app_settings WHERE key IN ('zelle_email', 'cashapp_tag', 'cashapp_phone')`
+      `SELECT key, value FROM app_settings WHERE key IN (
+         'zelle_email', 'cashapp_tag', 'cashapp_phone',
+         'paypal_email', 'support_phone',
+         'social_facebook', 'social_instagram', 'social_tiktok'
+       )`
     );
     const config: Record<string, string> = {};
     for (const row of result.rows) {
-      config[row.key] = typeof row.value === 'string' ? row.value : JSON.stringify(row.value);
+      // values are JSONB strings ("foo") — normalize to plain string
+      let v = row.value;
+      if (typeof v === 'string') {
+        try { const parsed = JSON.parse(v); if (typeof parsed === 'string') v = parsed; } catch { /* keep raw */ }
+      }
+      config[row.key] = typeof v === 'string' ? v : JSON.stringify(v);
     }
     res.json(config);
   } catch (error) { next(error); }

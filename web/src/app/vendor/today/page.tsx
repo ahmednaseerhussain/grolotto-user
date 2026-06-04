@@ -118,18 +118,86 @@ export default function TodayPlayersWinnersScreen() {
       doc.text(`Today's ${activeTab === "winners" ? "Winners" : "Players"} Report`, 14, 20);
       doc.setFontSize(10);
       doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 28);
-      autoTable(doc, {
-        startY: 35,
-        head: [["Player", "Game", "Numbers", "Bet", activeTab === "winners" ? "Won" : "State"]],
-        body: displayed.map((e) => [
-          e.playerName || e.playerPhone || "-",
+
+      // Sort: same player rows together, then by createdAt
+      const sorted = [...displayed].sort((a, b) => {
+        const pa = (a.playerName || a.playerPhone || "").toLowerCase();
+        const pb = (b.playerName || b.playerPhone || "").toLowerCase();
+        if (pa !== pb) return pa < pb ? -1 : 1;
+        const ca = (a as any).createdAt || "";
+        const cb = (b as any).createdAt || "";
+        return ca < cb ? -1 : ca > cb ? 1 : 0;
+      });
+
+      const isWinners = activeTab === "winners";
+      const body: (string | number)[][] = [];
+      let rowNum = 0;
+      let playerTotal = 0;
+      let playerWonTotal = 0;
+      let grandTotal = 0;
+      let grandWonTotal = 0;
+      let currentPlayer: string | null = null;
+
+      const flushPlayerSubtotal = () => {
+        if (currentPlayer === null) return;
+        body.push([
+          "",
+          `Subtotal — ${currentPlayer}`,
+          "",
+          "",
+          formatCurrency(playerTotal, currency),
+          isWinners ? formatCurrency(playerWonTotal, currency) : "",
+        ]);
+        playerTotal = 0;
+        playerWonTotal = 0;
+      };
+
+      for (const e of sorted) {
+        const pn = e.playerName || e.playerPhone || "Unknown";
+        if (pn !== currentPlayer) {
+          flushPlayerSubtotal();
+          currentPlayer = pn;
+        }
+        rowNum += 1;
+        playerTotal += Number(e.betAmount) || 0;
+        grandTotal += Number(e.betAmount) || 0;
+        if (e.won && e.winAmount) {
+          playerWonTotal += Number(e.winAmount) || 0;
+          grandWonTotal += Number(e.winAmount) || 0;
+        }
+        body.push([
+          rowNum,
+          pn,
           GAME_LABELS[e.gameType] || e.gameType,
           e.numbers,
           formatCurrency(e.betAmount, currency),
-          activeTab === "winners"
+          isWinners
             ? formatCurrency(e.winAmount || 0, currency)
             : DRAW_STATES[e.state || ""] || e.state || "-",
-        ]),
+        ]);
+      }
+      flushPlayerSubtotal();
+      body.push([
+        "",
+        "GRAND TOTAL",
+        "",
+        "",
+        formatCurrency(grandTotal, currency),
+        isWinners ? formatCurrency(grandWonTotal, currency) : "",
+      ]);
+
+      autoTable(doc, {
+        startY: 35,
+        head: [["#", "Player", "Game", "Numbers", "Bet", isWinners ? "Won" : "State"]],
+        body,
+        didParseCell: (data) => {
+          const raw = data.row.raw as any;
+          const cell1 = String((raw && raw[1]) ?? "");
+          if (cell1.startsWith("Subtotal") || cell1 === "GRAND TOTAL") {
+            data.cell.styles.fontStyle = "bold";
+            data.cell.styles.fillColor = cell1 === "GRAND TOTAL" ? [254, 215, 170] : [243, 244, 246];
+          }
+        },
       });
       doc.save(`today-${activeTab}-${new Date().toISOString().split("T")[0]}.pdf`);
       toast.success("PDF exported!");

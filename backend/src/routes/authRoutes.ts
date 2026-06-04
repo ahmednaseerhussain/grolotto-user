@@ -11,6 +11,8 @@ router.post('/login', validate(loginSchema), ctrl.login);
 router.post('/refresh', ctrl.refreshToken);
 router.post('/forgot-password', ctrl.forgotPassword);
 router.post('/reset-password', ctrl.resetPassword);
+router.post('/verify-email', ctrl.verifyEmail);
+router.post('/resend-verification', ctrl.resendVerification);
 router.post('/logout', authenticate, ctrl.logout);
 router.get('/profile', authenticate, ctrl.getProfile);
 router.put('/profile', authenticate, validate(updateProfileSchema), ctrl.updateProfile);

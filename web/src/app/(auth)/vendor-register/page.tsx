@@ -13,6 +13,13 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ArrowLeft, DollarSign } from "lucide-react";
 import toast from "react-hot-toast";
+import {
+  HAITI_PHONE_PREFIX,
+  extractHaitiDigits,
+  formatHaitiPhoneDisplay,
+  isValidHaitiPhone,
+  toHaitiPhone,
+} from "@/lib/phone";
 
 export default function VendorRegisterPage() {
   const router = useRouter();
@@ -20,6 +27,8 @@ export default function VendorRegisterPage() {
   const setUser = useAppStore((s) => s.setUser);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [phoneDigits, setPhoneDigits] = useState("");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -43,8 +52,7 @@ export default function VendorRegisterPage() {
     else if (formData.lastName.trim().length < 2) newErrors.lastName = "Last name must be at least 2 characters";
     if (!formData.email.trim()) newErrors.email = t("emailRequired");
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) newErrors.email = "Invalid email address";
-    if (!formData.phone.trim()) newErrors.phone = t("phoneRequired");
-    else if (formData.phone.trim().length < 8) newErrors.phone = "Phone must be at least 8 digits";
+    if (!isValidHaitiPhone(phoneDigits)) newErrors.phone = t("phoneInvalid") || "Phone must be +509 followed by 8 digits";
     if (!formData.dateOfBirth.trim()) newErrors.dateOfBirth = t("dobRequired");
     else {
       const dob = new Date(formData.dateOfBirth);
@@ -55,6 +63,7 @@ export default function VendorRegisterPage() {
     if (!formData.password) newErrors.password = t("passwordRequired");
     else if (formData.password.length < 6) newErrors.password = t("minimum6Chars");
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = t("passwordsDontMatch");
+    if (!acceptedTerms) newErrors.acceptedTerms = t("mustAcceptTerms") || "You must accept the Terms & Conditions";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -67,33 +76,40 @@ export default function VendorRegisterPage() {
     try {
       // Atomic signup: creates user + vendor row in a single backend transaction.
       // If any part fails, nothing is persisted — no orphan users.
-      const user = await authAPI.register({
+      const result = await authAPI.register({
         name: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
         password: formData.password,
         role: "vendor",
         dateOfBirth: formData.dateOfBirth,
-        phone: formData.phone,
+        phone: toHaitiPhone(phoneDigits),
         firstName: formData.firstName,
         lastName: formData.lastName,
         businessName: formData.businessName || undefined,
         operatingCurrency: formData.operatingCurrency,
+        acceptedTerms: true,
+        verifyByEmail: true,
       });
 
-      setUser(user);
-
-      // Upload documents if provided (non-blocking on failure)
-      try {
-        if (idCardFile) {
-          await vendorAPI.uploadDocument(idCardFile, "id_card");
-        }
-        if (businessLicenseFile) {
-          await vendorAPI.uploadDocument(businessLicenseFile, "business_license");
-        }
-      } catch (uploadErr) {
-        toast.error("Registration succeeded but document upload failed. You can upload later from your profile.");
+      if (result.requiresEmailVerification) {
+        // Defer document uploads until after email verification + login
+        try {
+          if (idCardFile) sessionStorage.setItem('pendingIdCardName', idCardFile.name);
+          if (businessLicenseFile) sessionStorage.setItem('pendingBusinessLicenseName', businessLicenseFile.name);
+        } catch { /* sessionStorage may be unavailable */ }
+        toast.success(t("verificationCodeSent") || "Verification code sent to your email");
+        router.push(`/verify-email?email=${encodeURIComponent(formData.email)}&role=vendor`);
+        return;
       }
 
+      // Fallback path (no verification required)
+      setUser(result.user);
+      try {
+        if (idCardFile) await vendorAPI.uploadDocument(idCardFile, "id_card");
+        if (businessLicenseFile) await vendorAPI.uploadDocument(businessLicenseFile, "business_license");
+      } catch {
+        toast.error("Registration succeeded but document upload failed. You can upload later from your profile.");
+      }
       toast.success(t("applicationSubmitted"));
       router.push("/vendor/pending");
     } catch (error) {
@@ -148,7 +164,26 @@ export default function VendorRegisterPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">{t("Phone Number")} *</label>
-              <Input value={formData.phone} onChange={(e) => updateField("phone", e.target.value)} placeholder="+509 1234 5678" />
+              <div className="flex items-stretch">
+                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-700 text-sm select-none">
+                  {HAITI_PHONE_PREFIX}
+                </span>
+                <Input
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel-national"
+                  value={formatHaitiPhoneDisplay(phoneDigits)}
+                  onChange={(e) => {
+                    setPhoneDigits(extractHaitiDigits(e.target.value));
+                    if (errors.phone) setErrors({ ...errors, phone: "" });
+                  }}
+                  placeholder="1234 5678"
+                  className="rounded-l-none"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                {t("haitianPhoneOnly") || "Only Haitian numbers (+509 followed by 8 digits) are accepted."}
+              </p>
               {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
             </div>
 
@@ -252,6 +287,27 @@ export default function VendorRegisterPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">{t("confirmPassword")} *</label>
               <Input type="password" value={formData.confirmPassword} onChange={(e) => updateField("confirmPassword", e.target.value)} placeholder={t("repeatPassword")} />
               {errors.confirmPassword && <p className="text-xs text-red-500 mt-1">{errors.confirmPassword}</p>}
+            </div>
+
+            <div>
+              <label className="flex items-start gap-2 text-sm text-gray-700 select-none">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => {
+                    setAcceptedTerms(e.target.checked);
+                    if (errors.acceptedTerms && e.target.checked) setErrors({ ...errors, acceptedTerms: "" });
+                  }}
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                />
+                <span>
+                  {t("iAgreeTo") || "I agree to the"}{" "}
+                  <Link href="/terms" target="_blank" className="text-emerald-600 hover:underline font-medium">
+                    {t("termsAndConditions") || "Terms & Conditions"}
+                  </Link>
+                </span>
+              </label>
+              {errors.acceptedTerms && <p className="text-xs text-red-500 mt-1">{errors.acceptedTerms}</p>}
             </div>
 
             <Button type="submit" loading={isLoading} variant="success" className="w-full" size="lg">

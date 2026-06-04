@@ -13,13 +13,15 @@ export const authAPI = {
     lastName?: string;
     businessName?: string;
     operatingCurrency?: "HTG" | "USD";
-  }) {
+    acceptedTerms?: boolean;
+    verifyByEmail?: boolean;
+  }): Promise<{ user: User; requiresEmailVerification?: boolean }> {
     const response = await apiClient.post("/auth/register", data);
     const payload = response.data.data || response.data;
     const accessToken = payload.accessToken || payload.tokens?.accessToken;
     const refreshToken = payload.refreshToken || payload.tokens?.refreshToken;
     if (accessToken) setTokens(accessToken, refreshToken);
-    return payload.user;
+    return { user: payload.user, requiresEmailVerification: !!payload.requiresEmailVerification };
   },
 
   async login(data: { email: string; password: string }) {
@@ -56,6 +58,20 @@ export const authAPI = {
 
   async resetPassword(email: string, otp: string, newPassword: string): Promise<{ message: string }> {
     const response = await apiClient.post("/auth/reset-password", { email, otp, newPassword });
+    return response.data;
+  },
+
+  async verifyEmail(email: string, otp: string): Promise<{ user: User }> {
+    const response = await apiClient.post("/auth/verify-email", { email, otp });
+    const payload = response.data.data || response.data;
+    const accessToken = payload.accessToken || payload.tokens?.accessToken;
+    const refreshToken = payload.refreshToken || payload.tokens?.refreshToken;
+    if (accessToken) setTokens(accessToken, refreshToken);
+    return { user: payload.user };
+  },
+
+  async resendVerification(email: string): Promise<{ message: string; otp?: string }> {
+    const response = await apiClient.post("/auth/resend-verification", { email });
     return response.data;
   },
 };

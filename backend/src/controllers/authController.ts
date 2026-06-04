@@ -87,3 +87,31 @@ export async function resetPassword(req: Request, res: Response, next: NextFunct
     next(error);
   }
 }
+
+export async function verifyEmail(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      res.status(400).json({ error: 'Email and OTP are required' });
+      return;
+    }
+    const result = await authService.verifyEmail(email, otp);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function resendVerification(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res.status(400).json({ error: 'Email is required' });
+      return;
+    }
+    const result = await authService.resendVerification(email);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}

@@ -112,6 +112,18 @@ export default function VendorHistoryScreen() {
 
   const escapeCSV = (val: string) => `"${String(val).replace(/"/g, '""')}"`;
 
+  /** Sort items so rows of the same player are adjacent, then by date. */
+  const groupItemsByPlayer = <T extends HistoryItem>(items: T[]): T[] => {
+    return [...items].sort((a, b) => {
+      const pa = (a.playerName || "").toLowerCase();
+      const pb = (b.playerName || "").toLowerCase();
+      if (pa !== pb) return pa < pb ? -1 : 1;
+      const ta = a.createdAt || "";
+      const tb = b.createdAt || "";
+      return ta < tb ? -1 : ta > tb ? 1 : 0;
+    });
+  };
+
   // Group items by draw (date + state + drawTime)
   const groupedByDraw = useMemo(() => {
     const groups: Record<string, { key: string; drawDate: string; state: string; drawTime: string; items: HistoryItem[]; hasResults: boolean }> = {};
@@ -133,17 +145,57 @@ export default function VendorHistoryScreen() {
   }, [filtered]);
 
   const exportGroupCSV = (group: typeof groupedByDraw[number], postResult: boolean) => {
+    const sorted = groupItemsByPlayer(group.items);
     const headers = postResult
-      ? "Player,Game,Numbers,Amount,Won,WinAmount,State,DrawTime,Date\n"
-      : "Player,Game,Numbers,Amount,State,DrawTime,Date\n";
-    const rows = group.items
-      .map((i) =>
+      ? "#,Player,Game,Numbers,Amount,Won,WinAmount,State,DrawTime,Date,PlayerTotalWagered\n"
+      : "#,Player,Game,Numbers,Amount,State,DrawTime,Date,PlayerTotalWagered\n";
+
+    const lines: string[] = [];
+    let rowNum = 0;
+    let playerTotal = 0;
+    let playerWonTotal = 0;
+    let grandTotal = 0;
+    let grandWonTotal = 0;
+    let currentPlayer: string | null = null;
+    const flushPlayerSubtotal = () => {
+      if (currentPlayer === null) return;
+      lines.push(
         postResult
-          ? `${escapeCSV(i.playerName || "")},${escapeCSV(i.gameType)},${escapeCSV(i.numbers)},${i.betAmount},${i.won ? "YES" : "NO"},${i.winAmount || 0},${escapeCSV(i.state || "")},${escapeCSV(i.drawTime || "")},${escapeCSV(i.createdAt || "")}`
-          : `${escapeCSV(i.playerName || "")},${escapeCSV(i.gameType)},${escapeCSV(i.numbers)},${i.betAmount},${escapeCSV(i.state || "")},${escapeCSV(i.drawTime || "")},${escapeCSV(i.createdAt || "")}`
-      )
-      .join("\n");
-    const blob = new Blob([headers + rows], { type: "text/csv" });
+          ? `,${escapeCSV(`Subtotal — ${currentPlayer || "Unknown"}`)},,,,,,,,,${playerTotal.toFixed(2)}`
+          : `,${escapeCSV(`Subtotal — ${currentPlayer || "Unknown"}`)},,,,,,,${playerTotal.toFixed(2)}`
+      );
+      playerTotal = 0;
+      playerWonTotal = 0;
+    };
+
+    for (const i of sorted) {
+      const pn = i.playerName || "Unknown";
+      if (pn !== currentPlayer) {
+        flushPlayerSubtotal();
+        currentPlayer = pn;
+      }
+      rowNum += 1;
+      playerTotal += Number(i.betAmount) || 0;
+      grandTotal += Number(i.betAmount) || 0;
+      if (postResult && i.won && i.winAmount) {
+        playerWonTotal += Number(i.winAmount) || 0;
+        grandWonTotal += Number(i.winAmount) || 0;
+      }
+      lines.push(
+        postResult
+          ? `${rowNum},${escapeCSV(pn)},${escapeCSV(i.gameType)},${escapeCSV(i.numbers)},${i.betAmount},${i.won ? "YES" : "NO"},${i.winAmount || 0},${escapeCSV(i.state || "")},${escapeCSV(i.drawTime || "")},${escapeCSV(i.createdAt || "")},`
+          : `${rowNum},${escapeCSV(pn)},${escapeCSV(i.gameType)},${escapeCSV(i.numbers)},${i.betAmount},${escapeCSV(i.state || "")},${escapeCSV(i.drawTime || "")},${escapeCSV(i.createdAt || "")},`
+      );
+    }
+    flushPlayerSubtotal();
+    // Grand total row
+    lines.push(
+      postResult
+        ? `,${escapeCSV("GRAND TOTAL")},,,${grandTotal.toFixed(2)},,${grandWonTotal.toFixed(2)},,,,${grandTotal.toFixed(2)}`
+        : `,${escapeCSV("GRAND TOTAL")},,,${grandTotal.toFixed(2)},,,,${grandTotal.toFixed(2)}`
+    );
+
+    const blob = new Blob([headers + lines.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -155,14 +207,43 @@ export default function VendorHistoryScreen() {
   };
 
   const handleExportCSV = () => {
-    const headers = "Player,Game,Numbers,Amount,Won,WinAmount,State,Date\n";
-    const rows = filtered
-      .map(
-        (i) =>
-          `${escapeCSV(i.playerName || "")},${escapeCSV(i.gameType)},${escapeCSV(i.numbers)},${i.betAmount},${i.won || false},${i.winAmount || 0},${escapeCSV(i.state || "")},${escapeCSV(i.createdAt || "")}`
-      )
-      .join("\n");
-    const blob = new Blob([headers + rows], { type: "text/csv" });
+    const sorted = groupItemsByPlayer(filtered);
+    const headers = "#,Player,Game,Numbers,Amount,Won,WinAmount,State,Date,PlayerTotalWagered\n";
+
+    const lines: string[] = [];
+    let rowNum = 0;
+    let playerTotal = 0;
+    let grandTotal = 0;
+    let grandWonTotal = 0;
+    let currentPlayer: string | null = null;
+    const flushPlayerSubtotal = () => {
+      if (currentPlayer === null) return;
+      lines.push(
+        `,${escapeCSV(`Subtotal — ${currentPlayer || "Unknown"}`)},,,,,,,,${playerTotal.toFixed(2)}`
+      );
+      playerTotal = 0;
+    };
+
+    for (const i of sorted) {
+      const pn = i.playerName || "Unknown";
+      if (pn !== currentPlayer) {
+        flushPlayerSubtotal();
+        currentPlayer = pn;
+      }
+      rowNum += 1;
+      playerTotal += Number(i.betAmount) || 0;
+      grandTotal += Number(i.betAmount) || 0;
+      if (i.won && i.winAmount) grandWonTotal += Number(i.winAmount) || 0;
+      lines.push(
+        `${rowNum},${escapeCSV(pn)},${escapeCSV(i.gameType)},${escapeCSV(i.numbers)},${i.betAmount},${i.won || false},${i.winAmount || 0},${escapeCSV(i.state || "")},${escapeCSV(i.createdAt || "")},`
+      );
+    }
+    flushPlayerSubtotal();
+    lines.push(
+      `,${escapeCSV("GRAND TOTAL")},,,${grandTotal.toFixed(2)},,${grandWonTotal.toFixed(2)},,,${grandTotal.toFixed(2)}`
+    );
+
+    const blob = new Blob([headers + lines.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -181,18 +262,75 @@ export default function VendorHistoryScreen() {
       doc.text("Play History Report", 14, 20);
       doc.setFontSize(10);
       doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 28);
-      autoTable(doc, {
-        startY: 35,
-        head: [["Player", "Game", "Numbers", "Amount", "Won", "State", "Date"]],
-        body: filtered.map((i) => [
-          i.playerName || "-",
+
+      const sorted = groupItemsByPlayer(filtered);
+      const body: (string | number)[][] = [];
+      let rowNum = 0;
+      let playerTotal = 0;
+      let grandTotal = 0;
+      let grandWon = 0;
+      let currentPlayer: string | null = null;
+
+      const flushPlayerSubtotal = () => {
+        if (currentPlayer === null) return;
+        body.push([
+          "",
+          `Subtotal — ${currentPlayer}`,
+          "",
+          "",
+          "",
+          formatCurrency(playerTotal, currency),
+          "",
+          "",
+        ]);
+        playerTotal = 0;
+      };
+
+      for (const i of sorted) {
+        const pn = i.playerName || "Unknown";
+        if (pn !== currentPlayer) {
+          flushPlayerSubtotal();
+          currentPlayer = pn;
+        }
+        rowNum += 1;
+        playerTotal += Number(i.betAmount) || 0;
+        grandTotal += Number(i.betAmount) || 0;
+        if (i.won && i.winAmount) grandWon += Number(i.winAmount) || 0;
+        body.push([
+          rowNum,
+          pn,
           GAME_LABELS[i.gameType] || i.gameType,
           i.numbers,
           formatCurrency(i.betAmount, currency),
           i.won ? formatCurrency(i.winAmount || 0, currency) : "-",
           i.state || "-",
           i.createdAt ? new Date(i.createdAt).toLocaleDateString() : "-",
-        ]),
+        ]);
+      }
+      flushPlayerSubtotal();
+      body.push([
+        "",
+        "GRAND TOTAL",
+        "",
+        "",
+        formatCurrency(grandTotal, currency),
+        formatCurrency(grandWon, currency),
+        "",
+        "",
+      ]);
+
+      autoTable(doc, {
+        startY: 35,
+        head: [["#", "Player", "Game", "Numbers", "Amount", "Won", "State", "Date"]],
+        body,
+        didParseCell: (data) => {
+          // Bold the subtotal/grand total rows (col 1 contains "Subtotal" or "GRAND TOTAL")
+          const cell1 = String(((data.row.raw as any) ?? [])[1] ?? "");
+          if (cell1.startsWith("Subtotal") || cell1 === "GRAND TOTAL") {
+            data.cell.styles.fontStyle = "bold";
+            data.cell.styles.fillColor = cell1 === "GRAND TOTAL" ? [254, 215, 170] : [243, 244, 246];
+          }
+        },
       });
       doc.save(`play-history-${new Date().toISOString().split("T")[0]}.pdf`);
       toast.success("PDF exported!");

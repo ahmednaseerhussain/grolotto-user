@@ -4390,6 +4390,326 @@ buyGiftCardFromWebsite: {
     en: "to",
     fr: "à",
     es: "a"
+  },
+
+  // ── Phone / Registration ──
+  phoneInvalid: {
+    ht: "Antre yon nimewo Ayisyen valid: +509 swivi pa 8 chif",
+    en: "Enter a valid Haitian phone: +509 followed by 8 digits",
+    fr: "Entrez un numéro haïtien valide : +509 suivi de 8 chiffres",
+    es: "Ingrese un número haitiano válido: +509 seguido de 8 dígitos"
+  },
+  haitianPhoneOnly: {
+    ht: "Sèlman nimewo Ayisyen (+509 swivi pa 8 chif) yo aksepte.",
+    en: "Only Haitian numbers (+509 followed by 8 digits) are accepted.",
+    fr: "Seuls les numéros haïtiens (+509 suivi de 8 chiffres) sont acceptés.",
+    es: "Solo se aceptan números haitianos (+509 seguido de 8 dígitos)."
+  },
+
+  // ── Terms & Conditions ──
+  mustAcceptTerms: {
+    ht: "Ou dwe aksepte Kondisyon & Tèm yo pou kontinye",
+    en: "You must accept the Terms & Conditions to continue",
+    fr: "Vous devez accepter les Conditions générales pour continuer",
+    es: "Debe aceptar los Términos y Condiciones para continuar"
+  },
+  iAgreeTo: {
+    ht: "Mwen dakò ak",
+    en: "I agree to the",
+    fr: "J'accepte les",
+    es: "Acepto los"
+  },
+  termsAndConditions: {
+    ht: "Tèm & Kondisyon yo",
+    en: "Terms & Conditions",
+    fr: "Conditions générales",
+    es: "Términos y Condiciones"
+  },
+
+  // ── Email Verification ──
+  verificationCodeSent: {
+    ht: "Kòd verifikasyon voye nan imèl ou",
+    en: "Verification code sent to your email",
+    fr: "Code de vérification envoyé à votre email",
+    es: "Código de verificación enviado a su correo"
+  },
+  verifyYourEmail: {
+    ht: "Verifye imèl ou",
+    en: "Verify your email",
+    fr: "Vérifiez votre email",
+    es: "Verifica tu correo"
+  },
+  verifyEmailHelp: {
+    ht: "Nou voye yon kòd 6 chif nan imèl ou. Antre li anba a pou aktive kont ou.",
+    en: "We sent a 6-digit verification code to your email. Enter it below to activate your account.",
+    fr: "Nous avons envoyé un code de vérification à 6 chiffres à votre email. Entrez-le ci-dessous pour activer votre compte.",
+    es: "Enviamos un código de verificación de 6 dígitos a su correo. Ingréselo abajo para activar su cuenta."
+  },
+  verificationCode: {
+    ht: "Kòd Verifikasyon",
+    en: "Verification Code",
+    fr: "Code de Vérification",
+    es: "Código de Verificación"
+  },
+  codeExpiresIn15: {
+    ht: "Kòd ekspire nan 15 minit.",
+    en: "Code expires in 15 minutes.",
+    fr: "Le code expire dans 15 minutes.",
+    es: "El código expira en 15 minutos."
+  },
+  verifyAndContinue: {
+    ht: "Verifye & Kontinye",
+    en: "Verify & Continue",
+    fr: "Vérifier & Continuer",
+    es: "Verificar y Continuar"
+  },
+  resendCode: {
+    ht: "Voye kòd la ankò",
+    en: "Resend code",
+    fr: "Renvoyer le code",
+    es: "Reenviar código"
+  },
+  resendIn: {
+    ht: "Voye ankò nan",
+    en: "Resend in",
+    fr: "Renvoi dans",
+    es: "Reenviar en"
+  },
+  sending: {
+    ht: "Ap voye...",
+    en: "Sending...",
+    fr: "Envoi en cours...",
+    es: "Enviando..."
+  },
+  emailVerified: {
+    ht: "Imèl verifye! Byenveni nan GroLotto",
+    en: "Email verified! Welcome to GroLotto",
+    fr: "Email vérifié ! Bienvenue sur GroLotto",
+    es: "¡Correo verificado! Bienvenido a GroLotto"
+  },
+  invalidOtpFormat: {
+    ht: "Antre kòd 6 chif la",
+    en: "Enter the 6-digit code",
+    fr: "Entrez le code à 6 chiffres",
+    es: "Ingrese el código de 6 dígitos"
+  },
+
+  // ── Auth misc ──
+  "Player Login": {
+    ht: "Koneksyon Jwè",
+    en: "Player Login",
+    fr: "Connexion Joueur",
+    es: "Inicio Jugador"
+  },
+  "Enter Credentials": {
+    ht: "Antre enfòmasyon ou",
+    en: "Enter your credentials",
+    fr: "Entrez vos informations",
+    es: "Ingrese sus credenciales"
+  },
+  "Enter Your Name": {
+    ht: "Antre non ou",
+    en: "Enter your name",
+    fr: "Entrez votre nom",
+    es: "Ingrese su nombre"
+  },
+  "Your Email": {
+    ht: "Imèl ou",
+    en: "Your email",
+    fr: "Votre email",
+    es: "Su correo"
+  },
+  "Enter Password": {
+    ht: "Antre modpas ou",
+    en: "Enter password",
+    fr: "Entrez le mot de passe",
+    es: "Ingrese la contraseña"
+  },
+  "Login Success": {
+    ht: "Koneksyon reyisi!",
+    en: "Login successful!",
+    fr: "Connexion réussie !",
+    es: "¡Inicio de sesión exitoso!"
+  },
+  "Registration Success": {
+    ht: "Enskripsyon reyisi!",
+    en: "Registration successful!",
+    fr: "Inscription réussie !",
+    es: "¡Registro exitoso!"
+  },
+  invalidRole: {
+    ht: "Wòl kont sa a pa valab",
+    en: "This account role is not valid here",
+    fr: "Le rôle de ce compte n'est pas valide ici",
+    es: "El rol de esta cuenta no es válido aquí"
+  },
+  "Must Be 18": {
+    ht: "Ou dwe gen omwen 18 an",
+    en: "You must be at least 18 years old",
+    fr: "Vous devez avoir au moins 18 ans",
+    es: "Debe tener al menos 18 años"
+  },
+  "Send Reset Code": {
+    ht: "Voye Kòd Reyinisyalizasyon",
+    en: "Send Reset Code",
+    fr: "Envoyer le Code de Réinitialisation",
+    es: "Enviar Código de Restablecimiento"
+  },
+  "Reset Password": {
+    ht: "Reyinisyalize Modpas",
+    en: "Reset Password",
+    fr: "Réinitialiser le Mot de Passe",
+    es: "Restablecer Contraseña"
+  },
+  "Reset code sent! Check your email.": {
+    ht: "Kòd reyinisyalizasyon voye! Verifye imèl ou.",
+    en: "Reset code sent! Check your email.",
+    fr: "Code de réinitialisation envoyé ! Vérifiez votre email.",
+    es: "¡Código de restablecimiento enviado! Revise su correo."
+  },
+  "Enter Email For Reset": {
+    ht: "Antre imèl ou pou reyinisyalize modpas la",
+    en: "Enter your email address and we'll send you a reset code.",
+    fr: "Entrez votre adresse email et nous vous enverrons un code de réinitialisation.",
+    es: "Ingrese su correo y le enviaremos un código de restablecimiento."
+  },
+  "Enter the 6-digit code sent to your email and your new password.": {
+    ht: "Antre kòd 6 chif voye nan imèl ou ak nouvo modpas ou.",
+    en: "Enter the 6-digit code sent to your email and your new password.",
+    fr: "Entrez le code à 6 chiffres envoyé à votre email et votre nouveau mot de passe.",
+    es: "Ingrese el código de 6 dígitos enviado a su correo y su nueva contraseña."
+  },
+
+  // ── Vendor / Social ──
+  "First Name": {
+    ht: "Premye Non",
+    en: "First Name",
+    fr: "Prénom",
+    es: "Nombre"
+  },
+  "Last Name": {
+    ht: "Siyati",
+    en: "Last Name",
+    fr: "Nom de Famille",
+    es: "Apellido"
+  },
+  "Email": {
+    ht: "Imèl",
+    en: "Email",
+    fr: "Email",
+    es: "Correo"
+  },
+  "Phone Number": {
+    ht: "Nimewo Telefòn",
+    en: "Phone Number",
+    fr: "Numéro de Téléphone",
+    es: "Número de Teléfono"
+  },
+  "Identity Documents": {
+    ht: "Dokiman Idantite",
+    en: "Identity Documents",
+    fr: "Documents d'Identité",
+    es: "Documentos de Identidad"
+  },
+  "Identity Documents Help": {
+    ht: "Telechaje kat idantite ou ak lisans biznis (JPG/PNG/PDF, maks 5MB chak). Opsyonèl men aksele apwobasyon.",
+    en: "Upload your ID card and business license (JPG/PNG/PDF, max 5MB each). Optional but speeds up approval.",
+    fr: "Téléchargez votre carte d'identité et licence d'affaires (JPG/PNG/PDF, max 5Mo chacun). Facultatif mais accélère l'approbation.",
+    es: "Suba su tarjeta de identidad y licencia comercial (JPG/PNG/PDF, máx 5MB cada uno). Opcional pero acelera la aprobación."
+  },
+  "Today's Players & Winners": {
+    ht: "Jwè & Gayan Jodi a",
+    en: "Today's Players & Winners",
+    fr: "Joueurs & Gagnants du Jour",
+    es: "Jugadores y Ganadores de Hoy"
+  },
+  "Play History": {
+    ht: "Istwa Jwèt",
+    en: "Play History",
+    fr: "Historique de Jeu",
+    es: "Historial de Juego"
+  },
+  "Search Players": {
+    ht: "Chèche jwè, nimewo...",
+    en: "Search players, numbers...",
+    fr: "Chercher joueurs, numéros...",
+    es: "Buscar jugadores, números..."
+  },
+  "Group by draw": {
+    ht: "Gwoup pa tiraj",
+    en: "Group by draw",
+    fr: "Grouper par tirage",
+    es: "Agrupar por sorteo"
+  },
+  "Winners only": {
+    ht: "Gayan sèlman",
+    en: "Winners only",
+    fr: "Gagnants seulement",
+    es: "Solo ganadores"
+  },
+  "Total Bet": {
+    ht: "Total Paryaj",
+    en: "Total Bet",
+    fr: "Mise Totale",
+    es: "Apuesta Total"
+  },
+  "Total Players": {
+    ht: "Total Jwè",
+    en: "Total Players",
+    fr: "Total Joueurs",
+    es: "Total Jugadores"
+  },
+  "Total Bets": {
+    ht: "Total Paryaj yo",
+    en: "Total Bets",
+    fr: "Total des Mises",
+    es: "Total Apuestas"
+  },
+  "Total Paid": {
+    ht: "Total Peye",
+    en: "Total Paid",
+    fr: "Total Payé",
+    es: "Total Pagado"
+  },
+  "Players": {
+    ht: "Jwè yo",
+    en: "Players",
+    fr: "Joueurs",
+    es: "Jugadores"
+  },
+  "Winners": {
+    ht: "Gayan yo",
+    en: "Winners",
+    fr: "Gagnants",
+    es: "Ganadores"
+  },
+
+  // ── Password reset ──
+  passwordResetSuccess: {
+    ht: "Modpas reyinisyalize avèk siksè!",
+    en: "Password reset successfully!",
+    fr: "Mot de passe réinitialisé avec succès !",
+    es: "¡Contraseña restablecida exitosamente!"
+  },
+  passwordsDontMatchReset: {
+    ht: "Modpas yo pa matche",
+    en: "Passwords don't match",
+    fr: "Les mots de passe ne correspondent pas",
+    es: "Las contraseñas no coinciden"
+  },
+  passwordTooShort: {
+    ht: "Modpas dwe gen omwen 6 karaktè",
+    en: "Password must be at least 6 characters",
+    fr: "Le mot de passe doit contenir au moins 6 caractères",
+    es: "La contraseña debe tener al menos 6 caracteres"
+  },
+
+  // ── Name field on player signup ──
+  Name: {
+    ht: "Non",
+    en: "Name",
+    fr: "Nom",
+    es: "Nombre"
   }
 };
 

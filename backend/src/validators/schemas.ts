@@ -27,16 +27,21 @@ export const registerSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
   name: z.string().min(2, 'Name must be at least 2 characters'),
   role: z.enum(['player', 'vendor']).optional().default('player'),
-  phone: z.string().optional(),
+  phone: z.string()
+    .regex(/^\+509\d{8}$/, 'Phone must be a Haitian number in the format +509XXXXXXXX')
+    .optional(),
   dateOfBirth: z.string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date of birth must be in YYYY-MM-DD format')
     .refine(isValidAdultDOB, 'You must be at least 18 years old to register'),
   country: z.string().optional(),
+  acceptedTerms: z.boolean().optional(),
   // Optional vendor fields — required by service if role === 'vendor'
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   businessName: z.string().optional(),
   operatingCurrency: z.enum(['HTG', 'USD']).optional(),
+  // When true (web flow): create the user but do NOT issue tokens; an OTP is emailed instead.
+  verifyByEmail: z.boolean().optional(),
 });
 
 export const loginSchema = z.object({
@@ -85,11 +90,13 @@ export const vendorRegistrationSchema = z.object({
   firstName: z.string().min(2),
   lastName: z.string().min(2),
   email: z.string().email(),
-  phone: z.string().min(8),
+  phone: z.string()
+    .regex(/^\+509\d{8}$/, 'Phone must be a Haitian number in the format +509XXXXXXXX'),
   dateOfBirth: z.string(),
   businessName: z.string().optional(),
   operatingCurrency: z.enum(['HTG', 'USD']).optional(),
   password: z.string().optional(),
+  acceptedTerms: z.boolean().optional(),
 });
 
 export const drawSettingsSchema = z.object({

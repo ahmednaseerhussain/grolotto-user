@@ -444,7 +444,7 @@ export default function PaymentScreen() {
             <p className="text-sm text-gray-600">
               {t("sendLabel") || "Send"} <span className="font-semibold text-gray-900">{amount ? formatCurrency(parseFloat(amount), currency) : (t("yourAmountLabel") || "your amount")}</span> {t("viaLabel") || "via"} {selectedMethod === "zelle" ? "Zelle" : "CashApp"} {t("toLabel") || "to"}{" "}
               <span className="font-mono text-amber-600">
-                {selectedMethod === "zelle" ? (paymentConfig.zelle_email || "payments@grolotto.com") : (paymentConfig.cashapp_tag || "$GroLotto")}
+                {selectedMethod === "zelle" ? (paymentConfig.zelle_email || "pay@grolotto.com") : (paymentConfig.cashapp_tag || "$groloto")}
               </span>
             </p>
           </div>
@@ -456,9 +456,13 @@ export default function PaymentScreen() {
             <div className="bg-amber-500 text-white font-bold w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0">3</div>
             <p className="text-sm text-gray-600">
               {t("sendScreenshotUsernameEmail") || "Send the screenshot with your GroLotto username via email to"}{" "}
-              <span className="font-mono text-amber-600">{paymentConfig.zelle_email || "payments@grolotto.com"}</span>
-              {" "}{t("orWhatsAppSmsTo") || "or WhatsApp/SMS to"}{" "}
-              <span className="font-mono text-amber-600">{paymentConfig.support_phone || "+1 (555) 123-4567"}</span>
+              <span className="font-mono text-amber-600">{paymentConfig.zelle_email || "pay@grolotto.com"}</span>
+              {paymentConfig.support_phone ? (
+                <>
+                  {" "}{t("orWhatsAppSmsTo") || "or WhatsApp/SMS to"}{" "}
+                  <span className="font-mono text-amber-600">{paymentConfig.support_phone}</span>
+                </>
+              ) : null}
             </p>
           </div>
           <div className="flex items-start gap-3">
@@ -480,9 +484,13 @@ export default function PaymentScreen() {
           </p>
           <p className="text-gray-500 text-sm">
             {t("makeSureSentScreenshotTo") || "Make sure you've sent your screenshot to"}{" "}
-            <span className="text-amber-600 font-medium">{paymentConfig.zelle_email || "payments@grolotto.com"}</span>
-            {" "}or{" "}
-            <span className="text-amber-600 font-medium">{paymentConfig.support_phone || "+1 (555) 123-4567"}</span>
+            <span className="text-amber-600 font-medium">{paymentConfig.zelle_email || "pay@grolotto.com"}</span>
+            {paymentConfig.support_phone ? (
+              <>
+                {" "}or{" "}
+                <span className="text-amber-600 font-medium">{paymentConfig.support_phone}</span>
+              </>
+            ) : null}
           </p>
           <button
             onClick={() => { setDepositStep("select"); setSelectedMethod(null); setAmount(""); }}

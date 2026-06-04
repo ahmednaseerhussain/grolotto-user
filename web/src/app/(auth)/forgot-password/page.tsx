@@ -27,7 +27,8 @@ export default function ForgotPasswordPage() {
         setIsLoading(true);
         try {
             const result = await authAPI.forgotPassword(email);
-            toast.success(t("resetCodeSent") || "Reset code sent! Check your email.");
+            // toast.success(t("resetCodeSent") || "Reset code sent! Check your email.");
+            toast.success(t("Reset code sent! Check your email.") || "Reset code sent! Check your email.");
             // In dev mode, the OTP may be returned
             if (result.otp) {
                 toast(`Dev OTP: ${result.otp}`, { duration: 10000, icon: "🔑" });

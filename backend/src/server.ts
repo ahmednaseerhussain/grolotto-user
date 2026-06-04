@@ -498,6 +498,35 @@ async function runStartupMigrations() {
     `);
     console.log('[Migration 023] notification origin / cash payout / must-send / admin_notifications applied');
 
+    // ─── Migration 024: email verification + terms acceptance + payment/social handles ───
+    await query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMPTZ;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_version VARCHAR(16);
+    `);
+    // Backfill: existing users are considered verified to avoid lockout.
+    await query(`UPDATE users SET email_verified = TRUE WHERE email_verified IS NOT TRUE;`);
+
+    await query(`
+      INSERT INTO app_settings (key, value, description) VALUES
+        ('zelle_email',      '"pay@grolotto.com"', 'Zelle payment destination email'),
+        ('cashapp_tag',      '"$groloto"',          'Cash App $cashtag'),
+        ('cashapp_phone',    '""',                  'Cash App phone (optional)'),
+        ('social_facebook',  '"Grolotto"',          'Facebook page/handle'),
+        ('social_instagram', '"@Grolotto"',         'Instagram handle'),
+        ('social_tiktok',    '"@Grolotto"',         'TikTok handle'),
+        ('support_phone',    '""',                  'Support phone number (optional)'),
+        ('paypal_email',     '""',                  'PayPal payment email (optional)')
+      ON CONFLICT (key) DO NOTHING;
+    `);
+    // Force-update payment & social handles to the official values
+    await query(`UPDATE app_settings SET value='"pay@grolotto.com"' WHERE key='zelle_email';`);
+    await query(`UPDATE app_settings SET value='"$groloto"'          WHERE key='cashapp_tag';`);
+    await query(`UPDATE app_settings SET value='"Grolotto"'          WHERE key='social_facebook';`);
+    await query(`UPDATE app_settings SET value='"@Grolotto"'         WHERE key='social_instagram';`);
+    await query(`UPDATE app_settings SET value='"@Grolotto"'         WHERE key='social_tiktok';`);
+    console.log('[Migration 024] email verification + terms + payment/social handles applied');
+
     console.log('[Migration] Startup migrations applied successfully');
   } catch (err) {
     console.error('[Migration] Startup migration error:', err);

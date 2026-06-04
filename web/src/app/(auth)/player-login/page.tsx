@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
+import { extractHaitiDigits, formatHaitiPhoneDisplay, isValidHaitiPhone, toHaitiPhone, HAITI_PHONE_PREFIX } from "@/lib/phone";
 
 export default function PlayerLoginPage() {
   const router = useRouter();
@@ -21,6 +22,8 @@ export default function PlayerLoginPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [suspensionError, setSuspensionError] = useState<string | null>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [phoneDigits, setPhoneDigits] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -31,32 +34,56 @@ export default function PlayerLoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isLogin) {
+      if (!isValidHaitiPhone(phoneDigits)) {
+        toast.error(t("phoneInvalid") || "Enter a valid Haitian phone: +509 followed by 8 digits");
+        return;
+      }
+      if (!acceptedTerms) {
+        toast.error(t("mustAcceptTerms") || "You must accept the Terms & Conditions to continue");
+        return;
+      }
+    }
+
     setIsLoading(true);
 
     try {
-      let user;
       if (isLogin) {
-        user = await authAPI.login({ email: formData.email, password: formData.password });
+        const user = await authAPI.login({ email: formData.email, password: formData.password });
+        if (user.role !== "player") {
+          clearTokens();
+          toast.error(t("invalidRole"));
+          return;
+        }
+        setUser(user);
+        toast.success(t("Login Success"));
+        router.push("/player/dashboard");
       } else {
-        user = await authAPI.register({
+        const result = await authAPI.register({
           name: formData.name,
           email: formData.email,
           password: formData.password,
           role: "player",
           dateOfBirth: formData.dateOfBirth,
-          phone: formData.phone || undefined,
+          phone: toHaitiPhone(phoneDigits),
+          acceptedTerms: true,
+          verifyByEmail: true,
         });
+        if (result.requiresEmailVerification) {
+          toast.success(t("verificationCodeSent") || "Verification code sent to your email");
+          router.push(`/verify-email?email=${encodeURIComponent(formData.email)}&role=player`);
+          return;
+        }
+        // Fallback (shouldn't happen with verifyByEmail=true)
+        if (result.user.role !== "player") {
+          clearTokens();
+          toast.error(t("invalidRole"));
+          return;
+        }
+        setUser(result.user);
+        router.push("/player/dashboard");
       }
-
-      if (user.role !== "player") {
-        clearTokens();
-        toast.error(t("invalidRole"));
-        return;
-      }
-
-      setUser(user);
-      toast.success(isLogin ? t("Login Success") : t("Registration Success"));
-      router.push("/player/dashboard");
     } catch (error: any) {
       const msg = getErrorMessage(error);
       if (msg.toLowerCase().includes('suspend')) {
@@ -129,13 +156,25 @@ export default function PlayerLoginPage() {
             {!isLogin && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("phoneNumber") || "Phone Number"}</label>
-                  <Input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="+509 1234 5678"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("phoneNumber") || "Phone Number"} *</label>
+                  <div className="flex items-stretch">
+                    <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-700 text-sm select-none">
+                      {HAITI_PHONE_PREFIX}
+                    </span>
+                    <Input
+                      type="tel"
+                      inputMode="numeric"
+                      autoComplete="tel-national"
+                      value={formatHaitiPhoneDisplay(phoneDigits)}
+                      onChange={(e) => setPhoneDigits(extractHaitiDigits(e.target.value))}
+                      placeholder="1234 5678"
+                      className="rounded-l-none"
+                      required={!isLogin}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {t("haitianPhoneOnly") || "Only Haitian numbers (+509 followed by 8 digits) are accepted."}
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t("dateOfBirth") || "Date of Birth"} *</label>
@@ -161,6 +200,24 @@ export default function PlayerLoginPage() {
                 minLength={6}
               />
             </div>
+
+            {!isLogin && (
+              <label className="flex items-start gap-2 text-sm text-gray-700 select-none">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  required
+                />
+                <span>
+                  {t("iAgreeTo") || "I agree to the"}{" "}
+                  <Link href="/terms" target="_blank" className="text-blue-600 hover:underline font-medium">
+                    {t("termsAndConditions") || "Terms & Conditions"}
+                  </Link>
+                </span>
+              </label>
+            )}
 
             <Button type="submit" loading={isLoading} className="w-full" size="lg">
               {isLogin ? t("login") : t("register")}

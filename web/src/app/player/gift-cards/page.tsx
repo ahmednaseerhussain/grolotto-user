@@ -447,11 +447,11 @@ export default function GiftCardsPage() {
                     </p>
                     {paymentMethod === "zelle" ? (
                       <p className="text-slate-400 text-sm mt-1">
-                        {t("sendTo") || "Send to:"} <span className="text-amber-400 font-mono">{paymentConfig.zelle_email || "payments@grolotto.com"}</span>
+                        {t("sendTo") || "Send to:"} <span className="text-amber-400 font-mono">{paymentConfig.zelle_email || "pay@grolotto.com"}</span>
                       </p>
                     ) : (
                       <p className="text-slate-400 text-sm mt-1">
-                        {t("sendTo") || "Send to:"} <span className="text-amber-400 font-mono">{paymentConfig.cashapp_tag || "$GroLotto"}</span>
+                        {t("sendTo") || "Send to:"} <span className="text-amber-400 font-mono">{paymentConfig.cashapp_tag || "$groloto"}</span>
                         {paymentConfig.cashapp_phone && (
                           <> or <span className="text-amber-400 font-mono">{paymentConfig.cashapp_phone}</span></>
                         )}
@@ -473,7 +473,7 @@ export default function GiftCardsPage() {
                   <div>
                     <p className="text-white font-medium">{t("emailTheScreenshot") || "Email the screenshot"}</p>
                     <p className="text-slate-400 text-sm mt-1">
-                      Send to: <span className="text-amber-400 font-mono">{paymentConfig.zelle_email || "payments@grolotto.com"}</span>
+                      Send to: <span className="text-amber-400 font-mono">{paymentConfig.zelle_email || "pay@grolotto.com"}</span>
                     </p>
                     <p className="text-slate-400 text-sm">{t("includeUsername") || "Include your GroLotto username in the email"}</p>
                   </div>
@@ -514,7 +514,7 @@ export default function GiftCardsPage() {
               </p>
               <p className="text-slate-500 text-sm">
                 {t("makeSureEmailedScreenshotTo") || "Make sure you've emailed your screenshot to"}{" "}
-                <span className="text-amber-400">{paymentConfig.zelle_email || "payments@grolotto.com"}</span>
+                <span className="text-amber-400">{paymentConfig.zelle_email || "pay@grolotto.com"}</span>
               </p>
               <button
                 onClick={resetBuyFlow}
