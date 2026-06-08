@@ -62,8 +62,8 @@ export default function PaymentScreen() {
     // Gift card — external redirect
     if (selectedMethod === "gift_card") {
       const url = currency === "HTG"
-        ? "https://grolotto.com/buy-gift-card-htg"
-        : "https://grolotto.com/buy-gift-card-usd";
+        ? "https://grolotto.com/gift-cards"
+        : "https://grolotto.com/gift-cards";
       window.open(url, "_blank", "noopener,noreferrer");
       return;
     }
@@ -369,7 +369,7 @@ export default function PaymentScreen() {
               </div>
             </div>
             <div className="flex gap-2 mt-3">
-              <button onClick={() => window.open("https://grolotto.com/buy-gift-card", "_blank", "noopener,noreferrer")}
+              <button onClick={() => window.open("https://grolotto.com/gift-cards", "_blank", "noopener,noreferrer")}
                 className="flex-1 py-2 px-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-colors"
               >
                 🌐 {t("buyGiftCardFromWebsite") || "Buy Gift Card From Website"}
@@ -382,7 +382,7 @@ export default function PaymentScreen() {
             </div>
           </div>
           {/* <button
-        onClick={() => window.open("https://grolotto.com/buy-gift-card", "_blank", "noopener,noreferrer")}
+        onClick={() => window.open("https://grolotto.com/gift-cards", "_blank", "noopener,noreferrer")}
         className="w-full flex items-center gap-4 p-4 rounded-2xl bg-linear-to-r from-indigo-600 to-blue-500 text-white hover:opacity-90 transition-all shadow-md"
       >
         <div className="bg-white/20 p-3 rounded-xl">

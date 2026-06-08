@@ -370,7 +370,7 @@ export default function PlayerDashboard() {
 
       {/* ── Buy Gift Card from Debit Card ── */}
       {/* <button
-        onClick={() => window.open("https://grolotto.com/buy-gift-card", "_blank", "noopener,noreferrer")}
+        onClick={() => window.open("https://grolotto.com/gift-cards", "_blank", "noopener,noreferrer")}
         className="w-full flex items-center gap-4 p-4 rounded-2xl bg-linear-to-r from-indigo-600 to-blue-500 text-white hover:opacity-90 transition-all shadow-md"
       >
         <div className="bg-white/20 p-3 rounded-xl">
