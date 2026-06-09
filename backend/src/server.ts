@@ -651,21 +651,40 @@ const ALLOWED_WEB_ORIGINS = [
   'http://localhost:5174',
   'http://localhost:19006',
   'https://app.grolotto.com',
+  'https://admin.grolotto.com',
   process.env.LANDING_FRONTEND_URL,
   process.env.ADMIN_WEB_URL,
 ].filter(Boolean) as string[];
 
-app.use(cors({
+function isAllowedOrigin(origin: string): boolean {
+  if (ALLOWED_WEB_ORIGINS.includes(origin)) return true;
+
+  try {
+    const url = new URL(origin);
+    const isGrolottoDomain = url.hostname === 'grolotto.com' || url.hostname.endsWith('.grolotto.com');
+    return url.protocol === 'https:' && isGrolottoDomain;
+  } catch {
+    return false;
+  }
+}
+
+const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
     // No origin = mobile app, Postman, server-to-server → allow
     if (!origin) return callback(null, true);
     // Known web origin → allow
-    if (ALLOWED_WEB_ORIGINS.includes(origin)) return callback(null, true);
+    if (isAllowedOrigin(origin)) return callback(null, true);
     // Unknown browser origin → block
     callback(new Error(`CORS: origin ${origin} not allowed`));
   },
   credentials: true,
-}));
+  methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Stripe-Signature'],
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // ─── Rate limiting ───────────────────────────────────────
 if (config.rateLimitEnabled) {
