@@ -26,11 +26,14 @@ export async function createPaymentIntent(
   amount: number,
   currency: string,
   metadata?: Record<string, string>,
+  options?: { description?: string; receiptEmail?: string },
 ) {
   const s = getStripe();
   const intent = await s.paymentIntents.create({
     amount: Math.round(amount * 100), // Stripe uses cents
     currency: currency.toLowerCase(),
+    description: options?.description,
+    receipt_email: options?.receiptEmail,
     metadata: metadata ?? {},
     automatic_payment_methods: { enabled: true },
   });

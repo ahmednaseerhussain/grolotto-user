@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as ctrl from '../controllers/adminController';
 import * as paymentOrderCtrl from '../controllers/paymentOrderController';
+import * as landingAdminCtrl from '../controllers/landingAdminController';
 import { authenticate, authorize, authorizeResource } from '../middleware/auth';
 import { validateUUIDParams } from '../middleware/validate';
 import * as walletCtrl from '../controllers/walletController';
@@ -13,6 +14,17 @@ router.use(authenticate, authorize('admin'));
 // Dashboard — all admin roles can see the dashboard
 router.get('/stats', authorizeResource('dashboard'), ctrl.getSystemStats);
 router.get('/analytics', authorizeResource('reports'), ctrl.getAnalytics);
+
+// Landing page admin dashboard
+router.get('/landing/dashboard-summary', authorizeResource('dashboard'), landingAdminCtrl.getDashboardSummary);
+router.get('/landing/contacts', authorizeResource('dashboard'), landingAdminCtrl.listContacts);
+router.get('/landing/contacts/:id', validateUUIDParams('id'), authorizeResource('dashboard'), landingAdminCtrl.getContact);
+router.patch('/landing/contacts/:id', validateUUIDParams('id'), authorizeResource('dashboard'), landingAdminCtrl.updateContact);
+router.delete('/landing/contacts/:id', validateUUIDParams('id'), authorizeResource('dashboard'), landingAdminCtrl.deleteContact);
+router.get('/landing/gift-card-orders', authorizeResource('gift-cards'), landingAdminCtrl.listGiftCardOrders);
+router.get('/landing/gift-card-orders/:id', validateUUIDParams('id'), authorizeResource('gift-cards'), landingAdminCtrl.getGiftCardOrder);
+router.patch('/landing/gift-card-orders/:id', validateUUIDParams('id'), authorizeResource('gift-cards'), landingAdminCtrl.updateGiftCardOrder);
+router.delete('/landing/gift-card-orders/:id', validateUUIDParams('id'), authorizeResource('gift-cards'), landingAdminCtrl.deleteGiftCardOrder);
 
 // User management — players + admin-users scoped
 router.get('/users', authorizeResource('players'), ctrl.getAllUsers);

@@ -1,4 +1,5 @@
 import { query } from './database/pool';
+import bcrypt from 'bcrypt';
 
 // ─── Startup migrations ─────────────────────────────────
 async function runStartupMigrations() {
@@ -395,6 +396,79 @@ async function runStartupMigrations() {
       CREATE INDEX IF NOT EXISTS idx_payment_orders_status ON payment_orders(status);
     `);
 
+    await query(`ALTER TABLE payment_orders ALTER COLUMN user_id DROP NOT NULL`).catch(() => {});
+    await query(`
+      ALTER TABLE payment_orders
+        ADD COLUMN IF NOT EXISTS customer_email VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS customer_name VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS transaction_reference VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS delivery_method VARCHAR(20),
+        ADD COLUMN IF NOT EXISTS delivery_contact VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS source VARCHAR(20) NOT NULL DEFAULT 'app';
+      CREATE INDEX IF NOT EXISTS idx_payment_orders_source ON payment_orders(source);
+      CREATE INDEX IF NOT EXISTS idx_payment_orders_customer_email ON payment_orders(customer_email);
+      CREATE INDEX IF NOT EXISTS idx_payment_orders_transaction_reference ON payment_orders(transaction_reference);
+    `);
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS contact_submissions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        subject VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'read', 'archived')),
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_contact_submissions_status ON contact_submissions(status);
+      CREATE INDEX IF NOT EXISTS idx_contact_submissions_created ON contact_submissions(created_at DESC);
+    `);
+
+    await query(`
+      ALTER TABLE gift_cards
+        ADD COLUMN IF NOT EXISTS purchaser_email VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS payment_order_id UUID REFERENCES payment_orders(id);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_gift_cards_payment_order_id ON gift_cards(payment_order_id) WHERE payment_order_id IS NOT NULL;
+    `);
+
+    await query(`
+      UPDATE gift_cards
+      SET code = UPPER(
+            SUBSTRING(REPLACE(gen_random_uuid()::TEXT, '-', '') FROM 1 FOR 4) || '-' ||
+            SUBSTRING(REPLACE(gen_random_uuid()::TEXT, '-', '') FROM 1 FOR 4) || '-' ||
+            SUBSTRING(REPLACE(gen_random_uuid()::TEXT, '-', '') FROM 1 FOR 4) || '-' ||
+            SUBSTRING(REPLACE(gen_random_uuid()::TEXT, '-', '') FROM 1 FOR 4)
+          ),
+          pin_code = NULL
+      WHERE payment_order_id IS NOT NULL
+        AND status != 'redeemed'
+        AND LENGTH(REPLACE(COALESCE(code, pin_code, ''), '-', '')) != 16;
+    `).catch(() => {});
+
+    await query(`
+      UPDATE gift_cards
+      SET pin_code = code
+      WHERE payment_order_id IS NOT NULL
+        AND status != 'redeemed'
+        AND pin_code IS DISTINCT FROM code;
+    `).catch(() => {});
+
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE;`);
+
+    const adminPasswordHash = await bcrypt.hash('123456', 12);
+    await query(
+      `INSERT INTO users (email, password_hash, name, role, is_verified, is_active, email_verified, admin_role)
+       VALUES ('admin@grolotto.com', $1, 'GroLotto Admin', 'admin', TRUE, TRUE, TRUE, 'admin')
+       ON CONFLICT (email) DO UPDATE
+       SET password_hash = $1,
+           role = 'admin',
+           admin_role = COALESCE(users.admin_role, 'admin'),
+           is_active = TRUE,
+           email_verified = TRUE`,
+      [adminPasswordHash],
+    );
+
     // Migration 021b: ensure draw_state enum includes 'KY' (safe to run repeatedly)
     try {
       await query(`ALTER TYPE draw_state ADD VALUE IF NOT EXISTS 'KY'`);
@@ -553,6 +627,8 @@ import tchalaRoutes from './routes/tchalaRoutes';
 import rewardRoutes from './routes/rewardRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import giftCardRoutes from './routes/giftCardRoutes';
+import landingRoutes from './routes/landingRoutes';
+import * as landingController from './controllers/landingController';
 
 const app = express();
 
@@ -571,8 +647,12 @@ const ALLOWED_WEB_ORIGINS = [
   'https://www.grolotto.com',
   'http://localhost:3000',
   'http://localhost:3001',
+  'http://localhost:5173',
+  'http://localhost:5174',
   'http://localhost:19006',
   'https://app.grolotto.com',
+  process.env.LANDING_FRONTEND_URL,
+  process.env.ADMIN_WEB_URL,
 ].filter(Boolean) as string[];
 
 app.use(cors({
@@ -615,6 +695,7 @@ app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));
 
 // ─── Body parsing ────────────────────────────────────────
 // Note: payment webhook route uses raw() parser, registered in its own route file
+app.post('/api/landing/stripe/webhook', express.raw({ type: 'application/json' }), landingController.handleStripeWebhook);
 app.use(express.json({ limit: '256kb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -640,6 +721,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/rewards', rewardRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/gift-cards', giftCardRoutes);
+app.use('/api/landing', landingRoutes);
 
 // Public app settings (non-sensitive only)
 app.get('/api/settings/public', async (_req, res, next) => {
