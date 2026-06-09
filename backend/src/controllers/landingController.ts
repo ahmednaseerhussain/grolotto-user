@@ -80,6 +80,8 @@ export async function createStripeIntent(req: Request, res: Response, next: Next
   try {
     const customerEmail = normalizeString(req.body?.customerEmail ?? req.body?.email);
     const customerName = normalizeString(req.body?.customerName ?? req.body?.fullName);
+    const deliveryMethod = normalizeString(req.body?.deliveryMethod).toLowerCase() as 'whatsapp' | 'email';
+    const deliveryContact = normalizeString(req.body?.deliveryContact);
     const currency = normalizeString(req.body?.currency).toUpperCase() as 'USD' | 'HTG';
     const amount = parseAmount(req.body?.amount);
 
@@ -91,9 +93,15 @@ export async function createStripeIntent(req: Request, res: Response, next: Next
       return res.status(400).json({ error: 'Name is required.' });
     }
 
+    if (!deliveryContact || !VALID_DELIVERY_METHODS.includes(deliveryMethod)) {
+      return res.status(400).json({ error: 'Delivery method and delivery contact are required.' });
+    }
+
     const result = await landingService.createLandingStripeIntent({
       customerEmail,
       customerName,
+      deliveryMethod,
+      deliveryContact,
       amount,
       currency,
     });

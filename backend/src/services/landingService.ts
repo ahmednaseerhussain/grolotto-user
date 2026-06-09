@@ -211,6 +211,8 @@ export async function createLandingStripeIntent(input: Omit<LandingOrderInput, '
     orderId: pendingOrder.id,
     customerEmail: normalizeEmail(input.customerEmail),
     customerName: input.customerName?.trim() || '',
+    deliveryMethod: input.deliveryMethod || '',
+    deliveryContact: input.deliveryContact?.trim() || '',
     giftCardAmount: String(input.amount),
     displayCurrency: input.currency,
     productName: `GroLotto ${input.currency} ${input.amount} Gift Card`,
