@@ -652,6 +652,7 @@ const ALLOWED_WEB_ORIGINS = [
   'http://localhost:19006',
   'https://app.grolotto.com',
   'https://admin.grolotto.com',
+  'https://grolotto-admin.vercel.app',
   process.env.LANDING_FRONTEND_URL,
   process.env.ADMIN_WEB_URL,
 ].filter(Boolean) as string[];
