@@ -28,6 +28,15 @@ interface PlayEntry {
   winAmount?: number;
   state?: string;
   createdAt?: string;
+  items?: Array<{
+    id: string;
+    gameType: string;
+    numbers: string;
+    betAmount: number;
+    state?: string;
+    won?: boolean;
+    winAmount?: number;
+  }>;
 }
 
 export default function TodayPlayersWinnersScreen() {
@@ -63,6 +72,19 @@ export default function TodayPlayersWinnersScreen() {
         winAmount: e.winAmount || e.win_amount || 0,
         state: e.drawState || e.draw_state || e.state,
         createdAt: e.createdAt || e.created_at,
+        items: Array.isArray(e.items)
+          ? e.items.map((item: any) => ({
+            id: item.id,
+            gameType: item.gameType || item.game_type,
+            numbers: Array.isArray(item.numbers)
+              ? formatLotteryNumbers(item.numbers, item.gameType || item.game_type, '-')
+              : (item.numbers || ''),
+            betAmount: item.betAmount || item.bet_amount || 0,
+            state: item.drawState || item.draw_state || item.state,
+            won: item.status === 'won' || item.won === true,
+            winAmount: item.winAmount || item.win_amount || 0,
+          }))
+          : undefined,
       }));
       const today = new Date().toISOString().split("T")[0];
       const todayEntries = all.filter((e: PlayEntry) => {
@@ -306,7 +328,8 @@ export default function TodayPlayersWinnersScreen() {
               <div className="space-y-1.5">
                 {items.map((entry) => (
                   <Card key={entry.id} className={entry.won ? "border-l-4 border-l-yellow-400" : ""}>
-                    <CardContent className="p-3 flex items-center justify-between">
+                    <CardContent className="p-3">
+                      <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600">
                           {(entry.playerName || "P")[0].toUpperCase()}
@@ -315,7 +338,7 @@ export default function TodayPlayersWinnersScreen() {
                           <p className="font-medium text-sm">{entry.playerName || entry.playerPhone || "Player"}</p>
                           <div className="flex items-center gap-1.5">
                             <span className={`text-xs px-1.5 py-0.5 rounded ${gameColors[entry.gameType] || "bg-gray-100 text-gray-700"}`}>
-                              {GAME_LABELS[entry.gameType] || entry.gameType}
+                              {entry.items && entry.items.length > 1 ? `${entry.items.length} selections` : GAME_LABELS[entry.gameType] || entry.gameType}
                             </span>
                             <span className="text-xs font-mono text-gray-500">{entry.numbers}</span>
                           </div>
@@ -329,6 +352,23 @@ export default function TodayPlayersWinnersScreen() {
                           </p>
                         )}
                       </div>
+                      </div>
+                      {entry.items && entry.items.length > 1 && (
+                        <div className="mt-3 space-y-1 border-t pt-2">
+                          {entry.items.map((item) => (
+                            <div key={item.id} className="flex items-center justify-between gap-3 text-xs text-gray-600">
+                              <span>
+                                <strong>{DRAW_STATES[item.state || ""] || item.state}</strong>
+                                {" - "}
+                                {GAME_LABELS[item.gameType] || item.gameType}
+                                {" - "}
+                                <span className="font-mono">{item.numbers}</span>
+                              </span>
+                              <span className="font-semibold">{formatCurrency(item.betAmount, currency)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}

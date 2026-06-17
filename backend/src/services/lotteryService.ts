@@ -3,6 +3,34 @@ import { AppError } from '../middleware/errorHandler';
 import crypto from 'crypto';
 import * as notificationService from './notificationService';
 
+function getEasternCurrentMinutes(): number {
+  const now = new Date();
+  const etFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    hourCycle: 'h23',
+  });
+  const etParts = etFormatter.formatToParts(now);
+  const etHour = parseInt(etParts.find(p => p.type === 'hour')?.value || '0', 10);
+  const etMin = parseInt(etParts.find(p => p.type === 'minute')?.value || '0', 10);
+  return etHour * 60 + etMin;
+}
+
+function isCurrentEasternTimeWithinWindow(openTime: string, closeTime: string): boolean {
+  const [openH, openM] = openTime.split(':').map(Number);
+  const [closeH, closeM] = closeTime.split(':').map(Number);
+  const currentMinutes = getEasternCurrentMinutes();
+  const openMinutes = openH * 60 + openM;
+  const closeMinutes = closeH * 60 + closeM;
+
+  if (closeMinutes >= openMinutes) {
+    return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
+  }
+  return currentMinutes >= openMinutes || currentMinutes <= closeMinutes;
+}
+
 type GameType = 'senp' | 'maryaj' | 'loto3' | 'loto4' | 'loto5';
 type DrawState = 'NY' | 'FL' | 'GA' | 'TX' | 'PA' | 'CT' | 'TN' | 'NJ';
 
@@ -14,7 +42,8 @@ export interface PlaceBetInput {
   numbers: number[];
   betAmount: number;
   currency: 'USD' | 'HTG';
-  drawTime?: 'midday' | 'evening';
+  drawTime?: 'morning' | 'midday' | 'evening';
+  betGroupId?: string;
 }
 
 /**
@@ -45,19 +74,13 @@ const GAME_MAX_NUMBER: Record<GameType, number> = {
  */
 export async function placeBet(input: PlaceBetInput) {
   const { playerId, vendorId, drawState, gameType, numbers, betAmount, currency } = input;
+  const betGroupId = input.betGroupId || crypto.randomUUID();
 
   // Determine draw time: use provided value, or auto-detect from current time
   // Before 3 PM ET = midday, after 3 PM ET = evening
   let drawTime = input.drawTime || 'midday';
   if (!input.drawTime) {
-    // DST-aware ET detection: US Eastern is UTC-5 (EST) or UTC-4 (EDT)
-    const now = new Date();
-    const etFormatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/New_York',
-      hour: 'numeric',
-      hour12: false,
-    });
-    const etHour = parseInt(etFormatter.format(now), 10);
+    const etHour = Math.floor(getEasternCurrentMinutes() / 60);
     drawTime = etHour >= 15 ? 'evening' : 'midday';
   }
 
@@ -106,24 +129,7 @@ export async function placeBet(input: PlaceBetInput) {
 
     if (scheduleCheck.rows.length > 0) {
       const sched = scheduleCheck.rows[0];
-      const now = new Date();
-      const etFormatter = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'America/New_York',
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: false,
-      });
-      const etParts = etFormatter.formatToParts(now);
-      const etHour = parseInt(etParts.find(p => p.type === 'hour')?.value || '0', 10);
-      const etMin = parseInt(etParts.find(p => p.type === 'minute')?.value || '0', 10);
-      const currentMinutes = etHour * 60 + etMin;
-
-      const [openH, openM] = sched.open_time.split(':').map(Number);
-      const [closeH, closeM] = sched.close_time.split(':').map(Number);
-      const openMinutes = openH * 60 + openM;
-      const closeMinutes = closeH * 60 + closeM;
-
-      if (currentMinutes < openMinutes || currentMinutes > closeMinutes) {
+      if (!isCurrentEasternTimeWithinWindow(sched.open_time, sched.close_time)) {
         const openStr = sched.open_time.slice(0, 5);
         const closeStr = sched.close_time.slice(0, 5);
         throw new AppError(
@@ -242,10 +248,10 @@ export async function placeBet(input: PlaceBetInput) {
 
     // 11. Create lottery ticket with commission amounts
     const ticketResult = await client.query(
-      `INSERT INTO lottery_tickets (player_id, vendor_id, round_id, draw_state, game_type, numbers, bet_amount, currency, platform_commission_amount, vendor_commission_amount)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `INSERT INTO lottery_tickets (player_id, vendor_id, round_id, draw_state, game_type, numbers, bet_amount, currency, platform_commission_amount, vendor_commission_amount, bet_group_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING id, created_at`,
-      [playerId, vendorId, roundId, drawState, gameType, numbers, betAmount, currency, adminCommission, vendorNetAmount]
+      [playerId, vendorId, roundId, drawState, gameType, numbers, betAmount, currency, adminCommission, vendorNetAmount, betGroupId]
     );
 
     const ticket = ticketResult.rows[0];
@@ -382,6 +388,7 @@ export async function placeBet(input: PlaceBetInput) {
       betAmount,
       currency,
       newBalance: parseFloat(walletResult.rows[0].new_balance),
+      betGroupId,
       createdAt: ticket.created_at,
     };
   });

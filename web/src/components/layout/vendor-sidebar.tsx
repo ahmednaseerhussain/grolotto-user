@@ -76,7 +76,7 @@ export function VendorSidebar() {
                 const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
                 const Icon = item.icon;
                 return (
-                  <li key={item.href}>
+                  <li key={`${item.href}-${item.labelKey}`}>
                     <Link
                       href={item.href}
                       className={cn(

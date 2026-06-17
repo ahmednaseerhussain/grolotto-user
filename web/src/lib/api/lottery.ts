@@ -10,6 +10,7 @@ export const lotteryAPI = {
     betAmount: number;
     currency?: string;
     drawTime?: 'morning' | 'midday' | 'evening';
+    betGroupId?: string;
   }): Promise<LotteryTicket> {
     const response = await apiClient.post("/lottery/bet", data);
     return response.data.data || response.data;

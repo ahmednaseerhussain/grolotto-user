@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from "axios";
+import { useAppStore } from "@/store/app-store";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://grolotto-user-wk3b.onrender.com/api";
 
@@ -27,6 +28,9 @@ const clearTokens = () => {
 const forceLogout = () => {
   clearTokens();
   try {
+    useAppStore.getState().logout();
+  } catch {}
+  try {
     // Clear persisted store auth state directly (works even if Zustand hasn't initialized)
     const raw = localStorage.getItem("grolotto-web-store");
     if (raw) {
@@ -38,8 +42,9 @@ const forceLogout = () => {
       }
     }
   } catch {}
-  if (typeof window !== "undefined") {
-    window.location.href = "/login";
+  if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+    window.history.replaceState(null, "", "/login");
+    window.dispatchEvent(new PopStateEvent("popstate"));
   }
 };
 

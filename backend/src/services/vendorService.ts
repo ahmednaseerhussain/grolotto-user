@@ -2,6 +2,34 @@ import { query, withTransaction } from '../database/pool';
 import { AppError } from '../middleware/errorHandler';
 import { notifyAdmins } from './notificationService';
 
+function getEasternCurrentMinutes(): number {
+  const now = new Date();
+  const etFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    hourCycle: 'h23',
+  });
+  const etParts = etFormatter.formatToParts(now);
+  const etHour = parseInt(etParts.find(p => p.type === 'hour')?.value || '0', 10);
+  const etMin = parseInt(etParts.find(p => p.type === 'minute')?.value || '0', 10);
+  return etHour * 60 + etMin;
+}
+
+function isCurrentEasternTimeWithinWindow(openTime: string, closeTime: string): boolean {
+  const [openH, openM] = openTime.split(':').map(Number);
+  const [closeH, closeM] = closeTime.split(':').map(Number);
+  const currentMinutes = getEasternCurrentMinutes();
+  const openMinutes = openH * 60 + openM;
+  const closeMinutes = closeH * 60 + closeM;
+
+  if (closeMinutes >= openMinutes) {
+    return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
+  }
+  return currentMinutes >= openMinutes || currentMinutes <= closeMinutes;
+}
+
 export interface VendorPublic {
   id: string;
   userId: string;
@@ -429,36 +457,95 @@ export async function getVendorPlayHistory(
   const offset = (page - 1) * limit;
 
   const countResult = await query(
-    'SELECT COUNT(*) FROM lottery_tickets WHERE vendor_id = $1',
+    'SELECT COUNT(DISTINCT COALESCE(bet_group_id, id)) FROM lottery_tickets WHERE vendor_id = $1',
     [vendorId]
   );
 
   const result = await query(
-    `SELECT lt.id, lt.player_id, lt.draw_state, lt.game_type, lt.numbers,
+    `WITH paged_groups AS (
+       SELECT COALESCE(bet_group_id, id) AS group_id, MAX(created_at) AS latest_created_at
+       FROM lottery_tickets
+       WHERE vendor_id = $1
+       GROUP BY COALESCE(bet_group_id, id)
+       ORDER BY latest_created_at DESC
+       LIMIT $2 OFFSET $3
+     )
+     SELECT lt.id, lt.player_id, lt.draw_state, lt.game_type, lt.numbers,
             lt.bet_amount, lt.currency, lt.status, lt.win_amount, lt.created_at,
+            lt.bet_group_id, pg.latest_created_at, lr.draw_time,
             u.name as player_name
      FROM lottery_tickets lt
+     JOIN paged_groups pg ON pg.group_id = COALESCE(lt.bet_group_id, lt.id)
      JOIN users u ON u.id = lt.player_id
+     LEFT JOIN lottery_rounds lr ON lr.id = lt.round_id
      WHERE lt.vendor_id = $1
-     ORDER BY lt.created_at DESC
-     LIMIT $2 OFFSET $3`,
+     ORDER BY pg.latest_created_at DESC, lt.created_at DESC`,
     [vendorId, limit, offset]
   );
 
-  return {
-    plays: result.rows.map((r) => ({
+  const grouped = new Map<string, any>();
+  for (const r of result.rows) {
+    const groupId = r.bet_group_id || r.id;
+    const item = {
       id: r.id,
-      playerId: r.player_id,
-      playerName: r.player_name,
       drawState: r.draw_state,
+      state: r.draw_state,
       gameType: r.game_type,
       numbers: r.numbers,
       betAmount: parseFloat(r.bet_amount),
       currency: r.currency,
       status: r.status,
+      won: r.status === 'won',
       winAmount: parseFloat(r.win_amount || '0'),
       createdAt: r.created_at,
-    })),
+      drawTime: r.draw_time || 'midday',
+    };
+
+    if (!grouped.has(groupId)) {
+      grouped.set(groupId, {
+        id: groupId,
+        betGroupId: groupId,
+        playerId: r.player_id,
+        playerName: r.player_name,
+        currency: r.currency,
+        createdAt: r.created_at,
+        items: [],
+      });
+    }
+
+    const group = grouped.get(groupId);
+    group.items.push(item);
+    if (new Date(r.created_at).getTime() > new Date(group.createdAt).getTime()) {
+      group.createdAt = r.created_at;
+    }
+  }
+
+  const plays = Array.from(grouped.values()).map((group) => {
+    const items = group.items;
+    const states = Array.from(new Set(items.map((item: any) => item.drawState)));
+    const games = Array.from(new Set(items.map((item: any) => item.gameType)));
+    const drawTimes = Array.from(new Set(items.map((item: any) => item.drawTime)));
+    const totalBet = items.reduce((sum: number, item: any) => sum + item.betAmount, 0);
+    const totalWon = items.reduce((sum: number, item: any) => sum + item.winAmount, 0);
+    const hasPending = items.some((item: any) => item.status === 'pending');
+    const hasWon = items.some((item: any) => item.status === 'won');
+
+    return {
+      ...group,
+      drawState: states.length === 1 ? states[0] : 'Multiple',
+      state: states.length === 1 ? states[0] : 'Multiple',
+      gameType: games.length === 1 && items.length === 1 ? games[0] : 'multiple',
+      numbers: items.length === 1 ? items[0].numbers : `${items.length} selections`,
+      betAmount: totalBet,
+      status: hasPending ? 'pending' : hasWon ? 'won' : 'lost',
+      won: hasWon,
+      winAmount: totalWon,
+      drawTime: drawTimes.length === 1 ? drawTimes[0] : 'multiple',
+    };
+  }).slice(0, limit);
+
+  return {
+    plays,
     total: parseInt(countResult.rows[0].count),
   };
 }
@@ -891,19 +978,7 @@ export async function checkDrawSchedule(
     return { isOpen: true }; // Inactive schedule = no restriction
   }
 
-  // Compare current time (Haiti is UTC-5 / EST)
-  const now = new Date();
-  const haitiOffset = -5 * 60;
-  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
-  const haitiTime = new Date(utcMs + haitiOffset * 60000);
-  const currentMinutes = haitiTime.getHours() * 60 + haitiTime.getMinutes();
-
-  const [openH, openM] = schedule.open_time.split(':').map(Number);
-  const [closeH, closeM] = schedule.close_time.split(':').map(Number);
-  const openMinutes = openH * 60 + openM;
-  const closeMinutes = closeH * 60 + closeM;
-
-  const isOpen = currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
+  const isOpen = isCurrentEasternTimeWithinWindow(schedule.open_time, schedule.close_time);
   return {
     isOpen,
     openTime: schedule.open_time,

@@ -601,6 +601,14 @@ async function runStartupMigrations() {
     await query(`UPDATE app_settings SET value='"@Grolotto"'         WHERE key='social_tiktok';`);
     console.log('[Migration 024] email verification + terms + payment/social handles applied');
 
+    // Migration 025: group tickets from the same checkout for vendor history display.
+    await query(`
+      ALTER TABLE lottery_tickets ADD COLUMN IF NOT EXISTS bet_group_id UUID;
+      UPDATE lottery_tickets SET bet_group_id = id WHERE bet_group_id IS NULL;
+      CREATE INDEX IF NOT EXISTS idx_lottery_tickets_bet_group ON lottery_tickets(bet_group_id);
+    `);
+    console.log('[Migration 025] ticket checkout grouping applied');
+
     console.log('[Migration] Startup migrations applied successfully');
   } catch (err) {
     console.error('[Migration] Startup migration error:', err);
@@ -647,6 +655,7 @@ const ALLOWED_WEB_ORIGINS = [
   'https://www.grolotto.com',
   'http://localhost:3000',
   'http://localhost:3001',
+  'http://localhost:3002',
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:19006',
@@ -733,7 +742,7 @@ import path from 'path';
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // ─── API Routes ──────────────────────────────────────────
-app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth', ...(config.rateLimitEnabled ? [authLimiter] : []), authRoutes);
 app.use('/api/vendors', vendorRoutes);
 app.use('/api/lottery', lotteryRoutes);
 app.use('/api/wallet', walletRoutes);

@@ -239,8 +239,10 @@ export async function login(input: LoginInput): Promise<{ user: UserProfile; tok
     throw new AppError(suspensionMsg, 403, 'ACCOUNT_SUSPENDED');
   }
 
-  // Check brute force protection (only if migration has run)
-  if (hasBruteForceColumns && user.failed_login_attempts >= 5 && user.last_failed_login) {
+  const bruteForceEnabled = config.rateLimitEnabled;
+
+  // Check brute force protection (only if enabled and migration has run)
+  if (bruteForceEnabled && hasBruteForceColumns && user.failed_login_attempts >= 5 && user.last_failed_login) {
     const lockoutEnd = new Date(user.last_failed_login);
     lockoutEnd.setMinutes(lockoutEnd.getMinutes() + 15);
     if (new Date() < lockoutEnd) {
@@ -250,7 +252,7 @@ export async function login(input: LoginInput): Promise<{ user: UserProfile; tok
 
   const passwordMatch = await bcrypt.compare(password, user.password_hash);
   if (!passwordMatch) {
-    if (hasBruteForceColumns) {
+    if (bruteForceEnabled && hasBruteForceColumns) {
       await query(
         'UPDATE users SET failed_login_attempts = COALESCE(failed_login_attempts, 0) + 1, last_failed_login = NOW() WHERE id = $1',
         [user.id]
@@ -260,7 +262,7 @@ export async function login(input: LoginInput): Promise<{ user: UserProfile; tok
   }
 
   // Reset failed attempts on successful login
-  if (hasBruteForceColumns) {
+  if (bruteForceEnabled && hasBruteForceColumns) {
     await query(
       'UPDATE users SET failed_login_attempts = 0, last_failed_login = NULL WHERE id = $1',
       [user.id]

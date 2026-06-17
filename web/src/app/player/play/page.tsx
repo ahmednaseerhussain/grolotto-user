@@ -44,6 +44,47 @@ const GAME_COLORS: Record<string, string> = {
   loto5: "bg-amber-500",
 };
 
+function getEasternCurrentMinutes(): number {
+  const now = new Date();
+  const etFormatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    hourCycle: "h23",
+  });
+  const etParts = etFormatter.formatToParts(now);
+  const etHour = parseInt(etParts.find((p) => p.type === "hour")?.value || "0", 10);
+  const etMin = parseInt(etParts.find((p) => p.type === "minute")?.value || "0", 10);
+  return etHour * 60 + etMin;
+}
+
+function isCurrentEasternTimeWithinWindow(openTime: string, closeTime: string): boolean {
+  const toMinutes = (t: string) => {
+    const [h, m] = t.split(":").map(Number);
+    return (h || 0) * 60 + (m || 0);
+  };
+  const currentMinutes = getEasternCurrentMinutes();
+  const open = toMinutes(openTime);
+  const close = toMinutes(closeTime);
+
+  if (close >= open) {
+    return currentMinutes >= open && currentMinutes <= close;
+  }
+  return currentMinutes >= open || currentMinutes <= close;
+}
+
+const createCheckoutGroupId = () => {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
+    const rand = Math.floor(Math.random() * 16);
+    const value = char === "x" ? rand : (rand & 0x3) | 0x8;
+    return value.toString(16);
+  });
+};
+
 interface GameSelection {
   id: string;
   state: string;
@@ -196,15 +237,7 @@ export default function PlayScreen() {
   // hide it when the current time is outside the open window.
   const isWithinOpenWindow = (openTime?: string, closeTime?: string) => {
     if (!openTime || !closeTime) return true;
-    const toMinutes = (t: string) => {
-      const [h, m] = t.split(":").map(Number);
-      return (h || 0) * 60 + (m || 0);
-    };
-    const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
-    const open = toMinutes(openTime);
-    const close = toMinutes(closeTime);
-    return currentMinutes >= open && currentMinutes <= close;
+    return isCurrentEasternTimeWithinWindow(openTime, closeTime);
   };
   const isStateTimeOpen = (stateCode: string, time: string) => {
     const sched = vendorSchedules.find(
@@ -386,6 +419,7 @@ export default function PlayScreen() {
     try {
       let allSuccess = true;
       const successfulBets: string[] = [];
+      const betGroupId = createCheckoutGroupId();
       for (const sel of gameSelections) {
         try {
           await lotteryAPI.placeBet({
@@ -396,6 +430,7 @@ export default function PlayScreen() {
             betAmount: sel.betAmount,
             currency,
             drawTime,
+            betGroupId,
           });
           successfulBets.push(sel.id);
         } catch (err: any) {
@@ -586,11 +621,7 @@ export default function PlayScreen() {
           {(["morning", "midday", "evening"] as const).map((time) => {
             const isAvailable = availableDrawTimes.length === 0 || availableDrawTimes.includes(time);
             const range = getDrawTimeRange(time);
-            // Past-cutoff check: if current local time has passed the close time,
-            // mark this draw as closed for today.
-            const now = new Date();
-            const currentHHMM = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
-            const isClosed = !!(range?.close && currentHHMM > range.close.slice(0, 5));
+            const isClosed = !!(range?.open && range?.close && !isCurrentEasternTimeWithinWindow(range.open, range.close));
             const isSelectable = isAvailable && !isClosed;
             const isSelected = drawTime === time && isSelectable;
             const colorActive =

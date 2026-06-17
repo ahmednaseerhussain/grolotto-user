@@ -15,7 +15,7 @@ import {
   ArrowLeft, Search, Filter, FileText, Download, Loader2,
   Ticket, DollarSign, Trophy, Percent, Calendar
 } from "lucide-react";
-import { formatCurrency, GAME_LABELS, DRAW_STATES } from "@/lib/utils";
+import { formatCurrency, GAME_LABELS, DRAW_STATES, formatLotteryNumbers } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 interface HistoryItem {
@@ -30,6 +30,16 @@ interface HistoryItem {
   drawTime?: string;
   createdAt?: string;
   drawDate?: string;
+  items?: Array<{
+    id: string;
+    gameType: string;
+    numbers: string;
+    betAmount: number;
+    state?: string;
+    drawTime?: string;
+    won?: boolean;
+    winAmount?: number;
+  }>;
 }
 
 export default function VendorHistoryScreen() {
@@ -58,7 +68,34 @@ export default function VendorHistoryScreen() {
       const res = await vendorAPI.getPlayHistory(1, 200);
       const raw = res.data?.data || res.data;
       const data = raw?.plays || raw?.tickets || raw;
-      setHistory(Array.isArray(data) ? data : []);
+      const mapped = (Array.isArray(data) ? data : []).map((item: any) => ({
+        ...item,
+        gameType: item.gameType || item.game_type,
+        numbers: Array.isArray(item.numbers)
+          ? formatLotteryNumbers(item.numbers, item.gameType || item.game_type, '-')
+          : (item.numbers || ''),
+        betAmount: item.betAmount || item.bet_amount || 0,
+        state: item.drawState || item.draw_state || item.state,
+        won: item.status === 'won' || item.won === true,
+        winAmount: item.winAmount || item.win_amount || 0,
+        createdAt: item.createdAt || item.created_at,
+        drawTime: item.drawTime || item.draw_time,
+        items: Array.isArray(item.items)
+          ? item.items.map((selection: any) => ({
+            id: selection.id,
+            gameType: selection.gameType || selection.game_type,
+            numbers: Array.isArray(selection.numbers)
+              ? formatLotteryNumbers(selection.numbers, selection.gameType || selection.game_type, '-')
+              : (selection.numbers || ''),
+            betAmount: selection.betAmount || selection.bet_amount || 0,
+            state: selection.drawState || selection.draw_state || selection.state,
+            drawTime: selection.drawTime || selection.draw_time,
+            won: selection.status === 'won' || selection.won === true,
+            winAmount: selection.winAmount || selection.win_amount || 0,
+          }))
+          : undefined,
+      }));
+      setHistory(mapped);
     } catch {
       toast.error("Failed to load play history");
     } finally {
@@ -513,7 +550,7 @@ export default function VendorHistoryScreen() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${gameColors[item.gameType] || "bg-gray-100 text-gray-700"}`}>
-                      {GAME_LABELS[item.gameType] || item.gameType}
+                      {item.items && item.items.length > 1 ? `${item.items.length} selections` : GAME_LABELS[item.gameType] || item.gameType}
                     </span>
                     <div>
                       <p className="font-medium text-sm">{item.playerName || "Player"}</p>
@@ -535,6 +572,22 @@ export default function VendorHistoryScreen() {
                     </p>
                   </div>
                 </div>
+                {item.items && item.items.length > 1 && (
+                  <div className="mt-3 space-y-1 border-t pt-2">
+                    {item.items.map((selection) => (
+                      <div key={selection.id} className="flex items-center justify-between gap-3 text-xs text-gray-600">
+                        <span>
+                          <strong>{DRAW_STATES[selection.state || ""] || selection.state}</strong>
+                          {" - "}
+                          {GAME_LABELS[selection.gameType] || selection.gameType}
+                          {" - "}
+                          <span className="font-mono">{selection.numbers}</span>
+                        </span>
+                        <span className="font-semibold">{formatCurrency(selection.betAmount, currency)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}

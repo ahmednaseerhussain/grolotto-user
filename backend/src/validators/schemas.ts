@@ -69,6 +69,7 @@ export const placeBetSchema = z.object({
   betAmount: z.number().positive('Bet amount must be positive'),
   currency: z.enum(['USD', 'HTG']).default('USD'),
   drawTime: z.enum(['morning', 'midday', 'evening']).optional(),
+  betGroupId: z.string().uuid('Invalid bet group ID').optional(),
 });
 
 export const createPaymentSchema = z.object({

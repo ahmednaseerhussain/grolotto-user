@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
@@ -15,7 +15,6 @@ export const metadata: Metadata = {
   description: "GroLotto - Haiti's premier lottery platform for players and vendors",
   icons: { icon: "/favicon.ico", apple: "/grolotto-logo.png" },
   manifest: "/manifest.json",
-  themeColor: "#f59e0b",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -24,6 +23,10 @@ export const metadata: Metadata = {
   other: {
     "mobile-web-app-capable": "yes",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#f59e0b",
 };
 
 export default function RootLayout({

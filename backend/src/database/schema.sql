@@ -253,6 +253,7 @@ CREATE TABLE lottery_tickets (
     status ticket_status DEFAULT 'pending',
     win_amount DECIMAL(12,2) DEFAULT 0.00,
     win_multiplier DECIMAL(6,2),
+    bet_group_id UUID,
     
     created_at TIMESTAMPTZ DEFAULT NOW(),
     settled_at TIMESTAMPTZ
@@ -262,6 +263,7 @@ CREATE INDEX idx_lottery_tickets_player ON lottery_tickets(player_id);
 CREATE INDEX idx_lottery_tickets_vendor ON lottery_tickets(vendor_id);
 CREATE INDEX idx_lottery_tickets_round ON lottery_tickets(round_id);
 CREATE INDEX idx_lottery_tickets_status ON lottery_tickets(status);
+CREATE INDEX idx_lottery_tickets_bet_group ON lottery_tickets(bet_group_id);
 
 -- ============================================
 -- TRANSACTIONS
