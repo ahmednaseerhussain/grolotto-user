@@ -28,6 +28,7 @@ export interface RegisterInput {
 }
 
 const TERMS_VERSION = '2025-01';
+const OTP_SEND_FAILED_MESSAGE = 'Failed to send OTP. Please contact support.';
 
 export interface LoginInput {
   email: string;
@@ -68,6 +69,10 @@ function generateTokens(user: { id: string; email: string; role: string }): Toke
     { expiresIn: config.jwt.refreshExpiry } as SignOptions
   );
   return { accessToken, refreshToken };
+}
+
+function throwOtpSendFailed(): never {
+  throw new AppError(OTP_SEND_FAILED_MESSAGE, 503, 'EMAIL_SEND_FAILED');
 }
 
 export async function register(input: RegisterInput): Promise<{ user: UserProfile; tokens: TokenPair | null; requiresEmailVerification?: boolean }> {
@@ -178,12 +183,11 @@ export async function register(input: RegisterInput): Promise<{ user: UserProfil
       `INSERT INTO email_verifications (user_id, otp_code, expires_at) VALUES ($1, $2, $3)`,
       [result.user.id, otp, expiresAt]
     );
-    await sendSignupVerificationEmail(result.user.email, otp, result.user.name).catch((err) =>
-      console.error('[SIGNUP VERIFY] email send failed:', err?.message || err)
-    );
+    const emailSent = await sendSignupVerificationEmail(result.user.email, otp, result.user.name);
     if (process.env.DEV_EXPOSE_OTP === 'true') {
       console.log(`[SIGNUP VERIFY] OTP for ${result.user.email}: ${otp}`);
     }
+    if (!emailSent) throwOtpSendFailed();
     return { ...result, requiresEmailVerification: true };
   }
 
@@ -437,14 +441,13 @@ export async function requestPasswordReset(email: string): Promise<{ message: st
     [user.id, otp, expiresAt]
   );
 
-  await sendPasswordResetEmail(email, otp).catch((err) =>
-    console.error('[PASSWORD RESET] email send failed:', err?.message || err)
-  );
+  const emailSent = await sendPasswordResetEmail(email, otp);
 
   const exposeOtp = process.env.DEV_EXPOSE_OTP === 'true';
   if (exposeOtp) {
     console.log(`[PASSWORD RESET] OTP for ${email}: ${otp}`);
   }
+  if (!emailSent) throwOtpSendFailed();
   return {
     message: 'If an account with that email exists, a reset code has been sent.',
     ...(exposeOtp ? { otp } : {}),
@@ -568,13 +571,12 @@ export async function resendVerification(email: string): Promise<{ message: stri
     [user.id, otp, expiresAt]
   );
 
-  await sendSignupVerificationEmail(user.email, otp, user.name).catch((err) =>
-    console.error('[SIGNUP VERIFY] resend failed:', err?.message || err)
-  );
+  const emailSent = await sendSignupVerificationEmail(user.email, otp, user.name);
 
   const exposeOtp = process.env.DEV_EXPOSE_OTP === 'true';
   if (exposeOtp) {
     console.log(`[SIGNUP VERIFY] OTP for ${user.email}: ${otp}`);
   }
+  if (!emailSent) throwOtpSendFailed();
   return { ...genericMsg, ...(exposeOtp ? { otp } : {}) };
 }

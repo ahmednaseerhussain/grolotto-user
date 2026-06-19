@@ -1,16 +1,19 @@
 import nodemailer, { Transporter } from 'nodemailer';
 
-const SMTP_HOST = process.env.SMTP_HOST;
+const SMTP_HOST = process.env.SMTP_HOST?.trim();
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587', 10);
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
+const SMTP_USER = process.env.SMTP_USER?.trim();
+const SMTP_PASS = normalizeSmtpPass(process.env.SMTP_PASS, SMTP_HOST);
 const SMTP_SECURE = (process.env.SMTP_SECURE || 'false').toLowerCase() === 'true';
-const SMTP_FROM = process.env.SMTP_FROM || 'GroLotto <no-reply@grolotto.com>';
+const SMTP_FROM = process.env.SMTP_FROM?.trim() || 'GroLotto <no-reply@grolotto.com>';
 
 let transporter: Transporter | null = null;
 
 function getTransporter(): Transporter | null {
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return null;
+  if (SMTP_HOST.includes('gmail.com') && SMTP_PASS.length !== 16) {
+    console.warn(`[EMAIL] Gmail app password should be 16 characters after removing spaces; current length is ${SMTP_PASS.length}.`);
+  }
   if (transporter) return transporter;
   transporter = nodemailer.createTransport({
     host: SMTP_HOST,
@@ -19,6 +22,12 @@ function getTransporter(): Transporter | null {
     auth: { user: SMTP_USER, pass: SMTP_PASS },
   });
   return transporter;
+}
+
+function normalizeSmtpPass(pass: string | undefined, host: string | undefined): string | undefined {
+  if (!pass) return undefined;
+  const trimmed = pass.trim();
+  return host?.includes('gmail.com') ? trimmed.replace(/\s+/g, '') : trimmed;
 }
 
 interface SendMailInput {

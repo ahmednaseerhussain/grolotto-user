@@ -175,6 +175,9 @@ export function getErrorMessage(error: unknown): string {
         .map((d: any) => (d.field ? `${d.field}: ${d.message}` : d.message))
         .join(", ");
     }
+    if (data?.code === "EMAIL_SEND_FAILED") {
+      return "Failed to send OTP. Please contact support.";
+    }
     return data?.message || data?.error || error.message;
   }
   if (error instanceof Error) return error.message;

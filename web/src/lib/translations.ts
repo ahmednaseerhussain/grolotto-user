@@ -4691,6 +4691,18 @@ buyGiftCardFromWebsite: {
     fr: "Mot de passe réinitialisé avec succès !",
     es: "¡Contraseña restablecida exitosamente!"
   },
+  canNowLogin: {
+    ht: "Kounye a ou ka konekte ak nouvo modpas ou.",
+    en: "You can now log in with your new password.",
+    fr: "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+    es: "Ahora puede iniciar sesion con su nueva contrasena."
+  },
+  backToLogin: {
+    ht: "Retounen konekte",
+    en: "Back to Login",
+    fr: "Retour a la connexion",
+    es: "Volver al inicio de sesion"
+  },
   passwordsDontMatchReset: {
     ht: "Modpas yo pa matche",
     en: "Passwords don't match",
